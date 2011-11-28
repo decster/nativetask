@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-AC_PREREQ([2.68])
+AC_PREREQ([2.59])
 AC_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -41,15 +41,6 @@ AC_CHECK_HEADERS([fcntl.h mach/mach.h memory.h stddef.h stdint.h stdlib.h string
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_INLINE
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_INT8_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-AC_TYPE_UINT8_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC

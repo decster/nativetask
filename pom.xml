@@ -16,7 +16,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hadoop</groupId>
   <artifactId>hadoop-nativetask</artifactId>
-  <version>0.20.3</version>
+  <version>0.1.0</version>
   <description>Hadoop MapReduce NativeTask</description>
   <name>NativeTask</name>
   <packaging>jar</packaging>
@@ -118,7 +118,7 @@
 		            <id>compile</id>
 		            <phase>compile</phase>
 		            <goals>
-<!-- 		              <goal>configure</goal> -->
+ 		              <goal>configure</goal>
 		              <goal>make-install</goal>
 		            </goals>
 		          </execution>
