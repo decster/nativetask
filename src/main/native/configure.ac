@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-AC_PREREQ([2.59])
+AC_PREREQ([2.68])
 AC_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
