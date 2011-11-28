@@ -47,8 +47,6 @@ public:
 
   virtual ~GzipDecompressStream();
 
-  virtual void seek(uint64_t position);
-
   virtual int32_t read(void * buff, uint32_t length);
 
   virtual void close();

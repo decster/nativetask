@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <signal.h>
 #include "commons.h"
 #include "NativeTask.h"
 #include "NativeObjectFactory.h"
