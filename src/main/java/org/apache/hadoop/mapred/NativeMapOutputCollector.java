@@ -38,7 +38,7 @@ public class NativeMapOutputCollector
     implements MapTask.MapOutputCollector<K, V> {
   private static Log LOG = LogFactory.getLog(NativeMapOutputCollector.class);
 
-  private OutputPathUtil mapOutputFile = null;
+  private MapOutputFile mapOutputFile = null;
   private TaskAttemptID taskAttemptID = null;
   private int spillNumber = 0;
 
@@ -75,7 +75,8 @@ public class NativeMapOutputCollector
     super("MCollectorOutputHandler", conf.getInt(
         NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB, 1024) * 1024, 0);
     this.taskAttemptID = taskAttemptID;
-    this.mapOutputFile = new OutputPathUtil(taskAttemptID.getJobID(), conf);
+    this.mapOutputFile = new MapOutputFile();
+    this.mapOutputFile.setConf(conf);
   }
 
   @Override
@@ -93,11 +94,11 @@ public class NativeMapOutputCollector
     String cmd = NativeUtils.fromBytes(data);
     Path p = null;
     if (cmd.equals("GetOutputPath")) {
-      p = mapOutputFile.getOutputFileForWrite(taskAttemptID, -1);
+      p = mapOutputFile.getOutputFileForWrite(-1);
     } else if (cmd.equals("GetOutputIndexPath")) {
-      p = mapOutputFile.getOutputIndexFileForWrite(taskAttemptID, -1);
+      p = mapOutputFile.getOutputIndexFileForWrite(-1);
     } else if (cmd.equals("GetSpillPath")) {
-      p = mapOutputFile.getSpillFileForWrite(taskAttemptID, spillNumber++, -1);
+      p = mapOutputFile.getSpillFileForWrite(spillNumber++, -1);
     } else {
       LOG.warn("Illegal command: " + cmd);
     }

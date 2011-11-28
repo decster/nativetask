@@ -34,7 +34,6 @@ import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskUmbilicalProtocol;
 import org.apache.hadoop.mapred.Task.TaskReporter;
 import org.apache.hadoop.mapred.nativetask.KeyValueBatchProcessor;
-import org.apache.hadoop.mapred.nativetask.OutputPathUtil;
 import org.apache.hadoop.mapred.nativetask.NativeRuntime;
 import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
 import org.apache.hadoop.mapred.nativetask.NativeUtils;
@@ -106,7 +105,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
    */
   static class MapperOutputProcessor<IK, IV>
       extends KeyValueBatchProcessor<IK, IV> {
-    private OutputPathUtil mapOutputFile;
+    private MapOutputFile mapOutputFile;
     private TaskAttemptID taskAttemptID;
     private int spillNumber = 0;
 
@@ -114,7 +113,8 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
         Class<IV> valueClass, JobConf conf, TaskAttemptID taskAttemptID)
         throws IOException {
       super("MMapperHandler", bufferCapacity, 0, keyClass, valueClass);
-      this.mapOutputFile = new OutputPathUtil(taskAttemptID.getJobID(), conf);
+      this.mapOutputFile = new MapOutputFile();
+      this.mapOutputFile.setConf(conf);
       this.taskAttemptID = taskAttemptID;
     }
 
@@ -123,11 +123,11 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
       String cmd = NativeUtils.fromBytes(data);
       Path p = null;
       if (cmd.equals("GetOutputPath")) {
-        p = mapOutputFile.getOutputFileForWrite(taskAttemptID, -1);
+        p = mapOutputFile.getOutputFileForWrite(-1);
       } else if (cmd.equals("GetOutputIndexPath")) {
-        p = mapOutputFile.getOutputIndexFileForWrite(taskAttemptID, -1);
+        p = mapOutputFile.getOutputIndexFileForWrite(-1);
       } else if (cmd.equals("GetSpillPath")) {
-        p = mapOutputFile.getSpillFileForWrite(taskAttemptID, spillNumber++, -1);
+        p = mapOutputFile.getSpillFileForWrite(spillNumber++, -1);
       } else {
         LOG.warn("Illegal command: " + cmd);
       }

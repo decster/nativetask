@@ -113,7 +113,7 @@ public class TestNativeMapTaskDelegator extends TestCase {
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
     NativeRuntime.configure(conf);
     TaskAttemptID taskid = new TaskAttemptID("TestMapperOutputProcessor", 1, true, 0, 0);
-    MapOutputFile mapOutputFile = new MapOutputFile(taskid.getJobID());
+    MapOutputFile mapOutputFile = new MapOutputFile();
     mapOutputFile.setConf(conf);
 
     int bufferCapacity = conf.getInt(
@@ -136,9 +136,9 @@ public class TestNativeMapTaskDelegator extends TestCase {
 
     // check output file correctness
     byte [] keyStore = new byte[INPUT_SIZE];
-    Path outFile = mapOutputFile.getOutputFile(taskid);
-    Path outIndex = mapOutputFile.getOutputIndexFile(taskid);
-    SpillRecord spillRecord = new SpillRecord(outIndex, conf);
+    Path outFile = mapOutputFile.getOutputFile();
+    Path outIndex = mapOutputFile.getOutputIndexFile();
+    SpillRecord spillRecord = new SpillRecord(outIndex, conf, null);
     FSDataInputStream dataIn = outFile.getFileSystem(conf).open(outFile);
     DataInputBuffer keyBuf = new DataInputBuffer();
     DataInputBuffer valueBuf = new DataInputBuffer();

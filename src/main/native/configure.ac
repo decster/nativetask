@@ -27,7 +27,7 @@ AC_CONFIG_HEADERS(config.h)
 LT_PREREQ([2.4])
 AC_PROG_LIBTOOL
 
-AM_INIT_AUTOMAKE(nativetask,1.0.0)
+AM_INIT_AUTOMAKE(nativetask,0.1.0)
 
 # Checks for programs.
 AC_PROG_CXX
