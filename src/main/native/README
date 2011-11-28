@@ -1,0 +1,26 @@
+Task level native optimization, and c/c++ programming interface for hadoop mapreduce.
+
+diskio 100M         0.1s
+decompress 300M     0.3s
+process    300M     0.6s
+compress   200M     0.5s     Total 1.5s 
+
+shuffle 100M * 4 /  3s           3s
+
+decompress 1200M  1s
+process    1200M  2s
+compress   100M   0.25s    Total 3.25s
+
+Perfect timing             Total 9.25s
+
+9.25s 
+1node 6map 6reduce 
+
+300M(compressed):1000M(decompressed)/s pernode processing power
+1000(sn)
+1P 1000000sn/10000 100s
+
+500 2s
+100 10s
+10 100s
+

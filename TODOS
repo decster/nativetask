@@ -1,0 +1,12 @@
+TODOs:
+
+job submitter
+mvn package
+Java input/output stream
+input progress
+iobuffer refactor to use input/output stream
+compress refactor
+compress support zlib
+Counters
+record reader/writer interface
+include file api
