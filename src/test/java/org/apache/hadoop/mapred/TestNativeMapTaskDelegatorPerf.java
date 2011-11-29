@@ -48,7 +48,7 @@ public class TestNativeMapTaskDelegatorPerf extends TestCase {
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
     NativeRuntime.configure(conf);
     TaskAttemptID taskid = new TaskAttemptID("PerfMapperOutputProcessor", 1, true, 0, 0);
-    MapOutputFile mapOutputFile = new MapOutputFile(taskid.getJobID());
+    MapOutputFile mapOutputFile = new MapOutputFile();
     mapOutputFile.setConf(conf);
 
     int bufferCapacity = conf.getInt(
