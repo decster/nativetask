@@ -19,6 +19,8 @@
 #ifndef STREAMS_H_
 #define STREAMS_H_
 
+#include "NativeTask.h"
+
 namespace Hadoop {
 
 class InputStream {
@@ -36,6 +38,8 @@ public:
   }
 
   virtual void close() {}
+
+  virtual int32_t readFully(void * buff, uint32_t length);
 };
 
 class OutputStream {
@@ -110,7 +114,9 @@ public:
     _stream->flush();
   }
 
-  virtual void close() {}
+  virtual void close() {
+    flush();
+  }
 };
 
 class LimitInputStream : public FilterInputStream {

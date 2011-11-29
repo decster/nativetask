@@ -24,6 +24,11 @@
 namespace Hadoop {
 
 class SnappyCompressStream : public CompressStream {
+protected:
+  uint32_t _hint;
+  uint32_t _blockMax;
+  char *   _tempBuffer;
+  uint32_t _tempBufferSize;
 public:
   SnappyCompressStream(OutputStream * stream,
                        uint32_t bufferSizeHint);
@@ -37,9 +42,21 @@ public:
   virtual void close();
 
   virtual void writeDirect(const void * buff, uint32_t length);
+
+protected:
+  void compressOneBlock(const void * buff, uint32_t length);
 };
 
 class SnappyDecompressStream : public DecompressStream {
+protected:
+  uint32_t _hint;
+  uint32_t _blockMax;
+  char *   _tempBuffer;
+  uint32_t _tempBufferSize;
+  char *   _tempDecompressBuffer;
+  uint32_t _tempDecompressBufferSize;
+  uint32_t _tempDecompressBufferUsed;
+  uint32_t _tempDecompressBufferCapacity;
 public:
   SnappyDecompressStream(InputStream * stream,
                          uint32_t bufferSizeHint);
@@ -51,6 +68,11 @@ public:
   virtual void close();
 
   virtual int32_t readDirect(void * buff, uint32_t length);
+
+protected:
+  uint32_t decompressOneBlock(uint32_t compressedSize,
+                              void * buff,
+                              uint32_t length);
 };
 
 } // namespace Hadoop

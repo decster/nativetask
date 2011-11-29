@@ -83,9 +83,10 @@ am__objects_1 = libnativetask_la-commons.lo \
 	libnativetask_la-MapOutputCollector.lo \
 	libnativetask_la-jniutils.lo \
 	libnativetask_la-NativeRuntimeJniImpl.lo \
-	libnativetask_la-Checksum.lo libnativetask_la-Compressions.lo \
-	libnativetask_la-GzipCodec.lo libnativetask_la-SnappyCodec.lo \
-	libnativetask_la-FileSystem.lo \
+	libnativetask_la-Checksum.lo libnativetask_la-Streams.lo \
+	libnativetask_la-BufferedStream.lo \
+	libnativetask_la-Compressions.lo libnativetask_la-GzipCodec.lo \
+	libnativetask_la-SnappyCodec.lo libnativetask_la-FileSystem.lo \
 	libnativetask_la-BatchHandler.lo \
 	libnativetask_la-NativeObject.lo \
 	libnativetask_la-NativeObjectFactory.lo \
@@ -264,12 +265,14 @@ PRFLAGS = -DSIMPLE_MEMCPY
 AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl
 AM_CFLAGS = -I$(SNAPPY_PREFIX)/include $(PRFLAGS)
 COMMONSOURCES = \
-src/commons.cc             \
-src/mempool.cc             \
-src/MapOutputCollector.cc  \
+src/commons.cc                         \
+src/mempool.cc                         \
+src/MapOutputCollector.cc              \
 src/jniutils.cc                        \
 src/NativeRuntimeJniImpl.cc            \
 src/Checksum.cc                        \
+src/Streams.cc                         \
+src/BufferedStream.cc                  \
 src/Compressions.cc                    \
 src/GzipCodec.cc                       \
 src/SnappyCodec.cc                     \
@@ -404,6 +407,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-BatchHandler.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-BufferedStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Checksum.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Compressions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-EchoBatchHandler.Plo@am__quote@
@@ -419,6 +423,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeTask.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-RReducerHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-SnappyCodec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Streams.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-commons.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-jniutils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-mempool.Plo@am__quote@
@@ -486,6 +491,20 @@ libnativetask_la-Checksum.lo: src/Checksum.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/Checksum.cc' object='libnativetask_la-Checksum.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Checksum.lo `test -f 'src/Checksum.cc' || echo '$(srcdir)/'`src/Checksum.cc
+
+libnativetask_la-Streams.lo: src/Streams.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Streams.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Streams.Tpo -c -o libnativetask_la-Streams.lo `test -f 'src/Streams.cc' || echo '$(srcdir)/'`src/Streams.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Streams.Tpo $(DEPDIR)/libnativetask_la-Streams.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/Streams.cc' object='libnativetask_la-Streams.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Streams.lo `test -f 'src/Streams.cc' || echo '$(srcdir)/'`src/Streams.cc
+
+libnativetask_la-BufferedStream.lo: src/BufferedStream.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-BufferedStream.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-BufferedStream.Tpo -c -o libnativetask_la-BufferedStream.lo `test -f 'src/BufferedStream.cc' || echo '$(srcdir)/'`src/BufferedStream.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-BufferedStream.Tpo $(DEPDIR)/libnativetask_la-BufferedStream.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/BufferedStream.cc' object='libnativetask_la-BufferedStream.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-BufferedStream.lo `test -f 'src/BufferedStream.cc' || echo '$(srcdir)/'`src/BufferedStream.cc
 
 libnativetask_la-Compressions.lo: src/Compressions.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Compressions.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Compressions.Tpo -c -o libnativetask_la-Compressions.lo `test -f 'src/Compressions.cc' || echo '$(srcdir)/'`src/Compressions.cc

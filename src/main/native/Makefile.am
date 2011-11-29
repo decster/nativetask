@@ -25,12 +25,14 @@ AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl
 AM_CFLAGS = -I$(SNAPPY_PREFIX)/include $(PRFLAGS)
 
 COMMONSOURCES = \
-src/commons.cc             \
-src/mempool.cc             \
-src/MapOutputCollector.cc  \
+src/commons.cc                         \
+src/mempool.cc                         \
+src/MapOutputCollector.cc              \
 src/jniutils.cc                        \
 src/NativeRuntimeJniImpl.cc            \
 src/Checksum.cc                        \
+src/Streams.cc                         \
+src/BufferedStream.cc                  \
 src/Compressions.cc                    \
 src/GzipCodec.cc                       \
 src/SnappyCodec.cc                     \
