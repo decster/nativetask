@@ -19,7 +19,6 @@
 package org.apache.hadoop.mapred;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,10 +30,19 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.NativeMapTaskDelegator.MapperOutputProcessor;
-import org.apache.hadoop.mapred.NativeMapTaskDelegator.MapperProcessor;
+import org.apache.hadoop.mapred.IFile;
+import org.apache.hadoop.mapred.IndexRecord;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapOutputFile;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.RecordWriter;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.SpillRecord;
+import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.nativetask.NativeRuntime;
 import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
+import org.apache.hadoop.mapred.nativetask.NativeMapTaskDelegator.MapperOutputProcessor;
+import org.apache.hadoop.mapred.nativetask.NativeMapTaskDelegator.MapperProcessor;
 
 import junit.framework.TestCase;
 

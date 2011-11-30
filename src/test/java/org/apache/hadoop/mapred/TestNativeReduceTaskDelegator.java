@@ -27,9 +27,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.NativeReduceTaskDelegator.ReducerProcessor;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RawKeyValueIterator;
+import org.apache.hadoop.mapred.RecordWriter;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.nativetask.NativeRuntime;
 import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
+import org.apache.hadoop.mapred.nativetask.NativeReduceTaskDelegator.ReducerProcessor;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.Progressable;
 

@@ -26,8 +26,6 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.NativeMapTaskDelegator;
-import org.apache.hadoop.mapred.NativeReduceTaskDelegator;
 import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -88,6 +86,7 @@ public class Submitter extends Configured implements Tool  {
   static class CommandLineParser {
     private Options options = new Options();
     
+    @SuppressWarnings("static-access")
     void addOption(String longName, boolean required, String description,
         String paramName) {
       Option option = OptionBuilder.withArgName(paramName).hasArgs(1)
@@ -95,6 +94,7 @@ public class Submitter extends Configured implements Tool  {
       options.addOption(option);
     }
 
+    @SuppressWarnings("static-access")
     void addArgument(String name, boolean required, String description) {
       Option option = OptionBuilder.withArgName(name).hasArgs(1)
           .withDescription(description).isRequired(required).create();

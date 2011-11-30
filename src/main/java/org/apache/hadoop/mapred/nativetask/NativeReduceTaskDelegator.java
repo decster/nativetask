@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.mapred;
+package org.apache.hadoop.mapred.nativetask;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,42 +25,37 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.DataInputBuffer;
-import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RawKeyValueIterator;
 import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Task;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TaskAttemptID;
+import org.apache.hadoop.mapred.TaskDelegation;
 import org.apache.hadoop.mapred.TaskUmbilicalProtocol;
-import org.apache.hadoop.mapred.Task.TaskReporter;
-import org.apache.hadoop.mapred.nativetask.NativeBatchProcessor;
-import org.apache.hadoop.mapred.nativetask.NativeRuntime;
-import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
-import org.apache.hadoop.mapred.nativetask.NativeUtils;
-import org.apache.hadoop.mapred.nativetask.NativeUtils.NativeDeserializer;
 import org.apache.hadoop.mapred.nativetask.NativeUtils.KVType;
-import org.apache.hadoop.mapred.nativetask.OutputPathUtil;
+import org.apache.hadoop.mapred.nativetask.NativeUtils.NativeDeserializer;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-public class NativeReduceTaskDelegator<IK, IV, OK, OV> {
+public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
+    TaskDelegation.ReduceTaskDelegator {
   private static final Log LOG = LogFactory.getLog(NativeReduceTaskDelegator.class);
 
   public NativeReduceTaskDelegator() {
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public void run(final TaskAttemptID taskAttemptID, JobConf job,
-      TaskUmbilicalProtocol umbilical, final TaskReporter reporter,
-      RawKeyValueIterator rIter) throws IOException,
-      InterruptedException {
+  public void run(TaskAttemptID taskAttemptID, JobConf job,
+      TaskUmbilicalProtocol umbilical, Reporter reporter, RawKeyValueIterator rIter)
+      throws IOException, InterruptedException {
     NativeRuntime.configure(job);
 
     Class keyClass = job.getMapOutputKeyClass();
     Class valueClass = job.getMapOutputValueClass();
 
-    String finalName = Task.getOutputName(taskAttemptID.getTaskID().getId());
+    String finalName = OutputPathUtil.getOutputName(taskAttemptID.getTaskID().getId());
     FileSystem fs = FileSystem.get(job);
     RecordWriter<OK, OV> writer = job.getOutputFormat().getRecordWriter(
         fs, job, finalName, reporter);
@@ -77,7 +72,7 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> {
     processor.close();
   }
 
-  static class ReducerProcessor<IK, IV, OK, OV> extends
+  public static class ReducerProcessor<IK, IV, OK, OV> extends
       NativeBatchProcessor {
     enum KVState {
       KEY, VALUE

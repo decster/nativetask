@@ -27,9 +27,13 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.IFile;
+import org.apache.hadoop.mapred.IndexRecord;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.NativeMapOutputCollector;
+import org.apache.hadoop.mapred.MapOutputFile;
+import org.apache.hadoop.mapred.SpillRecord;
 import org.apache.hadoop.mapred.TaskAttemptID;
+import org.apache.hadoop.mapred.nativetask.NativeMapOutputCollector;
 import org.apache.hadoop.mapred.nativetask.NativeRuntime;
 
 import junit.framework.TestCase;

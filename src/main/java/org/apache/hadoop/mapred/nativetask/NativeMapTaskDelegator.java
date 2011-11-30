@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.mapred;
+package org.apache.hadoop.mapred.nativetask;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,28 +29,25 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Task;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TaskAttemptID;
+import org.apache.hadoop.mapred.TaskDelegation;
 import org.apache.hadoop.mapred.TaskUmbilicalProtocol;
-import org.apache.hadoop.mapred.Task.TaskReporter;
-import org.apache.hadoop.mapred.nativetask.KeyValueBatchProcessor;
-import org.apache.hadoop.mapred.nativetask.NativeRuntime;
-import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
-import org.apache.hadoop.mapred.nativetask.NativeUtils;
 import org.apache.hadoop.mapred.nativetask.NativeUtils.NativeDeserializer;
 import org.apache.hadoop.util.ReflectionUtils;
 
-public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
+public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
+    TaskDelegation.MapTaskDelegator {
   private static final Log LOG = LogFactory.getLog(NativeMapTaskDelegator.class);
 
   public NativeMapTaskDelegator() {
   }
   
+  @Override
   @SuppressWarnings("unchecked")
-  public void run(final TaskAttemptID taskAttemptID, final JobConf job,
-      final TaskUmbilicalProtocol umbilical, TaskReporter reporter,
-      final Object split) throws IOException,
-      InterruptedException {
+  public void run(TaskAttemptID taskAttemptID, JobConf job,
+      TaskUmbilicalProtocol umbilical, Reporter reporter, Object split)
+      throws IOException, InterruptedException {
     NativeRuntime.configure(job);
 
     RecordReader<INKEY,INVALUE> rawIn =
@@ -79,7 +76,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
         processor.close();
       }
     } else {
-      String finalName = Task.getOutputName(taskAttemptID.getTaskID().getId());
+      String finalName = OutputPathUtil.getOutputName(taskAttemptID.getTaskID().getId());
       FileSystem fs = FileSystem.get(job);
       RecordWriter<OUTKEY, OUTVALUE> writer = job.getOutputFormat()
           .getRecordWriter(fs, job, finalName, reporter);
@@ -103,9 +100,9 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
   /**
    * Mapper processor with partitioner, output collector, and maybe combiner 
    */
-  static class MapperOutputProcessor<IK, IV>
+  public static class MapperOutputProcessor<IK, IV>
       extends KeyValueBatchProcessor<IK, IV> {
-    private MapOutputFile mapOutputFile;
+    private OutputPathUtil mapOutputFile;
     private TaskAttemptID taskAttemptID;
     private int spillNumber = 0;
 
@@ -113,7 +110,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
         Class<IV> valueClass, JobConf conf, TaskAttemptID taskAttemptID)
         throws IOException {
       super("MMapperHandler", bufferCapacity, 0, keyClass, valueClass);
-      this.mapOutputFile = new MapOutputFile();
+      this.mapOutputFile = new OutputPathUtil();
       this.mapOutputFile.setConf(conf);
       this.taskAttemptID = taskAttemptID;
     }
@@ -142,7 +139,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> {
   /**
    * Mapper only processor
    */
-  static class MapperProcessor<IK, IV, OK, OV>
+  public static class MapperProcessor<IK, IV, OK, OV>
       extends KeyValueBatchProcessor<IK, IV> {
     enum KVState {
       KEY,

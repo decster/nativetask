@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.mapred;
+package org.apache.hadoop.mapred.nativetask;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,19 +26,17 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.mapred.nativetask.NativeBatchProcessor;
-import org.apache.hadoop.mapred.nativetask.OutputPathUtil;
-import org.apache.hadoop.mapred.nativetask.NativeRuntime;
-import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
-import org.apache.hadoop.mapred.nativetask.NativeUtils;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TaskAttemptID;
+import org.apache.hadoop.mapred.TaskDelegation;
 
 public class NativeMapOutputCollector
     <K extends BinaryComparable, V extends BinaryComparable>
     extends NativeBatchProcessor
-    implements MapTask.MapOutputCollector<K, V> {
+    implements TaskDelegation.MapOutputCollectorDelegator<K, V> {
   private static Log LOG = LogFactory.getLog(NativeMapOutputCollector.class);
 
-  private MapOutputFile mapOutputFile = null;
+  private OutputPathUtil mapOutputFile = null;
   private TaskAttemptID taskAttemptID = null;
   private int spillNumber = 0;
 
@@ -75,8 +73,8 @@ public class NativeMapOutputCollector
     super("MCollectorOutputHandler", conf.getInt(
         NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB, 1024) * 1024, 0);
     this.taskAttemptID = taskAttemptID;
-    this.mapOutputFile = new MapOutputFile();
-    this.mapOutputFile.setConf(conf);
+    this.mapOutputFile = new OutputPathUtil();
+    mapOutputFile.setConf(conf);
   }
 
   @Override

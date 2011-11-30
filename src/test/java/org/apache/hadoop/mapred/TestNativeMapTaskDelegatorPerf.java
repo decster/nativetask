@@ -21,9 +21,12 @@ package org.apache.hadoop.mapred;
 import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.NativeMapTaskDelegator.MapperOutputProcessor;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapOutputFile;
+import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.nativetask.NativeRuntime;
 import org.apache.hadoop.mapred.nativetask.NativeTaskConfig;
+import org.apache.hadoop.mapred.nativetask.NativeMapTaskDelegator.MapperOutputProcessor;
 
 import junit.framework.TestCase;
 

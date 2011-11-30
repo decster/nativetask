@@ -42,7 +42,7 @@ index 19faa87..a058d22 100644
     */
    public void clear() {
 diff --git a/src/mapred/org/apache/hadoop/mapred/MapTask.java b/src/mapred/org/apache/hadoop/mapred/MapTask.java
-index 8a469ac..f403e9e 100644
+index 8a469ac..aec2807 100644
 --- a/src/mapred/org/apache/hadoop/mapred/MapTask.java
 +++ b/src/mapred/org/apache/hadoop/mapred/MapTask.java
 @@ -41,6 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
@@ -58,8 +58,8 @@ index 8a469ac..f403e9e 100644
      }
  
 -    if (useNewApi) {
-+    if (TaskDelegationUtil.canDelegateMapTask(job)) {
-+      TaskDelegationUtil.delegateMapTask(
++    if (TaskDelegation.canDelegateMapTask(job)) {
++      TaskDelegation.delegateMapTask(
 +          this,
 +          job,
 +          umbilical,
@@ -75,7 +75,7 @@ index 8a469ac..f403e9e 100644
      MapOutputCollector collector = null;
      if (numReduceTasks > 0) {
 -      collector = new MapOutputBuffer(umbilical, job, reporter);
-+      collector = TaskDelegationUtil.tryGetDelegateMapOutputCollector(job, getTaskID(), mapOutputFile);
++      collector = TaskDelegation.tryGetDelegateMapOutputCollector(job, getTaskID(), mapOutputFile);
 +      if (collector == null)
 +        collector = new MapOutputBuffer(umbilical, job, reporter);
      } else { 
@@ -86,13 +86,13 @@ index 8a469ac..f403e9e 100644
                         TaskReporter reporter
                         ) throws IOException, ClassNotFoundException {
 -      collector = new MapOutputBuffer<K,V>(umbilical, job, reporter);
-+      MapOutputCollector<K,V> tc = TaskDelegationUtil.tryGetDelegateMapOutputCollector(job, getTaskID(), mapOutputFile);
++      MapOutputCollector<K,V> tc = TaskDelegation.tryGetDelegateMapOutputCollector(job, getTaskID(), mapOutputFile);
 +      collector = tc != null ? tc : new MapOutputBuffer<K,V>(umbilical, job, reporter);
        partitions = jobContext.getNumReduceTasks();
        if (partitions > 0) {
          partitioner = (org.apache.hadoop.mapreduce.Partitioner<K,V>)
 diff --git a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-index 980b988..a4b4777 100644
+index 980b988..e51bff2 100644
 --- a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
 +++ b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
 @@ -413,7 +413,9 @@ class ReduceTask extends Task {
@@ -100,18 +100,18 @@ index 980b988..a4b4777 100644
      RawComparator comparator = job.getOutputValueGroupingComparator();
  
 -    if (useNewApi) {
-+    if (TaskDelegationUtil.catDelegateReduceTask(job)) {
-+      TaskDelegationUtil.delegateReduceTask(this, job, umbilical, reporter, rIter);
++    if (TaskDelegation.catDelegateReduceTask(job)) {
++      TaskDelegation.delegateReduceTask(this, job, umbilical, reporter, rIter);
 +    } else if (useNewApi) {
        runNewReducer(job, umbilical, reporter, rIter, comparator, 
                      keyClass, valueClass);
      } else {
-diff --git a/src/mapred/org/apache/hadoop/mapred/TaskDelegationUtil.java b/src/mapred/org/apache/hadoop/mapred/TaskDelegationUtil.java
+diff --git a/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
 new file mode 100644
-index 0000000..073c878
+index 0000000..16cafbd
 --- /dev/null
-+++ b/src/mapred/org/apache/hadoop/mapred/TaskDelegationUtil.java
-@@ -0,0 +1,117 @@
++++ b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
+@@ -0,0 +1,98 @@
 +/**
 + * Licensed to the Apache Software Foundation (ASF) under one
 + * or more contributor license agreements.  See the NOTICE file
@@ -134,82 +134,62 @@ index 0000000..073c878
 +
 +import java.io.IOException;
 +import java.lang.reflect.Constructor;
-+import java.lang.reflect.InvocationTargetException;
 +import java.lang.reflect.Method;
 +
-+import org.apache.hadoop.io.BytesWritable;
-+import org.apache.hadoop.io.DataInputBuffer;
 +import org.apache.hadoop.mapred.Task.TaskReporter;
 +import org.apache.hadoop.util.ReflectionUtils;
 +
-+public class TaskDelegationUtil {
++public class TaskDelegation {
++  public static interface MapTaskDelegator {
++    public void run(TaskAttemptID taskID, JobConf job,
++        TaskUmbilicalProtocol umbilical, Reporter reporter, Object split)
++        throws IOException, InterruptedException;
++  }
++
 +  public static boolean canDelegateMapTask(JobConf job) {
 +    return job.get("mapreduce.map.task.delegator.class", null) != null;
 +  }
 +
++  @SuppressWarnings("unchecked")
 +  public static void delegateMapTask(MapTask mapTask, JobConf job,
 +      TaskUmbilicalProtocol umbilical, TaskReporter reporter,
 +      Object split)
 +      throws IOException, InterruptedException {
-+    Class<?> delegatorClass = job.getClass("mapreduce.map.task.delegator.class", null);
-+    Object delegator = ReflectionUtils.newInstance(delegatorClass, job);
-+    try {
-+      Method runMethod = delegatorClass.getMethod("run", TaskAttemptID.class,
-+          JobConf.class, TaskUmbilicalProtocol.class, TaskReporter.class,
-+          Object.class);
-+      runMethod.invoke(delegator, mapTask.getTaskID(), job, umbilical, reporter,
-+          split);
-+    } catch (NoSuchMethodException e) {
-+      throw new IOException(e);
-+    } catch (IllegalAccessException e) {
-+      throw new IOException(e);
-+    } catch (InvocationTargetException e) {
-+      Throwable orig = e.getTargetException();
-+      if (orig instanceof IOException) {
-+        throw (IOException)orig;
-+      }
-+      if (orig instanceof InterruptedException) {
-+        throw (InterruptedException)orig;
-+      }
-+      throw new IOException(orig);
-+    }
++    Class<? extends MapTaskDelegator> delegatorClass = (Class<? extends MapTaskDelegator>) 
++        job.getClass("mapreduce.map.task.delegator.class", null);
++    MapTaskDelegator delegator = ReflectionUtils.newInstance(delegatorClass, job);
++    delegator.run(mapTask.getTaskID(), job, umbilical, reporter, split);
++  }
++
++  public static interface ReduceTaskDelegator {
++    public void run(TaskAttemptID taskID, JobConf job,
++        TaskUmbilicalProtocol umbilical, Reporter reporter,
++        RawKeyValueIterator rIter) 
++        throws IOException, InterruptedException;
 +  }
 +
 +  public static boolean catDelegateReduceTask(JobConf job) {
 +    return job.get("mapreduce.reduce.task.delegator.class", null) != null;
 +  }
 +
++  @SuppressWarnings("unchecked")
 +  public static void delegateReduceTask(ReduceTask reduceTask, JobConf job,
 +      TaskUmbilicalProtocol umbilical, TaskReporter reporter,
 +      RawKeyValueIterator rIter) throws IOException, ClassNotFoundException,
 +      InterruptedException {
-+    Class<?> delegatorClass = job.getClass("mapreduce.reduce.task.delegator.class", null);
-+    Object delegator = ReflectionUtils.newInstance(delegatorClass, job);
-+    try {
-+      Method runMethod = delegatorClass.getMethod("run", TaskAttemptID.class,
-+          JobConf.class, TaskUmbilicalProtocol.class, TaskReporter.class,
-+          RawKeyValueIterator.class);
-+      runMethod.invoke(delegator, reduceTask.getTaskID(), job, umbilical, reporter, rIter);
-+    } catch (NoSuchMethodException e) {
-+      throw new IOException(e);
-+    } catch (IllegalAccessException e) {
-+      throw new IOException(e);
-+    } catch (InvocationTargetException e) {
-+      Throwable orig = e.getTargetException();
-+      if (orig instanceof IOException) {
-+        throw (IOException)orig;
-+      }
-+      if (orig instanceof InterruptedException) {
-+        throw (InterruptedException)orig;
-+      }
-+      throw new IOException(orig);
-+    }
++    Class<? extends ReduceTaskDelegator> delegatorClass = 
++        (Class<? extends ReduceTaskDelegator>)job.getClass(
++            "mapreduce.reduce.task.delegator.class", null);
++    ReduceTaskDelegator delegator = ReflectionUtils.newInstance(delegatorClass, job);
++    delegator.run(reduceTask.getTaskID(), job, umbilical, reporter, rIter);
 +  }
 +
++  public interface MapOutputCollectorDelegator<K, V> extends
++      MapTask.MapOutputCollector<K, V> {
++  }
 +
 +  @SuppressWarnings("unchecked")
-+  public static <K, V>
-+  MapTask.MapOutputCollector<K, V> tryGetDelegateMapOutputCollector(
++  public static <K, V> MapTask.MapOutputCollector<K, V> tryGetDelegateMapOutputCollector(
 +      JobConf job, TaskAttemptID taskId, MapOutputFile mapOutputFile) {
 +    try {
 +      Class<?> cls = Class.forName(
@@ -219,8 +199,9 @@ index 0000000..073c878
 +      if (can) {
 +        Constructor<?> cons = cls.getConstructor(JobConf.class,
 +            TaskAttemptID.class, MapOutputFile.class);
-+        MapTask.MapOutputCollector<K,V> moc = (MapTask.MapOutputCollector<K,V>)
-+            cons.newInstance(job, taskId, mapOutputFile);
++        MapTask.MapOutputCollector<K, V> moc = 
++            (MapTask.MapOutputCollector<K, V>) cons.newInstance(
++                job, taskId, mapOutputFile);
 +        return moc;
 +      }
 +      return null;
