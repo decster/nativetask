@@ -19,6 +19,8 @@
 #include <assert.h>
 #include "Checksum.h"
 
+namespace Hadoop {
+
 const uint32_t CRC32_T8_0[] = {
   0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
   0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
@@ -1269,8 +1271,11 @@ uint32_t crc32c_sb8_software(uint32_t crc, const uint8_t *buf, size_t length) {
 
 uint32_t crc32c_sb8(uint32_t crc, const uint8_t *buf, size_t length) {
   if (likely(cached_cpu_supports_crc32)) {
-    crc32c_hardware(crc, buf, length);
+    return crc32c_hardware(crc, buf, length);
   } else {
-    crc32c_sb8_software(crc, buf, length);
+    return crc32c_sb8_software(crc, buf, length);
   }
 }
+
+} // namespace Hadoop
+

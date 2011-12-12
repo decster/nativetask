@@ -24,8 +24,8 @@
 
 namespace Hadoop {
 
-extern uint32_t crc32_sb8(uint32_t crc, const uint8_t *buf, size_t length);
-extern uint32_t crc32c_sb8(uint32_t crc, const uint8_t *buf, size_t length);
+extern uint32_t crc32_sb8(uint32_t, const uint8_t *, size_t);
+extern uint32_t crc32c_sb8(uint32_t, const uint8_t *, size_t);
 
 enum ChecksumType {
   CHECKSUM_NONE,

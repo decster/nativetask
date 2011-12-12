@@ -40,6 +40,10 @@ const string NativeObjectTypeToString(NativeObjectType type) {
     return string("PartitionerType");
   case CombinerType:
     return string("CombinerType");
+  case RecordReaderType:
+    return string("RecordReaderType");
+  case RecordWriterType:
+    return string("RecordWriterType");
   default:
     return string("UnknownObjectType");
   }
@@ -56,6 +60,10 @@ NativeObjectType NativeObjectTypeFromString(const string type) {
     return PartitionerType;
   } else if (type == "CombinerType") {
     return CombinerType;
+  } else if (type == "RecordReaderType") {
+    return RecordReaderType;
+  } else if (type == "RecordWriterType") {
+    return RecordWriterType;
   }
   return UnknownObjectType;
 }

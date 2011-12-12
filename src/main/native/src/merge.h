@@ -19,8 +19,9 @@
 #ifndef MERGE_H_
 #define MERGE_H_
 
+#include "Buffers.h"
 #include "MapOutputCollector.h"
-#include "fileutils.h"
+#include "IFile.h"
 
 namespace Hadoop {
 
@@ -29,10 +30,10 @@ namespace Hadoop {
  */
 class MergeEntry {
 public:
-  // these 3 fields showed be filled when next() is called
+  // these 3 fields should be filled after next() is called
+  const char *   _key;
   uint32_t _key_len;
   uint32_t _value_len;
-  const char *   _key;
 public:
   MergeEntry() :
       _key_len(0),
@@ -53,7 +54,7 @@ public:
    * 0 on success
    * 1 on no more
    */
-  virtual int next_partition() = 0;
+  virtual int nextPartition() = 0;
 
   /**
    * move to next key/value
@@ -64,9 +65,8 @@ public:
 
   /**
    * read value
-   * NOTICE: no big value problem, cause value is already in memory
    */
-  virtual const char * get_value() = 0;
+  virtual const char * getValue() = 0;
 };
 
 /**
@@ -95,11 +95,10 @@ public:
    * 0 on success
    * 1 on no more
    */
-  virtual int next_partition() {
+  virtual int nextPartition() {
     ++_cur_partition;
     if (_cur_partition < _moc->num_partition()) {
       _pb = _moc->bucket(_cur_partition);
-      _pb->sort(_moc->get_sort_type());
       _cur_index = -1ULL;
       return 0;
     }
@@ -136,7 +135,7 @@ public:
    * read value
    * NOTICE: no big value problem, cause value is already in memory
    */
-  virtual const char * get_value() {
+  virtual const char * getValue() {
     return _value;
   }
 };
@@ -145,24 +144,19 @@ public:
 /**
  * Merge entry for intermediate file
  */
-class InterFileMergeEntry : public MergeEntry {
+class IFileMergeEntry : public MergeEntry {
 protected:
-  IntermediateFileReader * _reader;
+  IFileReader * _reader;
   bool new_partition;
 public:
   /**
    * @param reader: managed by InterFileMergeEntry
    */
-  InterFileMergeEntry(IntermediateFileReader * reader):_reader(reader) {
+  IFileMergeEntry(IFileReader * reader):_reader(reader) {
     new_partition = false;
   }
 
-  InterFileMergeEntry(SpillRangeInfo * sr, uint32_t buffsize) {
-    _reader = new IntermediateFileReader(sr, buffsize);
-  }
-
-  virtual ~InterFileMergeEntry() {
-    delete _reader;
+  virtual ~IFileMergeEntry() {
   }
 
   /**
@@ -170,8 +164,8 @@ public:
    * 0 on success
    * 1 on no more
    */
-  virtual int next_partition() {
-    return _reader->next_partition();
+  virtual int nextPartition() {
+    return _reader->nextPartition();
   }
 
   /**
@@ -180,24 +174,22 @@ public:
    * 1 on no more
    */
   virtual int next() {
-    _key = _reader->next_key(_key_len);
+    _key = _reader->nextKey(_key_len);
     if (unlikely(NULL == _key)) {
       // detect error early
       _key_len = 0xffffffffU;
       _value_len = 0xffffffffU;
       return 1;
     }
-    _value_len = _reader->current_value_len();
+    _value_len = _reader->valueLen();
     return 0;
   }
 
   /**
    * read value
-   * TODO: handle big value
    */
-  virtual const char * get_value() {
-    assert(_value_len!=0xffffffffU);
-    const char * ret = _reader->value();
+  virtual const char * getValue() {
+    const char * ret = _reader->value(_value_len);
     assert(ret != NULL);
     return ret;
   }
@@ -299,110 +291,29 @@ class Merger {
 private:
   std::vector<MergeEntryPtr> _entries;
   std::vector<MergeEntryPtr> _heap;
-  MapOutputWriter * _writer;
+  IFileWriter * _writer;
 public:
-  Merger(MapOutputWriter * writer) :
+  Merger(IFileWriter * writer) :
       _writer(writer) {
   }
-  ~Merger() {
-    _heap.clear();
-    for (size_t i = 0 ; i < _entries.size() ; i++) {
-      delete _entries[i];
-    }
-    _entries.clear();
-  }
+  ~Merger();
 
-  void add_merge_entry(MergeEntryPtr pme) {
-    _entries.push_back(pme);
-  }
+  void addMergeEntry(MergeEntryPtr pme);
 
   /**
-   * 0 if success, have next partition
-   * 1 if failed, no more
+   * @return 0 if success, have next partition
+   *         1 if failed, no more
    */
-  int next_partition() {
-    int ret = -1;
-    for (size_t i = 0 ; i < _entries.size() ; i++) {
-      int r = _entries[i]->next_partition();
-      if (ret == -1) {
-        ret = r;
-      } else if (r != ret) {
-        THROW_EXCEPTION(IOException, "MergeEntry partition number not equal");
-      }
-    }
-    if (0==ret) { // do have new partition
-      _writer->start_partition();
-    }
-    return ret;
-  }
+  int startPartition();
 
   /**
    * finish one partition
    */
-  void end_partition() {
-    _writer->end_partition();
-  }
+  void endPartition();
 
-  void init_heap() {
-    _heap.clear();
-    for (size_t i = 0 ; i < _entries.size() ; i++) {
-      MergeEntryPtr pme = _entries[i];
-      if (0==pme->next()) {
-        _heap.push_back(pme);
-      }
-    }
-    make_heap(&(_heap[0]), &(_heap[0])+_heap.size(), MergeEntryCompare);
-  }
+  void initHeap();
 
-  void merge() {
-    // only use TIMED in test, clock() is enough here
-    clock_t start_time = clock();
-    uint64_t total_record = 0;
-    _heap.reserve(_entries.size());
-    MergeEntryPtr * base = &(_heap[0]);
-    while (0==next_partition()) {
-      init_heap();
-      size_t cur_heap_size = _heap.size();
-      while (cur_heap_size>0) {
-        MergeEntryPtr top = base[0];
-        _writer->write_key_part(top->_key, top->_key_len, top->_value_len);
-        // TODO: handle big value
-        _writer->write_value_part(top->get_value(), top->_value_len);
-        total_record++;
-        if (0 == top->next()) { // have more, adjust heap
-          if (cur_heap_size == 1) {
-            continue;
-          } else if (cur_heap_size == 2) {
-            if (*(base[1]) < *(base[0])) {
-              std::swap(base[0], base[1]);
-            }
-          } else {
-            adjust_heap(base, 1, cur_heap_size, MergeEntryCompare);
-          }
-        } else { // no more, pop heap
-          if (cur_heap_size>2) {
-            pop_heap(base, base+cur_heap_size, MergeEntryCompare);
-          }
-          else if (cur_heap_size==2) {
-            base[0] = base[1];
-          }
-          cur_heap_size--;
-        }
-      }
-      end_partition();
-    }
-    clock_t end_time = clock();
-    uint64_t output_size;
-    uint64_t real_output_size;
-    _writer->get_statistics(output_size, real_output_size);
-    LOG("Merge %lu segments: record %llu, avg %.3lf, size %llu, real %llu, time(cpu) %.3lf",
-        _entries.size(),
-        total_record,
-        (double)output_size/total_record,
-        output_size,
-        real_output_size,
-        (end_time-start_time)/(double)CLOCKS_PER_SEC);
-  }
+  void merge();
 };
 
 } // namespace Hadoop

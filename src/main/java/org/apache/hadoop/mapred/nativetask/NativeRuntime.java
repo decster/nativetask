@@ -121,6 +121,27 @@ public class NativeRuntime {
     FileSystem fs = path.getFileSystem(conf);
     return fs.getLength(path);
   }
+  
+  public static boolean exists(byte [] pathUTF8) throws IOException {
+    String pathStr = NativeUtils.fromBytes(pathUTF8);
+    Path path = new Path(pathStr);
+    FileSystem fs = path.getFileSystem(conf);
+    return fs.exists(path);    
+  }
+  
+  public static boolean remove(byte [] pathUTF8) throws IOException {
+    String pathStr = NativeUtils.fromBytes(pathUTF8);
+    Path path = new Path(pathStr);
+    FileSystem fs = path.getFileSystem(conf);
+    return fs.delete(path, true);
+  }
+  
+  public static boolean mkdirs(byte [] pathUTF8) throws IOException {
+    String pathStr = NativeUtils.fromBytes(pathUTF8);
+    Path path = new Path(pathStr);
+    FileSystem fs = path.getFileSystem(conf);
+    return fs.mkdirs(path);
+  }
 
   public static void configure(JobConf jobConf) {
     asserNativeLibraryLoaded();

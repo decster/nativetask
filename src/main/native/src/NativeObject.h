@@ -28,12 +28,14 @@ namespace Hadoop {
  */
 enum NativeObjectType {
   UnknownObjectType = 0,
-  BatchHandlerType,
-  MapperType,
-  ReducerType,
-  PartitionerType,
-  CombinerType,
-  FolderType
+  BatchHandlerType = 1,
+  MapperType = 2,
+  ReducerType = 3,
+  PartitionerType = 4,
+  CombinerType = 5,
+  FolderType = 6,
+  RecordReaderType = 7,
+  RecordWriterType = 8
 };
 
 extern const std::string NativeObjectTypeToString(NativeObjectType type);
@@ -52,6 +54,26 @@ public:
   virtual ~NativeObject() {};
 };
 
+template<typename T>
+NativeObject * ObjectCreator() {
+  return new T();
+}
+
+typedef NativeObject * (*ObjectCreatorFunc)();
+
+#define DEFINE_NATIVE_LIBRARY(Library) \
+  static std::map<std::string, ObjectCreatorFunc> Library##ClassMap__; \
+  extern "C" void * Library##CreateObject(const char * name) { \
+    NativeObject * ret = NULL; \
+    map<string, ObjectCreatorFunc>::iterator itr = Library##ClassMap__.find(name); \
+    if (itr != Library##ClassMap__.end()) { \
+      return itr->second(); \
+    } \
+    return NULL; \
+  } \
+  extern "C" int Library##Init()
+
+#define REGISTER_CLASS(Type, Library) Library##ClassMap__[#Library"."#Type] = ObjectCreator<Type>
 
 } // namespace Hadoop
 

@@ -20,10 +20,12 @@
 #define COMPRESSIONS_H_
 
 #include <string>
+#include <vector>
 #include "Streams.h"
 
 namespace Hadoop {
 
+using std::vector;
 using std::string;
 
 class CompressStream : public FilterOutputStream {
@@ -34,6 +36,9 @@ public:
 
   virtual void writeDirect(const void * buff, uint32_t length);
 
+  virtual uint64_t compressedBytesWritten() {
+    return 0;
+  }
 };
 
 class DecompressStream : public FilterInputStream {
@@ -45,15 +50,43 @@ public:
   virtual ~DecompressStream();
 
   virtual int32_t readDirect(void * buff, uint32_t length);
+
+  virtual uint64_t compressedBytesRead() {
+    return 0;
+  }
 };
 
+
 class Compressions {
+protected:
+  class Codec {
+  public:
+    string name;
+    string extension;
+
+    Codec(const string & name, const string & extension) :
+      name(name),
+      extension(extension) {
+    }
+  };
+
+  static vector<Codec> SupportedCodecs;
+
+  static void initCodecs();
+
+public:
+  static const Codec GzipCodec;
+  static const Codec SnappyCodec;
+  static const Codec Lz4Codec;
+
 public:
   static bool support(const string & codec);
 
   static const string getExtension(const string & codec);
 
   static const string getCodec(const string & extension);
+
+  static const string getCodecByFile(const string & file);
 
   static CompressStream * getCompressionStream(const string & codec,
                                                OutputStream * stream,

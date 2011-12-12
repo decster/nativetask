@@ -45,7 +45,7 @@ void MCollectorOutputHandler::reset() {
 
 void MCollectorOutputHandler::setup() {
   Config & config = NativeObjectFactory::GetConfig();
-  uint32_t partition = config.get_uint32("mapred.reduce.tasks", 1);
+  uint32_t partition = config.getInt("mapred.reduce.tasks", 1);
   _collector = new MapOutputCollector(partition);
   _collector->configure(config);
 }
@@ -62,10 +62,9 @@ void MCollectorOutputHandler::finish() {
   if ((outputpath.length() == 0) || (indexpath.length() == 0)) {
     THROW_EXCEPTION(IOException, "Illegal(empty) map output file/index path");
   }
-  vector<string> pathes = SplitString(outputpath,";");
-  if (0!=_collector->final_merge_and_spill(pathes, indexpath)) {
-    THROW_EXCEPTION(IOException, "Final spill failed");
-  }
+  vector<string> pathes;
+  StringUtil::Split(outputpath, ";", pathes);
+  _collector->final_merge_and_spill(pathes, indexpath, _collector->getMapOutputSpec());
   reset();
   BatchHandler::finish();
 }
@@ -96,10 +95,9 @@ void MCollectorOutputHandler::handleInput(char * buff, uint32_t length) {
       if (spillpath.length() == 0) {
         THROW_EXCEPTION(IOException, "Illegal(empty) spill files path");
       }
-      vector<string> pathes = SplitString(spillpath,";");
-      if (0 != _collector->mid_spill(pathes)) {
-        THROW_EXCEPTION(IOException, "Mid-spill failed");
-      }
+      vector<string> pathes;
+      StringUtil::Split(spillpath, ";", pathes);
+      _collector->mid_spill(pathes, "", _collector->getMapOutputSpec());
       dest = _collector->get_buffer_to_put(kvlength, partition);
       if (NULL == dest) {
         // io.sort.mb too small, cann't proceed

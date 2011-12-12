@@ -16,53 +16,30 @@
  * limitations under the License.
  */
 
-#ifndef BUFFEREDSTREAM_H_
-#define BUFFEREDSTREAM_H_
+#ifndef LZ4CODEC_H_
+#define LZ4CODEC_H_
 
-#include "Streams.h"
+#include "Compressions.h"
+#include "BlockCodec.h"
 
 namespace Hadoop {
-
-class BufferedInputStream : public FilterInputStream {
-protected:
-  char * _buff;
-  uint32_t _position;
-  uint32_t _limit;
-  uint32_t _capacity;
+class Lz4CompressStream : public BlockCompressStream {
 public:
-  BufferedInputStream(InputStream * stream, uint32_t bufferSize = 64 * 1024);
-
-  virtual ~BufferedInputStream();
-
-  virtual void seek(uint64_t position);
-
-  virtual uint64_t tell();
-
-  virtual int32_t read(void * buff, uint32_t length);
+  Lz4CompressStream(OutputStream * stream, uint32_t bufferSizeHint);
+protected:
+  virtual uint64_t maxCompressedLength(uint64_t origLength);
+  virtual void compressOneBlock(const void * buff, uint32_t length);
 };
 
-
-class BufferedOutputStream : public FilterOutputStream {
-protected:
-  char * _buff;
-  uint32_t _position;
-  uint32_t _capacity;
-
+class Lz4DecompressStream : public BlockDecompressStream {
 public:
-  BufferedOutputStream(InputStream * stream, uint32_t bufferSize = 64 * 1024);
-
-  virtual ~BufferedOutputStream();
-
-  virtual uint64_t tell();
-
-  virtual void write(const void * buff, uint32_t length);
-
-  virtual void flush();
-
+  Lz4DecompressStream(InputStream * stream, uint32_t bufferSizeHint);
+protected:
+  virtual uint64_t maxCompressedLength(uint64_t origLength);
+  virtual uint32_t decompressOneBlock(uint32_t compressedSize, void * buff,
+                                      uint32_t length);
 };
-
 
 } // namespace Hadoop
 
-
-#endif /* BUFFEREDSTREAM_H_ */
+#endif /* LZ4CODEC_H_ */

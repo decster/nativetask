@@ -16,24 +16,26 @@
  * limitations under the License.
  */
 
-#ifndef SNAPPYCODEC_H_
-#define SNAPPYCODEC_H_
+#ifndef BLOCKCODEC_H_
+#define BLOCKCODEC_H_
+
 
 #include "Compressions.h"
 
 namespace Hadoop {
 
-class SnappyCompressStream : public CompressStream {
+class BlockCompressStream : public CompressStream {
 protected:
   uint32_t _hint;
   uint32_t _blockMax;
   char *   _tempBuffer;
   uint32_t _tempBufferSize;
+  uint64_t _compressedBytesWritten;
 public:
-  SnappyCompressStream(OutputStream * stream,
+  BlockCompressStream(OutputStream * stream,
                        uint32_t bufferSizeHint);
 
-  virtual ~SnappyCompressStream();
+  virtual ~BlockCompressStream();
 
   virtual void write(const void * buff, uint32_t length);
 
@@ -43,11 +45,14 @@ public:
 
   virtual void writeDirect(const void * buff, uint32_t length);
 
+  virtual uint64_t compressedBytesWritten();
+
 protected:
-  void compressOneBlock(const void * buff, uint32_t length);
+  virtual uint64_t maxCompressedLength(uint64_t origLength) = 0;
+  virtual void compressOneBlock(const void * buff, uint32_t length) = 0;
 };
 
-class SnappyDecompressStream : public DecompressStream {
+class BlockDecompressStream : public DecompressStream {
 protected:
   uint32_t _hint;
   uint32_t _blockMax;
@@ -57,11 +62,12 @@ protected:
   uint32_t _tempDecompressBufferSize;
   uint32_t _tempDecompressBufferUsed;
   uint32_t _tempDecompressBufferCapacity;
+  uint64_t _compressedBytesRead;
 public:
-  SnappyDecompressStream(InputStream * stream,
+  BlockDecompressStream(InputStream * stream,
                          uint32_t bufferSizeHint);
 
-  virtual ~SnappyDecompressStream();
+  virtual ~BlockDecompressStream();
 
   virtual int32_t read(void * buff, uint32_t length);
 
@@ -69,12 +75,15 @@ public:
 
   virtual int32_t readDirect(void * buff, uint32_t length);
 
+  virtual uint64_t compressedBytesRead();
+
 protected:
-  uint32_t decompressOneBlock(uint32_t compressedSize,
-                              void * buff,
-                              uint32_t length);
+  virtual uint64_t maxCompressedLength(uint64_t origLength) = 0;
+  virtual uint32_t decompressOneBlock(uint32_t compressedSize, void * buff,
+                                      uint32_t length) = 0;
 };
 
 } // namespace Hadoop
 
-#endif /* SNAPPYCODEC_H_ */
+
+#endif /* BLOCKCODEC_H_ */

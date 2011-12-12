@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include <zconf.h>
+#include <zlib.h>
 #include "GzipCodec.h"
 
 namespace Hadoop {

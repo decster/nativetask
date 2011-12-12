@@ -17,21 +17,81 @@
  */
 
 #include "commons.h"
+#include "Checksum.h"
 #include "Streams.h"
 
 namespace Hadoop {
 
 int32_t InputStream::readFully(void * buff, uint32_t length) {
   int32_t ret = 0;
-  while (length>0) {
+  while (length > 0) {
     int32_t rd = read(buff, length);
-    if (rd < 0) {
+    if (rd <= 0) {
       return ret > 0 ? ret : -1;
     }
     ret += rd;
-    buff = ((char *)buff) + rd;
+    buff = ((char *) buff) + rd;
     length -= rd;
   }
+  return ret;
+}
+
+///////////////////////////////////////////////////////////
+
+ChecksumInputStream::ChecksumInputStream(InputStream * stream, ChecksumType type) :
+  FilterInputStream(stream),
+  _type(type),
+  _limit(-1) {
+  resetChecksum();
+}
+
+void ChecksumInputStream::resetChecksum() {
+  _checksum = Checksum::init(_type);
+}
+
+uint32_t ChecksumInputStream::getChecksum() {
+  return Checksum::getValue(_type, _checksum);
+}
+
+int32_t ChecksumInputStream::read(void * buff, uint32_t length) {
+  if (_limit < 0) {
+    int32_t ret = _stream->read(buff, length);
+    if (ret > 0) {
+      Checksum::update(_type, _checksum, buff, ret);
+    }
+    return ret;
+  } else if (_limit == 0) {
+    return -1;
+  } else {
+    int64_t rd = _limit < length ? _limit : length;
+    int32_t ret = _stream->read(buff, rd);
+    if (ret > 0) {
+      _limit -= ret;
+      Checksum::update(_type, _checksum, buff, ret);
+    }
+    return ret;
+  }
+}
+
+///////////////////////////////////////////////////////////
+
+ChecksumOutputStream::ChecksumOutputStream(OutputStream * stream, ChecksumType type) :
+  FilterOutputStream(stream),
+  _type(type) {
+  resetChecksum();
+}
+
+void ChecksumOutputStream::resetChecksum() {
+  _checksum = Checksum::init(_type);
+}
+
+uint32_t ChecksumOutputStream::getChecksum() {
+  return Checksum::getValue(_type, _checksum);
+}
+
+void ChecksumOutputStream::write(const void * buff, uint32_t length) {
+  Checksum::update(_type, _checksum, buff, length);
+  _stream->write(buff, length);
 }
 
 

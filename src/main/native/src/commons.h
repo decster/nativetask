@@ -34,10 +34,12 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <set>
 #include <map>
 #include <algorithm>
 
 #include "primitives.h"
+#include "StringUtil.h"
 #include "NativeTask.h"
 
 namespace Hadoop {
@@ -60,103 +62,6 @@ extern FILE * LOG_DEVICE;
 #define LOG(_fmt_, args...)
 
 #endif
-
-
-/**
- * internal sort method
- * CQSORT: using standard c qsort routine, faster on large data (>200M)
- * CPPSORT: using c++ std::sort, faster on small data (<2M)
- */
-enum SortType {
-  CQSORT = 0,
-  CPPSORT = 1,
-};
-
-
-/**
- * spill file type
- * INTERMEDIATE: a simple key/value sequence file
- * IFILE: classic hadoop IFile
- */
-enum OutputFileType {
-  INTERMEDIATE = 0,
-  IFILE = 1,
-};
-
-/**
- * key/value recored order requirements
- * FULLSORT: hadoop  standard
- * GROUPBY:  same key are grouped together, but not in order
- * NOSORT:   no order at all
- */
-enum RecordOrderType {
-  FULLSORT = 0,
-  GROUPBY = 1,
-  NOSORT = 2,
-};
-
-enum CompressionType {
-  PLAIN = 0,
-  SNAPPY = 1,
-};
-
-enum KeyValueType {
-  TextType = 0,
-  BytesType = 1,
-  UnknownType = 2
-};
-
-KeyValueType JavaClassToKeyValueType(const std::string & clazz);
-
-int NameToEnum(const std::string & name);
-
-std::string ToLower(const std::string & name);
-
-std::string Trim(const std::string & str);
-
-std::vector<std::string> SplitString(const std::string & src,
-                                     const std::string & splitChar,
-                                     bool clean=false);
-
-std::string JoinString(const std::vector<std::string> & strs,
-                       const std::string & joinChar);
-
-inline static uint32_t GetCeil(uint32_t v, uint32_t unit) {
-  return ((v + unit - 1) / unit) * unit;
-}
-
-inline static int32_t HashBytes(const char * bytes, int length) {
-  int hash = 1;
-  for (int i = 0; i < length; i++)
-    hash = (31 * hash) + (int32_t)bytes[i];
-  return hash;
-}
-
-
-/**
- * io operation
- */
-
-#define READ(ret, fd, buff, len) \
-  ret = ::read(fd, buff, len); \
-  if (ret < 0) { \
-    THROW_EXCEPTION(IOException, "sys call read() failed"); \
-  }
-
-#define WRITE(fd, start, len) if (::write(fd, start, len) < 0) {\
-  THROW_EXCEPTION(IOException, "sys call write() error");}
-
-
-/**
- * Dump memory content for debug
- */
-extern void dump_memory(const void * pos, size_t length, const char * filename);
-
-/**
- * print stack trace
- */
-extern void print_trace(int fd);
-
 
 } // namespace Hadoop
 

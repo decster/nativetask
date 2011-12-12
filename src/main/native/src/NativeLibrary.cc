@@ -71,7 +71,6 @@ NativeObject * NativeLibrary::createObject(const string clz) {
   if (NULL == _create_object_func) {
     return NULL;
   }
-  // TODO: use RTTI dynamic_cast<NativeObject*>
   return (NativeObject*)(_create_object_func(clz.c_str()));
 }
 

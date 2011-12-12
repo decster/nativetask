@@ -19,7 +19,7 @@
 #ifndef STREAMS_H_
 #define STREAMS_H_
 
-#include "NativeTask.h"
+#include "Checksum.h"
 
 namespace Hadoop {
 
@@ -143,7 +143,7 @@ public:
     } else if (_limit == 0) {
       return -1;
     } else {
-      int64_t rd = _limit<length?_limit:length;
+      int64_t rd = _limit < length ? _limit : length;
       int32_t ret = _stream->read(buff, rd);
       if (ret > 0) {
         _limit -= ret;
@@ -151,6 +151,48 @@ public:
       return ret;
     }
   }
+};
+
+class ChecksumInputStream : public FilterInputStream {
+protected:
+  ChecksumType _type;
+  uint32_t _checksum;
+  int64_t _limit;
+public:
+  ChecksumInputStream(InputStream * stream, ChecksumType type);
+
+  virtual ~ChecksumInputStream() {}
+
+  int64_t getLimit() {
+    return _limit;
+  }
+
+  void setLimit(int64_t limit) {
+    _limit = limit;
+  }
+
+  void resetChecksum();
+
+  uint32_t getChecksum();
+
+  virtual int32_t read(void * buff, uint32_t length);
+};
+
+class ChecksumOutputStream : public FilterOutputStream {
+protected:
+  ChecksumType _type;
+  uint32_t _checksum;
+public:
+  ChecksumOutputStream(OutputStream * stream, ChecksumType type);
+
+  virtual ~ChecksumOutputStream() {}
+
+  void resetChecksum();
+
+  uint32_t getChecksum();
+
+  virtual void write(const void * buff, uint32_t length);
+
 };
 
 } // namespace Hadoop

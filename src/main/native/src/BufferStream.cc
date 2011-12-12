@@ -18,7 +18,7 @@
 
 
 #include "commons.h"
-#include "BufferedStream.h"
+#include "BufferStream.h"
 
 namespace Hadoop {
 
@@ -135,6 +135,29 @@ void BufferedOutputStream::flush() {
   if (_position > 0) {
     _stream->write(_buff, _position);
     _position = 0;
+  }
+}
+
+///////////////////////////////////////////////////////////
+
+int32_t InputBuffer::read(void * buff, uint32_t length) {
+  uint32_t rd = _capacity - _position < length
+      ? _capacity - _position
+      : length;
+  if (rd > 0) {
+    memcpy(buff, _buff + _position, rd);
+    _position += rd;
+    return rd;
+  }
+  return length == 0 ? 0 : -1;
+}
+
+void OutputBuffer::write(const void * buff, uint32_t length) {
+  if (_position + length <= _capacity) {
+    memcpy(_buff+_position, buff, length);
+    _position += length;
+  } else {
+    THROW_EXCEPTION(IOException, "OutputBuffer too small to write");
   }
 }
 

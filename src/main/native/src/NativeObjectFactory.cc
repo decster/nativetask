@@ -26,15 +26,15 @@
 #include "MCollectorOutputHandler.h"
 #include "MMapperHandler.h"
 #include "RReducerHandler.h"
+#include "lib/LineRecordReader.h"
+#include "lib/LineRecordWriter.h"
+#include "lib/TeraSort.h"
+#include "lib/WordCount.h"
 
 using namespace Hadoop;
 
-extern "C" {
-
-static void handler(int sig);
-
 // TODO: just for debug, should be removed
-void handler(int sig) {
+extern "C" void handler(int sig) {
   void *array[10];
   size_t size;
 
@@ -47,48 +47,30 @@ void handler(int sig) {
   exit(1);
 }
 
-/**
- * CreateObjectFunc for this object library, NativeTask
- */
-void * NativeTaskCreateObject(const char * name) {
-  NativeObject * ret = NULL;
-  std::string clazz(name);
-  if (clazz=="BatchHandler") {
-    // dummy handler, do nothing
-    ret = new BatchHandler();
-  } else if (clazz=="EchoBatchHandler") {
-    ret = new EchoBatchHandler();
-  } else if (clazz=="MCollectorOutputHandler") {
-    ret = new MCollectorOutputHandler();
-  } else if (clazz=="MMapperHandler") {
-    ret = new MMapperHandler();
-  } else if (clazz=="RReducerHandler") {
-    ret = new RReducerHandler();
-  }else if (clazz=="Mapper") {
-    ret = new Mapper();
-  } else if (clazz=="Reducer") {
-    ret = new Reducer();
-  } else if (clazz=="Partitioner") {
-    ret = new Partitioner();
-  } else if (clazz=="Folder")  {
-    ret = new Folder();
-  }
-  return ret;
-}
-
-/**
- * Init function for this library, NativeTask
- */
-int NativeTaskInit() {
+DEFINE_NATIVE_LIBRARY(NativeTask) {
   signal(SIGSEGV, handler);
-  NativeObjectFactory::SetDefaultClass(BatchHandlerType, "BatchHandler");
-  NativeObjectFactory::SetDefaultClass(MapperType, "Mapper");
-  NativeObjectFactory::SetDefaultClass(ReducerType, "Reducer");
-  NativeObjectFactory::SetDefaultClass(PartitionerType, "Partitioner");
-  NativeObjectFactory::SetDefaultClass(FolderType, "Folder");
+  REGISTER_CLASS(BatchHandler, NativeTask);
+  REGISTER_CLASS(EchoBatchHandler, NativeTask);
+  REGISTER_CLASS(MCollectorOutputHandler, NativeTask);
+  REGISTER_CLASS(MMapperHandler, NativeTask);
+  REGISTER_CLASS(RReducerHandler, NativeTask);
+  REGISTER_CLASS(Mapper, NativeTask);
+  REGISTER_CLASS(Reducer, NativeTask);
+  REGISTER_CLASS(Partitioner, NativeTask);
+  REGISTER_CLASS(Folder, NativeTask);
+  REGISTER_CLASS(LineRecordReader, NativeTask);
+  REGISTER_CLASS(LineRecordWriter, NativeTask);
+  REGISTER_CLASS(TeraRecordReader, NativeTask);
+  REGISTER_CLASS(TeraRecordWriter, NativeTask);
+  REGISTER_CLASS(WordCountMapper, NativeTask);
+  REGISTER_CLASS(WordCountReducer, NativeTask);
+  REGISTER_CLASS(WordCountRecordWriter, NativeTask);
+  NativeObjectFactory::SetDefaultClass(BatchHandlerType, "NativeTask.BatchHandler");
+  NativeObjectFactory::SetDefaultClass(MapperType, "NativeTask.Mapper");
+  NativeObjectFactory::SetDefaultClass(ReducerType, "NativeTask.Reducer");
+  NativeObjectFactory::SetDefaultClass(PartitionerType, "NativeTask.Partitioner");
+  NativeObjectFactory::SetDefaultClass(FolderType, "NativeTask.Folder");
   return 0;
-}
-
 }
 
 namespace Hadoop {

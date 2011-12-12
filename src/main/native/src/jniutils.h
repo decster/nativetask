@@ -22,9 +22,14 @@
 #include <string>
 #include <jni.h>
 
+JNIEnv* JNU_GetJNIEnv(void);
+
 void JNU_ThrowByName(JNIEnv *jenv, const char *name, const char *msg);
 
 std::string JNU_ByteArrayToString(JNIEnv * jenv, jbyteArray src);
 
+jmethodID methodIdFromClass(const char *className, const char *methName,
+                            const char *methSignature, bool isStatic,
+                            JNIEnv *env);
 
 #endif /* JNIUTILS_H_ */

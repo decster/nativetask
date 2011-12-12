@@ -19,6 +19,8 @@
 #ifndef FILESYSTEM_H_
 #define FILESYSTEM_H_
 
+#include <string>
+#include "NativeTask.h"
 #include "Streams.h"
 
 namespace Hadoop {
@@ -72,13 +74,11 @@ public:
  * Simple wrapper for java org.apache.hadoop.fs.FSDataInputstream
  */
 class FSDataInputStream : public InputStream {
-  friend class FileSystem;
+  friend class JavaFileSystem;
 private:
-  void * _streamObjRef;
-  void * _buffObjRef;
-  uint32_t _buffSize;
+  void * _jobject;
 
-  FSDataInputStream(void * jenv);
+  FSDataInputStream(void * jobject);
 public:
   ~FSDataInputStream();
 
@@ -95,13 +95,11 @@ public:
  * Simple wrapper for java org.apache.hadoop.fs.FSDataOutputstream
  */
 class FSDataOutputStream : public OutputStream {
-  friend class FileSystem;
+  friend class JavaFileSystem;
 private:
-  void * _streamObjRef;
-  void * _buffObjRef;
-  uint32_t _buffSize;
+  void * _jobject;
 
-  FSDataOutputStream(void * jenv);
+  FSDataOutputStream(void * jobject);
 public:
   ~FSDataOutputStream();
 
@@ -118,24 +116,20 @@ public:
  * FileSystem interface
  */
 class FileSystem {
-private:
-  static void * _tempJEnv;
-  static bool _IDInited;
-
-  static void checkInitID();
+protected:
+  FileSystem() {}
 public:
-  static void setTempJEnv(void * tempJEnv);
+  virtual ~FileSystem() {}
 
-  static FSDataInputStream * openJava(const string & path,
-                                  uint32_t buffSize = 32 * 1024);
-  static FSDataOutputStream * createJava(const string & path,
-                                     bool overwrite = true,
-                                     uint32_t buffSize = 32 * 1024);
-  static uint64_t getLengthJava(const string & path);
+  virtual InputStream * open(const string & path) {}
+  virtual OutputStream * create(const string & path, bool overwrite = true) {}
+  virtual uint64_t getLength(const string & path) {}
+  virtual void remove(const string & path) {}
+  virtual bool exists(const string & path) {}
+  virtual void mkdirs(const string & path) {}
 
-  static FileInputStream * openRaw(const string & path);
-  static FileOutputStream * createRaw(const string & path, bool overwrite = true);
-  static uint64_t getLength(const string & path);
+  static FileSystem & getRaw();
+  static FileSystem & getJava(Config & config);
 };
 
 } // namespace Hadoop

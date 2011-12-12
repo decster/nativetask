@@ -19,6 +19,7 @@
 #ifndef NATIVETASK_H_
 #define NATIVETASK_H_
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -38,7 +39,7 @@ typedef void * (*CreateObjectFunc)(const char * name);
  * module should provide a function of this type with
  * the name of "<LIBRARYNAME>Init"
  */
-typedef int (*InitLibraryFunc)();
+typedef int32_t (*InitLibraryFunc)();
 
 
 namespace Hadoop {
@@ -46,6 +47,7 @@ namespace Hadoop {
 using std::string;
 using std::vector;
 using std::map;
+using std::pair;
 
 /**
  * Exceptions
@@ -54,7 +56,7 @@ class HadoopException: public std::exception {
 private:
   std::string _reason;
 public:
-  HadoopException(const char * what);
+  HadoopException(const string & what);
   virtual ~HadoopException() throw () { }
 
   virtual const char* what() const throw () {
@@ -64,101 +66,122 @@ public:
 
 class OutOfMemoryException: public HadoopException {
 public:
-  OutOfMemoryException(const char * what) :
+  OutOfMemoryException(const string & what) :
     HadoopException(what) {
   }
 };
 
 class IOException: public HadoopException {
 public:
-  IOException(const char * what) :
+  IOException(const string & what) :
     HadoopException(what) {
   }
 };
 
 class UnsupportException : public HadoopException {
 public:
-  UnsupportException(const char * what) :
+  UnsupportException(const string & what) :
     HadoopException(what) {
   }
 };
 
-
-typedef std::map<std::string, std::string> Dict;
-
 class Config {
-private:
-  Dict _dict;
+protected:
+  map<string, string> _configs;
 public:
   Config() {}
   ~Config() {}
 
+  const char * get(const string & name);
+
+  string get(const string & name, const string & defaultValue);
+
+  bool getBool(const string & name, bool defaultValue);
+
+  int64_t getInt(const string & name, int64_t defaultValue=-1);
+
+  float getFloat(const string & name, float defaultValue=-1);
+
+  void getStrings(const string & name, vector<string> & dest);
+
+  void getInts(const string & name, vector<int64_t> & dest);
+
+  void getFloats(const string & name, vector<float> & dest);
+
+  void set(const string & key, const string & value);
+
+  void setInt(const string & name, int64_t value);
+
+  void setBool(const string & name, bool value);
+
   /**
-   * Load configs from a config file with format:
+   * Load configs from a config file with the following format:
    * # comment
    * key1=value1
    * key2=value2
    * ...
    */
-  void load(const char * filepath);
+  void load(const string & path);
 
-  uint32_t get_uint32(const char * key, int default_value);
-  int get_type_enum(const char * key, int default_value = 0);
-  const char * get(const char * key, const char * default_value = NULL);
-  void set(std::string key, std::string value);
-  void set_uint32(const char * key, uint32_t value);
+
+  /**
+   * Load configs form command line args
+   * key1=value1 key2=value2,value2
+   */
+  void parse(int32_t argc, const char ** argv);
 };
 
-// new style API
-//class TaskContext {
-//  virtual Config & getConfig();
-//  virtual const char * getInputKey(int64_t & len);
-//  virtual const char * getInputValue(int64_t & len);
-//  virtual void emit(const char * key,
-//                    uint32_t keyLen,
-//                    const char * value,
-//                    uint32_t valueLen) = 0;
-//  virtual ~TaskContext() {
-//  }
-//};
-//
-//
-//class MapContext: public TaskContext {
-//};
-//
-//class ReduceContext: public TaskContext {
-//public:
-//  /**
-//   * Advance to the next value.
-//   */
-//  virtual bool nextValue() = 0;
-//};
-//
-//class Mapper: public NativeObject {
-//public:
-//  virtual void setup(MapContext & context) {
-//  }
-//
-//  virtual void map(MapContext & context) {
-//  }
-//
-//  virtual void cleanUp(MapContext & context) {
-//  }
-//};
-//
-//class Reducer: public NativeObject {
-//public:
-//  virtual void setup(ReduceContext & context) {
-//  }
-//
-//  virtual void reduce(ReduceContext & context) {
-//  }
-//
-//  virtual void cleanUp(ReduceContext & context) {
-//  }
-//};
+class Buffer {
+protected:
+  char * _data;
+  uint32_t _length;
 
-// Old API
+public:
+  Buffer() :
+    _data(NULL),
+    _length(0) {
+  }
+
+  Buffer(char * data, uint32_t length) :
+    _data(data),
+    _length(length) {
+  }
+
+  ~Buffer() {}
+
+  void reset(char * data, uint32_t length) {
+    this->_data = data;
+    this->_length = length;
+  }
+
+  char * data() const {
+    return _data;
+  }
+
+  uint32_t length() const {
+    return _length;
+  }
+
+  void data(char * data) {
+    this->_data = data;
+  }
+
+  void length(uint32_t length) {
+    this->_length = length;
+  }
+
+  string toString() const {
+    return string(_data, _length);
+  }
+};
+
+class InputSplit {
+public:
+  virtual uint64_t getLength() = 0;
+  virtual vector<string> & getLocations() = 0;
+  virtual void readFields(const string & data) = 0;
+};
+
 class Configurable : public NativeObject {
 public:
   Configurable() {
@@ -175,16 +198,14 @@ public:
 
   virtual void collect(const void * key, uint32_t keyLen,
                        const void * value, uint32_t valueLen,
-                       int partition) {
+                       int32_t partition) {
     collect(key, keyLen, value, valueLen);
   }
-
-  virtual void close() {}
 };
 
 class Counter {
 private:
-  // not thread safe, use a counter in one thread only
+  // not thread safe
   volatile uint64_t _count;
 
   string _group;
@@ -223,6 +244,31 @@ public:
   }
 };
 
+class RecordReader : public Configurable {
+public:
+  virtual NativeObjectType type() {
+    return RecordReaderType;
+  }
+
+  virtual bool next(Buffer & key, Buffer & value) = 0;
+
+  virtual float getProgress() = 0;
+
+  virtual void close() = 0;
+};
+
+class RecordWriter : public Configurable {
+public:
+  virtual NativeObjectType type() {
+    return RecordWriterType;
+  }
+
+  virtual void write(const Buffer & key, const Buffer & value) = 0;
+
+  virtual void close() = 0;
+};
+
+
 class ProcessorBase : public Configurable {
 private:
   Collector * _collector;
@@ -241,7 +287,7 @@ public:
 
   void collect(const void * key, uint32_t keyLen,
                const void * value, uint32_t valueLen,
-               int partition) {
+               int32_t partition) {
     _collector->collect(key, keyLen, value, valueLen, partition);
   }
 
@@ -351,7 +397,7 @@ public:
    *         >0  fixed sized state
    *            e.g. int32 int64 float.
    */
-  virtual int size() {
+  virtual int32_t size() {
     return -1;
   }
 

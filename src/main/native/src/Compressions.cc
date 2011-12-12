@@ -18,8 +18,9 @@
 
 #include "commons.h"
 #include "Compressions.h"
-#include "GzipCodec.h"
-#include "SnappyCodec.h"
+#include "codec/GzipCodec.h"
+#include "codec/SnappyCodec.h"
+#include "codec/Lz4Codec.h"
 
 namespace Hadoop {
 
@@ -41,15 +42,27 @@ int32_t DecompressStream::readDirect(void * buff, uint32_t length) {
 
 ///////////////////////////////////////////////////////////
 
-static const char * SUPPORTED_CODECS[][2] = {
-    {"org.apache.hadoop.io.compress.GzipCodec", ".gzip"},
-    {"org.apache.hadoop.io.compress.SnappyCodec", ".snappy"},
-    NULL
-};
+const Compressions::Codec Compressions::GzipCodec =
+    Compressions::Codec("org.apache.hadoop.io.compress.GzipCodec", ".gz");
+const Compressions::Codec Compressions::SnappyCodec =
+    Compressions::Codec("org.apache.hadoop.io.compress.SnappyCodec", ".snappy");
+const Compressions::Codec Compressions::Lz4Codec =
+    Compressions::Codec("org.apache.hadoop.io.compress.Lz4Codec", ".lz4");
+
+vector<Compressions::Codec> Compressions::SupportedCodecs = vector<Compressions::Codec>();
+
+void Compressions::initCodecs() {
+  if (SupportedCodecs.size() == 0) {
+    SupportedCodecs.push_back(GzipCodec);
+    SupportedCodecs.push_back(SnappyCodec);
+    SupportedCodecs.push_back(Lz4Codec);
+  }
+}
 
 bool Compressions::support(const string & codec) {
-  for (int i=0;SUPPORTED_CODECS[i]!=NULL;i++) {
-    if (codec == SUPPORTED_CODECS[i][0]) {
+  initCodecs();
+  for (size_t i = 0; i < SupportedCodecs.size(); i++) {
+    if (codec == SupportedCodecs[i].name) {
       return true;
     }
   }
@@ -57,18 +70,31 @@ bool Compressions::support(const string & codec) {
 }
 
 const string Compressions::getExtension(const string & codec) {
-  for (int i=0;SUPPORTED_CODECS[i]!=NULL;i++) {
-    if (codec == SUPPORTED_CODECS[i][0]) {
-      return SUPPORTED_CODECS[i][1];
+  initCodecs();
+  for (size_t i = 0; i < SupportedCodecs.size(); i++) {
+    if (codec == SupportedCodecs[i].name) {
+      return SupportedCodecs[i].extension;
     }
   }
   return string();
 }
 
 const string Compressions::getCodec(const string & extension) {
-  for (int i=0;SUPPORTED_CODECS[i]!=NULL;i++) {
-    if (extension == SUPPORTED_CODECS[i][1]) {
-      return SUPPORTED_CODECS[i][0];
+  initCodecs();
+  for (size_t i = 0; i < SupportedCodecs.size(); i++) {
+    if (extension == SupportedCodecs[i].extension) {
+      return SupportedCodecs[i].name;
+    }
+  }
+  return string();
+}
+
+const string Compressions::getCodecByFile(const string & file) {
+  initCodecs();
+  for (size_t i = 0; i < SupportedCodecs.size(); i++) {
+    const string & extension = SupportedCodecs[i].extension;
+    if (file.substr(file.length() - extension.length()) == extension) {
+      return SupportedCodecs[i].name;
     }
   }
   return string();
@@ -78,11 +104,14 @@ CompressStream * Compressions::getCompressionStream(
     const string & codec,
     OutputStream * stream,
     uint32_t bufferSizeHint) {
-  if (codec == SUPPORTED_CODECS[0][0]) {
+  if (codec == GzipCodec.name) {
     return new GzipCompressStream(stream, bufferSizeHint);
   }
-  if (codec == SUPPORTED_CODECS[1][0]) {
+  if (codec == SnappyCodec.name) {
     return new SnappyCompressStream(stream, bufferSizeHint);
+  }
+  if (codec == Lz4Codec.name) {
+    return new Lz4CompressStream(stream, bufferSizeHint);
   }
   return NULL;
 }
@@ -91,11 +120,14 @@ DecompressStream * Compressions::getDecompressionStream(
     const string & codec,
     InputStream * stream,
     uint32_t bufferSizeHint) {
-  if (codec == SUPPORTED_CODECS[0][0]) {
+  if (codec == GzipCodec.name) {
     return new GzipDecompressStream(stream, bufferSizeHint);
   }
-  if (codec == SUPPORTED_CODECS[1][0]) {
+  if (codec == SnappyCodec.name) {
     return new SnappyDecompressStream(stream, bufferSizeHint);
+  }
+  if (codec == Lz4Codec.name) {
+    return new Lz4DecompressStream(stream, bufferSizeHint);
   }
   return NULL;
 }
