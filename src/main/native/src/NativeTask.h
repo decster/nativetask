@@ -26,19 +26,36 @@
 #include "NativeObject.h"
 
 /**
- * Entrance for a object library, all user level object
- * libraries should provide a function of this type,
- * with function name "<LIBRARYNAME>CreateObject"
- * Notice: the return object must be an instance of
- *         type NativeObject or NULL
+ * Entrance for an object library, all user level object
+ * libraries with library name "LIBRARYNAME" should provide
+ * two function of the type defined below with the function
+ * name:
+ *  <LIBRARYNAME>CreateObject
+ *  <LIBRARYNAME>Init
+ * The return value for CreateObjectFunc must be an pointer of
+ * NativeObject instance or NULL.
+ *
+ * These two interfaces provide a simple way to register classes,
+ * and create classes objects by class name at runtime(like
+ * java reflection).
+ * Normally, users doesn't need to define these two functions
+ * explicitly, just use these two predefined macro:
+ *   DEFINE_NATIVE_LIBRARY(Library)
+ *   REGISTER_CLASS(Type, Library)
+ * For example, suppose we have a demo application, which has
+ * defined class MyDemoMapper and MyDemoReducer, to register
+ * this module & these two classes, you need to add following
+ * code to you source code.
+ *   DEFINE_NATIVE_LIBRARY(MyDemo) {
+ *     REGISTER_CLASS(MyDemoMapper, MyDemo);
+ *     REGISTER_CLASS(MyDemoReducer, MyDemo);
+ *   }
+ * The class name for MyDemoMapper will be MyDemo.MyDemoMapper,
+ * and similar for MyDemoReducer.
+ * Then you can set native.mapper.class to MyDemo.MyDemoMapper
+ * in JobConf.
  */
 typedef void * (*CreateObjectFunc)(const char * name);
-
-/**
- * Entrance for a user module, all user level application
- * module should provide a function of this type with
- * the name of "<LIBRARYNAME>Init"
- */
 typedef int32_t (*InitLibraryFunc)();
 
 
@@ -263,9 +280,14 @@ public:
     return RecordWriterType;
   }
 
-  virtual void write(const Buffer & key, const Buffer & value) = 0;
+  virtual void write(const void * key, uint32_t keyLen,
+                     const void * value, uint32_t valueLen) = 0;
 
   virtual void close() = 0;
+
+  void write(const Buffer & key, const Buffer & value) {
+    write(key.data(), key.length(), value.data(), value.length());
+  }
 };
 
 

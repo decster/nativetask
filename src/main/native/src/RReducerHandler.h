@@ -45,6 +45,8 @@ protected:
   Reducer * _reducer;
   // passive folder style reducer
   Folder  * _folder;
+  // RecordWriter
+  RecordWriter * _writer;
   // state info KV pairs
   char * _dest;
   char * _current;
@@ -90,7 +92,6 @@ public:
       uint32_t valueLen, int partition);
   virtual void collect(const void * key, uint32_t keyLen, const void * value,
       uint32_t valueLen);
-  virtual void close();
 private:
   void syncHandleInput(char * buff, uint32_t length);
   void asynHandleInput(char * buff, uint32_t length);

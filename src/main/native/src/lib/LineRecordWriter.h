@@ -43,7 +43,8 @@ public:
 
   virtual void configure(Config & config);
 
-  virtual void write(const Buffer & key, const Buffer & value);
+  virtual void write(const void * key, uint32_t keyLen,
+                     const void * value, uint32_t valueLen);
 
   virtual void close();
 };

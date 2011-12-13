@@ -27,6 +27,11 @@ namespace Hadoop {
 
 class MapOutputCollector;
 
+/**
+ * Handle the whole map task, from input split to writer/mapoutput
+ * First call setup to setup all sub parts,
+ * then call command("run") to run the whole task
+ */
 class MMapTaskHandler :
     public BatchHandler,
     public Collector {
@@ -42,6 +47,7 @@ public:
   virtual ~MMapTaskHandler();
 
   virtual void setup();
+  virtual string command(const string & cmd);
 
   // Collector methods
   virtual void collect(const void * key, uint32_t keyLen, const void * value,

@@ -71,18 +71,19 @@ void LineRecordWriter::configure(Config & config) {
   }
 }
 
-void LineRecordWriter::write(const Buffer & key, const Buffer & value) {
-  if (key.length() > 0) {
-    _appendBuffer.write(key.data(), key.length());
-    if (value.length() > 0) {
+void LineRecordWriter::write(const void * key, uint32_t keyLen,
+                             const void * value, uint32_t valueLen) {
+  if (keyLen > 0) {
+    _appendBuffer.write(key, keyLen);
+    if (valueLen > 0) {
       if (_keyValueSeparator.length() > 0) {
         _appendBuffer.write(_keyValueSeparator.c_str(),
                             _keyValueSeparator.length());
       }
-      _appendBuffer.write(value.data(), value.length());
+      _appendBuffer.write(value, valueLen);
     }
-  } else if (value.length()>0) {
-    _appendBuffer.write(value.data(), value.length());
+  } else if (valueLen>0) {
+    _appendBuffer.write(value, valueLen);
   }
   _appendBuffer.write('\n');
 }

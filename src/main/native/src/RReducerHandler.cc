@@ -26,6 +26,7 @@ RReducerHandler::RReducerHandler() :
   _mapper(NULL),
   _reducer(NULL),
   _folder(NULL),
+  _writer(NULL),
   _dest(NULL),
   _current(NULL),
   _remain(0),
@@ -52,6 +53,8 @@ void RReducerHandler::reset() {
   _reducer = NULL;
   delete _folder;
   _folder = NULL;
+  delete _writer;
+  _writer = NULL;
   delete _dest;
   _dest = NULL;
   delete _KVBuffer;
@@ -61,46 +64,62 @@ void RReducerHandler::reset() {
 void RReducerHandler::setup() {
   Config & config = NativeObjectFactory::GetConfig();
 
+  // writer
+  const char * writerClass = config.get("native.recordwriter.class");
+  if (NULL != writerClass) {
+    _writer = (RecordWriter*) NativeObjectFactory::CreateObject(writerClass);
+    if (NULL == _writer) {
+      THROW_EXCEPTION_EX(IOException, "native.recordwriter.class %s not found", writerClass);
+    }
+    _writer->configure(config);
+  }
+
   // reducer
   const char * reducerClass = config.get("native.reducer.class");
   if (NULL != reducerClass) {
     NativeObject * obj = NativeObjectFactory::CreateObject(reducerClass);
+    if (NULL == obj) {
+      THROW_EXCEPTION_EX(IOException, "native.reducer.class %s not found", reducerClass);
+    }
     _reducerType = obj->type();
     switch (_reducerType) {
     case ReducerType:
       _reducer = (Reducer*)obj;
+      _reducer->setCollector(this);
       break;
     case MapperType:
       _mapper = (Mapper*)obj;
+      _mapper->setCollector(this);
       break;
     case FolderType:
       _folder = (Folder*)obj;
+      _folder->setCollector(this);
       break;
     default:
         THROW_EXCEPTION(UnsupportException, "Reducer type not supported");
     }
   }
   else {
-    _reducerType = ReducerType;
-    _reducer = (Reducer *) NativeObjectFactory::CreateDefaultObject(
-        ReducerType);
+    // default use IdenticalMapper
+    _reducerType = MapperType;
+    _mapper = (Mapper *) NativeObjectFactory::CreateDefaultObject(
+        MapperType);
+    _mapper->setCollector(this);
   }
   if (NULL == _reducer && _mapper == NULL && _folder == NULL) {
     THROW_EXCEPTION(UnsupportException, "Reducer class not found");
   }
+
   switch (_reducerType) {
   case ReducerType:
+    // TODO: configure in reducerThread?
     _reducer->configure(config);
-    _reducer->setCollector(this);
-    startReducerThread();
     break;
   case MapperType:
     _mapper->configure(config);
-    _mapper->setCollector(this);
     break;
   case FolderType:
     _folder->configure(config);
-    _folder->setCollector(this);
     // TODO: implement
     THROW_EXCEPTION(UnsupportException, "Folder API not supported");
     break;
@@ -108,14 +127,28 @@ void RReducerHandler::setup() {
     // should not be here
     THROW_EXCEPTION(UnsupportException, "Reducer type not supported");
   }
+
+  if (_reducer != NULL) {
+    startReducerThread();
+  }
 }
 
 void RReducerHandler::finish() {
-  if (_reducerType!=ReducerType) {
-    close();
-    BatchHandler::finish();
+  if (_reducer != NULL) {
+    joinReducerThread();
+    if (_reducerThreadError) {
+      THROW_EXCEPTION_EX(IOException, "Reducer thread throw exception: %s",
+                         _errorMessage.c_str());
+    }
+  } else {
+    if (_mapper!=NULL) {
+      _mapper->close();
+    }
+    if (_folder!=NULL) {
+      // TODO: _folder finals
+    }
   }
-  reset();
+  BatchHandler::finish();
 }
 
 std::string RReducerHandler::command(const std::string & cmd) {
@@ -182,18 +215,13 @@ void RReducerHandler::collect(const void * key, uint32_t keyLen,
 
 void RReducerHandler::collect(const void * key, uint32_t keyLen,
     const void * value, uint32_t valueLen) {
-  putInt(keyLen);
-  put((char *)key, keyLen);
-  putInt(valueLen);
-  put((char *)value, valueLen);
-}
-
-void RReducerHandler::close() {
-  if (_mapper!=NULL) {
-    _mapper->close();
-  }
-  if (_folder!=NULL) {
-    // TODO: _folder finals
+  if (NULL != _writer) {
+    _writer->write(key, keyLen, value, valueLen);
+  } else {
+    putInt(keyLen);
+    put((char *)key, keyLen);
+    putInt(valueLen);
+    put((char *)value, valueLen);
   }
 }
 
@@ -233,8 +261,7 @@ void RReducerHandler::runReducer() {
       _reducer->reduce(*this);
     }
     _reducer->close();
-    BatchHandler::finish();
-  } catch (std::exception & e) {
+  } catch (std::exception e) {
     _reducerThreadError = true;
     _errorMessage = e.what();
   }

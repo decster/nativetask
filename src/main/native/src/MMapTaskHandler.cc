@@ -24,9 +24,12 @@
 namespace Hadoop {
 
 MMapTaskHandler::MMapTaskHandler() :
-    _moc(NULL),
+    _numPartition(0),
+    _reader(NULL),
     _mapper(NULL),
-    _partitioner(NULL) {
+    _partitioner(NULL),
+    _moc(NULL),
+    _writer(NULL) {
 }
 
 MMapTaskHandler::~MMapTaskHandler() {
@@ -34,41 +37,59 @@ MMapTaskHandler::~MMapTaskHandler() {
 }
 
 void MMapTaskHandler::reset() {
+  delete _reader;
+  _reader = NULL;
   delete _mapper;
   _mapper = NULL;
-  delete _moc;
-  _moc = NULL;
   delete _partitioner;
   _partitioner = NULL;
+  delete _moc;
+  _moc = NULL;
+  delete _writer;
+  _writer = NULL;
 }
 
 void MMapTaskHandler::setup() {
   Config & config = NativeObjectFactory::GetConfig();
 
-  // partitioner
-  const char * partitionerClass = config.get("native.partitioner.class");
-  if (NULL != partitionerClass) {
-    _partitioner
-        = (Partitioner *) NativeObjectFactory::CreateObject(partitionerClass);
-  }
-  else {
-    _partitioner
-        = (Partitioner *) NativeObjectFactory::CreateDefaultObject(PartitionerType);
-  }
-  if (NULL == _partitioner) {
-    THROW_EXCEPTION(UnsupportException, "Partitioner not found");
-  }
-  _partitioner->configure(config);
-
-  // collector
   _numPartition = config.getInt("mapred.reduce.tasks", 1);
+
+  const char * readerClass = config.get("native.recordreader.class");
+  if (NULL == readerClass) {
+    THROW_EXCEPTION(IOException, "RecordReader not found");
+  }
+  _reader = (RecordReader*) NativeObjectFactory::CreateObject(readerClass);
+  _reader->configure(config);
+
   if (_numPartition > 0) {
+    // collector
     LOG("Native Mapper with MapOutputCollector");
     _moc = new MapOutputCollector(_numPartition);
     _moc->configure(config);
+
+    // partitioner
+    const char * partitionerClass = config.get("native.partitioner.class");
+    if (NULL != partitionerClass) {
+      _partitioner
+          = (Partitioner *) NativeObjectFactory::CreateObject(partitionerClass);
+    }
+    else {
+      _partitioner
+          = (Partitioner *) NativeObjectFactory::CreateDefaultObject(PartitionerType);
+    }
+    if (NULL == _partitioner) {
+      THROW_EXCEPTION(IOException, "Partitioner not found");
+    }
+    _partitioner->configure(config);
   }
   else {
-    LOG("Native Mapper with java direct output collector");
+    LOG("Native Mapper with direct output collector");
+    const char * writerClass = config.get("native.recordwriter.class");
+    if (NULL == writerClass) {
+      THROW_EXCEPTION(IOException, "RecordWriter not found");
+    }
+    _writer = (RecordWriter*) NativeObjectFactory::CreateObject(writerClass);
+    _writer->configure(config);
   }
 
   // mapper
@@ -82,67 +103,85 @@ void MMapTaskHandler::setup() {
   if (NULL == _mapper) {
     THROW_EXCEPTION(UnsupportException, "Mapper not found");
   }
-  _mapper->configure(config);
   _mapper->setCollector(this);
+  _mapper->configure(config);
 }
 
 void MMapTaskHandler::collect(const void * key, uint32_t keyLen,
     const void * value, uint32_t valueLen, int partition) {
-  if (NULL == _moc) {
+  if (NULL != _moc) {
+    int result =_moc->put(key, keyLen, value, valueLen, partition);
+    if (result==0) {
+      return;
+    }
+    string spillpath = this->sendCommand("GetSpillPath");
+    if (hasJavaException()) {
+      THROW_EXCEPTION(IOException, "GetSpillPath failed with java side exception");
+    }
+    if (spillpath.length() == 0) {
+      THROW_EXCEPTION(IOException, "Illegal(empty) spill files path");
+    }
+    vector<string> pathes;
+    StringUtil::Split(spillpath, ";", pathes);
+    _moc->mid_spill(pathes,"", _moc->getMapOutputSpec());
+    result =_moc->put(key, keyLen, value, valueLen, partition);
+    if (0 != result) {
+      // should not get here, cause _moc will throw Exceptions
+      THROW_EXCEPTION(OutOfMemoryException, "key/value pair larger than io.sort.mb");
+    }
+  } else {
     THROW_EXCEPTION(UnsupportException, "Collect with partition not support");
-  }
-  int result =_moc->put(key, keyLen, value, valueLen, partition);
-  if (result==0) {
-    return;
-  }
-  string spillpath = this->sendCommand("GetSpillPath");
-  if (hasJavaException()) {
-    return;
-  }
-  if (spillpath.length() == 0) {
-    THROW_EXCEPTION(IOException, "Illegal(empty) spill files path");
-  }
-  vector<string> pathes;
-  StringUtil::Split(spillpath, ";", pathes);
-  _moc->mid_spill(pathes,"", _moc->getMapOutputSpec());
-  result =_moc->put(key, keyLen, value, valueLen, partition);
-  if (0 != result) {
-    // should not get here, cause _moc will throw Exceptions
-    THROW_EXCEPTION(OutOfMemoryException, "key/value pair larger than io.sort.mb");
   }
 }
 
 void MMapTaskHandler::collect(const void * key, uint32_t keyLen,
                      const void * value, uint32_t valueLen) {
-  if (NULL == _moc) {
-    // TODO: use record writer
-    return;
+  if (NULL != _moc) {
+    uint32_t partition = _partitioner->getPartition((const char *) key, keyLen,
+        _numPartition);
+    collect(key, keyLen, value, valueLen, partition);
+  } else {
+    _writer->write(key, keyLen, value, valueLen);
   }
-  uint32_t partition = _partitioner->getPartition((const char *) key, keyLen,
-      _numPartition);
-  collect(key, keyLen, value, valueLen, partition);
+}
+
+string MMapTaskHandler::command(const string & cmd) {
+  if (cmd != "run") {
+    THROW_EXCEPTION_EX(UnsupportException, "command not support [%s]", cmd.c_str());
+  }
+  if (_reader==NULL || _mapper==NULL) {
+    THROW_EXCEPTION(IOException, "MMapTaskHandler not setup yet");
+  }
+  Buffer key;
+  Buffer value;
+  // TODO: insert counters
+  while (_reader->next(key, value)) {
+    _mapper->map(key.data(), key.length(), value.data(), value.length());
+  }
+  close();
+  return string();
 }
 
 void MMapTaskHandler::close() {
   _mapper->close();
-  if (NULL == _moc) {
-    // TODO: close record writer
-    return;
+  if (NULL != _moc) {
+    string outputpath = this->sendCommand("GetOutputPath");
+    if (hasJavaException()) {
+      return;
+    }
+    string indexpath = this->sendCommand("GetOutputIndexPath");
+    if (hasJavaException()) {
+      return;
+    }
+    if ((outputpath.length() == 0) || (indexpath.length() == 0)) {
+      THROW_EXCEPTION(IOException, "Illegal(empty) map output file/index path");
+    }
+    vector<string> pathes;
+    StringUtil::Split(outputpath, ";", pathes);
+    _moc->final_merge_and_spill(pathes, indexpath, _moc->getMapOutputSpec());
+  } else {
+    _writer->close();
   }
-  string outputpath = this->sendCommand("GetOutputPath");
-  if (hasJavaException()) {
-    return;
-  }
-  string indexpath = this->sendCommand("GetOutputIndexPath");
-  if (hasJavaException()) {
-    return;
-  }
-  if ((outputpath.length() == 0) || (indexpath.length() == 0)) {
-    THROW_EXCEPTION(IOException, "Illegal(empty) map output file/index path");
-  }
-  vector<string> pathes;
-  StringUtil::Split(outputpath, ";", pathes);
-  _moc->final_merge_and_spill(pathes, indexpath, _moc->getMapOutputSpec());
 }
 
 } // namespace Hadoop
