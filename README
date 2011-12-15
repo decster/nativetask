@@ -2,19 +2,23 @@ NativeTask is a task level native runtime & API for hadoop mapreduce.
 
 Most of code is written using C++, and then wrapped using JNI, so java side can call NativeTask directly, rather than using other IPC mechanisms like sockets/pipes in Pipes or streaming. But NativeTask isn't just another "stremaing/pipes", it has(or will have) more features:
 
-1. Some performance bottlenecks are optimized using native code, such as sort,spill,merge;
+1. Some performance bottlenecks are optimized using native code, such as sort,spill,merge, and using SSE to optimize some performance critical routines(memcmp, memchr, crc32);
 2. Support no sort, by disable sort, the reduce side shuffle/merge stage barrier can be eliminated;
 3. Support foldl style hash aggregation, hash->foldl style data flow and API vs sort(merge)->reduce;
-4. Pure native task, after protobuff based HDFS client is OK, the native side can read input and write output to HDFS directly, so the java side is probably not needed anymore.
+4. Pure native task, after protobuff based HDFS client & YARN is OK, the native side can do all the work, so JNI is not needed anymore.
+5. Pure binary based API, no serialization/deserialization overhead, a feature which have been proposed long ago, https://issues.apache.org/jira/browse/MAPREDUCE-326
 
 I think this work can help improving hadoop in many ways:
 
 1. Reduce total resource consumption, mainly CPU
 2. Speed up job execution, better query performance & response time
+   Earlier test results shows that a native map task can process 250MB(~50MB) input data in just 1.6s, while the original map task needs about 14s, that is 8x speed up. And it can be further optimized.
+   Reduce task execution time is dominated by IO(shuffle and 3 replication write), so it's a bit harder to optimize, but still possible if compression is used.
 3. More programming interface and library choice, c/cpp, python, etc.
+   Lots of programming languages only provide native interfaces to extend the language, nativetask makes it possible to add more language choices for Hadoop.
 4. Opens up further optimization possibility. 
-   Such as using LLVM to compile hive logical query plan directly to native code. 
-   According to google's tenzing paper and some recent research projects, this will surely speed up query performance a lot.
+   Such as using LLVM to compile hive logical query plan directly to native code.
+   According to google's Tenzing paper and some recent research projects, this will surely speed up query performance a lot.
 
 This project is in very early stages currently.
 
