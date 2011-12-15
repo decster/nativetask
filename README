@@ -12,7 +12,7 @@ I think this work can help improving hadoop in many ways:
 
 1. Reduce total resource consumption, mainly CPU
 2. Speed up job execution, better query performance & response time
-   Earlier test results shows that a native map task can process 250MB(~50MB) input data in just 1.6s, while the original map task needs about 14s, that is 8x speed up. And it can be further optimized.
+   Earlier test results shows that a native map task can process 250MB(~50MB compressed) input data in just 1.6s, while the original map task needs about 14s, that is 8x speed up. And it can be further optimized.
    Reduce task execution time is dominated by IO(shuffle and 3 replication write), so it's a bit harder to optimize, but still possible if compression is used.
 3. More programming interface and library choice, c/cpp, python, etc.
    Lots of programming languages only provide native interfaces to extend the language, nativetask makes it possible to add more language choices for Hadoop.
