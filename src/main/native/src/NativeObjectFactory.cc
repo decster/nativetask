@@ -59,11 +59,13 @@ DEFINE_NATIVE_LIBRARY(NativeTask) {
   REGISTER_CLASS(Partitioner, NativeTask);
   REGISTER_CLASS(Folder, NativeTask);
   REGISTER_CLASS(LineRecordReader, NativeTask);
+  REGISTER_CLASS(KeyValueLineRecordReader, NativeTask);
   REGISTER_CLASS(LineRecordWriter, NativeTask);
   REGISTER_CLASS(TeraRecordReader, NativeTask);
   REGISTER_CLASS(TeraRecordWriter, NativeTask);
   REGISTER_CLASS(WordCountMapper, NativeTask);
   REGISTER_CLASS(WordCountReducer, NativeTask);
+  REGISTER_CLASS(WordCountRMapper, NativeTask);
   REGISTER_CLASS(WordCountRecordWriter, NativeTask);
   NativeObjectFactory::SetDefaultClass(BatchHandlerType, "NativeTask.BatchHandler");
   NativeObjectFactory::SetDefaultClass(MapperType, "NativeTask.Mapper");

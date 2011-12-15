@@ -48,8 +48,11 @@ public:
   virtual uint64_t compressedBytesWritten();
 
 protected:
-  virtual uint64_t maxCompressedLength(uint64_t origLength) = 0;
-  virtual void compressOneBlock(const void * buff, uint32_t length) = 0;
+  virtual uint64_t maxCompressedLength(uint64_t origLength) {
+    return origLength;
+  }
+
+  virtual void compressOneBlock(const void * buff, uint32_t length) {}
 };
 
 class BlockDecompressStream : public DecompressStream {
@@ -78,9 +81,12 @@ public:
   virtual uint64_t compressedBytesRead();
 
 protected:
-  virtual uint64_t maxCompressedLength(uint64_t origLength) = 0;
+  virtual uint64_t maxCompressedLength(uint64_t origLength) {
+    return origLength;
+  }
+
   virtual uint32_t decompressOneBlock(uint32_t compressedSize, void * buff,
-                                      uint32_t length) = 0;
+                                      uint32_t length) {}
 };
 
 } // namespace Hadoop

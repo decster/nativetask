@@ -76,7 +76,7 @@ public:
   RReducerHandler();
   virtual ~RReducerHandler();
 
-  virtual void setup();
+  virtual void configure(Config & config);
   virtual void finish();
   virtual std::string command(const std::string & cmd);
   virtual void handleInput(char * buff, uint32_t length);

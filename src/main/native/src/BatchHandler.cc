@@ -20,6 +20,7 @@
 #include "commons.h"
 #include "jniutils.h"
 #include "BatchHandler.h"
+#include "NativeObjectFactory.h"
 
 ///////////////////////////////////////////////////////////////
 // NativeBatchProcessor jni util methods
@@ -44,6 +45,14 @@ BatchHandler::BatchHandler() :
 }
 
 BatchHandler::~BatchHandler() {
+}
+
+void BatchHandler::onInputData(uint32_t length) {
+  if (length>_ib.capacity) {
+    THROW_EXCEPTION(IOException, "length larger than input buffer capacity");
+  }
+  _ib.position = length;
+  handleInput(_ib.buff, length);
 }
 
 void BatchHandler::flushOutput(uint32_t length) {
@@ -78,7 +87,7 @@ void BatchHandler::onSetup(char * inputBuffer, uint32_t inputBufferCapacity,
     }
     _ob.reset(outputBuffer, outputBufferCapacity - sizeof(uint64_t));
   }
-  setup();
+  configure(NativeObjectFactory::GetConfig());
 }
 
 std::string BatchHandler::sendCommand(const std::string & data) {

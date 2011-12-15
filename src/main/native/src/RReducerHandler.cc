@@ -61,9 +61,7 @@ void RReducerHandler::reset() {
   _KVBuffer = NULL;
 }
 
-void RReducerHandler::setup() {
-  Config & config = NativeObjectFactory::GetConfig();
-
+void RReducerHandler::configure(Config & config) {
   // writer
   const char * writerClass = config.get("native.recordwriter.class");
   if (NULL != writerClass) {
@@ -73,6 +71,10 @@ void RReducerHandler::setup() {
     }
     _writer->configure(config);
   }
+
+  Collector * collector = _writer != NULL
+      ? (Collector*) _writer
+      : (Collector*) this;
 
   // reducer
   const char * reducerClass = config.get("native.reducer.class");
@@ -85,15 +87,15 @@ void RReducerHandler::setup() {
     switch (_reducerType) {
     case ReducerType:
       _reducer = (Reducer*)obj;
-      _reducer->setCollector(this);
+      _reducer->setCollector(collector);
       break;
     case MapperType:
       _mapper = (Mapper*)obj;
-      _mapper->setCollector(this);
+      _mapper->setCollector(collector);
       break;
     case FolderType:
       _folder = (Folder*)obj;
-      _folder->setCollector(this);
+      _folder->setCollector(collector);
       break;
     default:
         THROW_EXCEPTION(UnsupportException, "Reducer type not supported");
@@ -104,7 +106,7 @@ void RReducerHandler::setup() {
     _reducerType = MapperType;
     _mapper = (Mapper *) NativeObjectFactory::CreateDefaultObject(
         MapperType);
-    _mapper->setCollector(this);
+    _mapper->setCollector(collector);
   }
   if (NULL == _reducer && _mapper == NULL && _folder == NULL) {
     THROW_EXCEPTION(UnsupportException, "Reducer class not found");
@@ -146,6 +148,9 @@ void RReducerHandler::finish() {
     }
     if (_folder!=NULL) {
       // TODO: _folder finals
+    }
+    if (_writer!=NULL) {
+      _writer->close();
     }
   }
   BatchHandler::finish();
@@ -210,19 +215,15 @@ void RReducerHandler::syncHandleInput(char * buff, uint32_t length) {
 
 void RReducerHandler::collect(const void * key, uint32_t keyLen,
     const void * value, uint32_t valueLen, int partition) {
-  THROW_EXCEPTION(UnsupportException, "Collect with partition not support");
+  THROW_EXCEPTION(UnsupportException, "Collect with partition not support in reducer");
 }
 
 void RReducerHandler::collect(const void * key, uint32_t keyLen,
     const void * value, uint32_t valueLen) {
-  if (NULL != _writer) {
-    _writer->write(key, keyLen, value, valueLen);
-  } else {
-    putInt(keyLen);
-    put((char *)key, keyLen);
-    putInt(valueLen);
-    put((char *)value, valueLen);
-  }
+  putInt(keyLen);
+  put((char *)key, keyLen);
+  putInt(valueLen);
+  put((char *)value, valueLen);
 }
 
 void * ReducerThreadFunction(void * pData) {
@@ -261,6 +262,9 @@ void RReducerHandler::runReducer() {
       _reducer->reduce(*this);
     }
     _reducer->close();
+    if (_writer != NULL) {
+      _writer->close();
+    }
   } catch (std::exception e) {
     _reducerThreadError = true;
     _errorMessage = e.what();

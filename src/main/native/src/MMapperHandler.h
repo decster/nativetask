@@ -44,7 +44,7 @@ public:
   MMapperHandler();
   virtual ~MMapperHandler();
 
-  virtual void setup();
+  virtual void configure(Config & config);
   virtual void finish();
   virtual void handleInput(char * buff, uint32_t length);
 

@@ -17,6 +17,7 @@
  */
 
 #include "mempool.h"
+#include "DualPivotQuickSort.h"
 
 namespace Hadoop {
 
@@ -62,6 +63,23 @@ void MemoryBlockPool::release() {
   _used = 0;
   _blocks.clear();
   _inited = false;
+}
+
+void MemoryBlockPool::sort(std::vector<uint32_t> & kvpairs_offsets, SortType type) {
+  switch (type) {
+  case CQSORT:
+    qsort(&kvpairs_offsets[0], kvpairs_offsets.size(), sizeof(uint32_t),
+          compare_offset);
+    break;
+  case CPPSORT:
+    std::sort(kvpairs_offsets.begin(), kvpairs_offsets.end(), OffsetLessThan());
+    break;
+  case DUALPIVOTSORT:
+    DualPivotQuicksort(kvpairs_offsets, CompareOffset());
+    break;
+  default:
+    THROW_EXCEPTION(UnsupportException, "SortType not support");
+  }
 }
 
 void MemoryBlockPool::dump(FILE *out)

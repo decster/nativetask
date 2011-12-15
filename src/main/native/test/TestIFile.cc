@@ -88,8 +88,8 @@ void TestIFileReadWrite(KeyValueType kvtype, int partition, int size,
 
 
 TEST(IFile, WriteRead) {
-  int partition = GlobalConfig.getInt("ifile.partition", 7);
-  int size = GlobalConfig.getInt("partition.size", 20000);
+  int partition = TestConfig.getInt("ifile.partition", 7);
+  int size = TestConfig.getInt("partition.size", 20000);
   vector<pair<string, string> > kvs;
   Generate(kvs, size, "bytes");
   TestIFileReadWrite(TextType, partition, size, kvs);
@@ -103,7 +103,7 @@ TEST(IFile, WriteRead) {
 void TestIFileWriteRead2(vector<pair<string, string> > & kvs, char * buff,
                          size_t buffsize, const string & codec,
                          ChecksumType checksumType, KeyValueType type) {
-  int partition = GlobalConfig.getInt("ifile.partition", 50);
+  int partition = TestConfig.getInt("ifile.partition", 50);
   Timer timer;
   OutputBuffer outputBuffer = OutputBuffer(buff, buffsize);
   IFileWriter * iw = new IFileWriter(&outputBuffer, checksumType, type, type, codec);
@@ -140,7 +140,7 @@ void TestIFileWriteRead2(vector<pair<string, string> > & kvs, char * buff,
 void TestKVFileWriteRead2(vector<pair<string, string> > & kvs, char * buff,
                          size_t buffsize, const string & codec,
                          ChecksumType checksumType, KeyValueType type) {
-  int partition = GlobalConfig.getInt("ifile.partition", 50);
+  int partition = TestConfig.getInt("ifile.partition", 50);
   Timer timer;
   OutputBuffer outputBuffer = OutputBuffer(buff, buffsize);
   KVFileWriter * iw = new KVFileWriter(&outputBuffer, checksumType, codec);
@@ -175,9 +175,9 @@ void TestKVFileWriteRead2(vector<pair<string, string> > & kvs, char * buff,
 }
 
 TEST(Perf, IFile) {
-  int size = GlobalConfig.getInt("partition.size", 20000);
-  string codec = GlobalConfig.get("ifile.codec", "");
-  string type = GlobalConfig.get("ifile.type", "bytes");
+  int size = TestConfig.getInt("partition.size", 20000);
+  string codec = TestConfig.get("ifile.codec", "");
+  string type = TestConfig.get("ifile.type", "bytes");
 
   vector<pair<string, string> > kvs;
   Generate(kvs, size, type);

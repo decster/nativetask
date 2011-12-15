@@ -62,9 +62,9 @@ void TestCodec(const string & codec, const string & data, char * buff,
 
 TEST(Perf, Compressions) {
   string data;
-  size_t length = GlobalConfig.getInt("compression.input.length", 100*1024*1024);
-  uint32_t buffhint = GlobalConfig.getInt("compression.buffer.hint", 128*1024);
-  string type = GlobalConfig.get("compression.input.type", "tera");
+  size_t length = TestConfig.getInt("compression.input.length", 100*1024*1024);
+  uint32_t buffhint = TestConfig.getInt("compression.buffer.hint", 128*1024);
+  string type = TestConfig.get("compression.input.type", "tera");
   Timer timer;
   GenerateKVTextLength(data, length, type);
   LOG("%s", timer.getInterval("Generate data").c_str());

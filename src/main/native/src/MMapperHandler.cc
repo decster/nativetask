@@ -46,9 +46,7 @@ void MMapperHandler::reset() {
   _partitioner = NULL;
 }
 
-void MMapperHandler::setup() {
-  Config & config = NativeObjectFactory::GetConfig();
-
+void MMapperHandler::configure(Config & config) {
   // partitioner
   const char * partitionerClass = config.get("native.partitioner.class");
   if (NULL != partitionerClass) {

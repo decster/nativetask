@@ -66,13 +66,13 @@ int main(int argc, char ** argv) {
   testing::InitGoogleTest(&argc, newArgv);
   if (argc>0) {
     int skip = gen ? 2 : 1;
-    GlobalConfig.parse(argc-skip, (const char **)(newArgv+skip));
+    TestConfig.parse(argc-skip, (const char **)(newArgv+skip));
   }
   try {
     if (gen == true) {
-      string type = GlobalConfig.get("generate.type", "word");
-      string codec = GlobalConfig.get("generate.codec", "");
-      int64_t len = GlobalConfig.getInt("generate.length", 1024);
+      string type = TestConfig.get("generate.type", "word");
+      string codec = TestConfig.get("generate.codec", "");
+      int64_t len = TestConfig.getInt("generate.length", 1024);
       string temp;
       GenerateKVTextLength(temp, len, type);
       if (codec.length()==0) {

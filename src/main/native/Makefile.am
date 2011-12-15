@@ -55,6 +55,7 @@ src/BatchHandler.cc                    \
 src/EchoBatchHandler.cc                \
 src/MCollectorOutputHandler.cc         \
 src/MMapperHandler.cc                  \
+src/MMapTaskHandler.cc                 \
 src/RReducerHandler.cc                 \
 src/codec/GzipCodec.cc                 \
 src/codec/BlockCodec.cc                \
@@ -83,12 +84,14 @@ test/TestPrimitives.cc                \
 test/TestCompressions.cc              \
 test/TestChecksum.cc                  \
 test/TestRReducerHandler.cc           \
+test/TestMMapTaskHandler.cc           \
 test/TestStringUtil.cc                \
 test/TestBuffers.cc                   \
 test/TestStream.cc                    \
 test/TestFileSystem.cc                \
 test/TestHash.cc                      \
 test/TestIFile.cc                     \
+test/TestSort.cc                      \
 test/TestWritableUtils.cc             \
 test/TestMapTask.cc                   \
 test/lib/TestLineRecordReader.cc      \

@@ -19,7 +19,7 @@
 #ifndef BATCHHANDLER_H_
 #define BATCHHANDLER_H_
 
-#include "NativeObject.h"
+#include "NativeTask.h"
 
 namespace Hadoop {
 
@@ -48,7 +48,7 @@ struct ByteBuffer {
  *  Reduce task stages:
  *    Reduce
  */
-class BatchHandler: public Hadoop::NativeObject {
+class BatchHandler: public Configurable {
 protected:
   ByteBuffer _ib;
   ByteBuffer _ob;
@@ -89,13 +89,7 @@ public:
    * Called by java side to notice that input data available to handle
    * @param length input buffer's available data length
    */
-  void onInputData(uint32_t length) {
-    if (length>_ib.capacity) {
-      THROW_EXCEPTION(IOException, "length larger than input buffer capacity");
-    }
-    _ib.position = length;
-    handleInput(_ib.buff, length);
-  }
+  void onInputData(uint32_t length);
 
   /**
    * Called by java side to notice that input has finished
@@ -120,7 +114,7 @@ protected:
    * @param data command data
    * @return command return value
    */
-  std::string sendCommand(const std::string & cmd);
+  virtual std::string sendCommand(const std::string & cmd);
 
   /**
    * Used by subclass, call java side flushOutput(int length)
@@ -179,7 +173,7 @@ protected:
    * Called by onSetup, do nothing by default
    * Subclass should override this if needed
    */
-  virtual void setup() {}
+  virtual void configure(Config & config) {}
 
   /**
    * Called by onFinish, flush & close output by default

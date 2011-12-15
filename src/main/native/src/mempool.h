@@ -21,6 +21,7 @@
 
 #include "commons.h"
 #include "Buffers.h"
+#include "MapOutputSpec.h"
 
 namespace Hadoop {
 
@@ -185,24 +186,37 @@ public:
   }
 
   /**
+   * DualPivotQuickSort compare function
+   */
+  class CompareOffset {
+  public:
+    int operator()(uint32_t lhs, uint32_t rhs) {
+      InplaceBuffer * lhb = (InplaceBuffer*) get_position(lhs);
+      InplaceBuffer * rhb = (InplaceBuffer*) get_position(rhs);
+      uint32_t minlen = std::min(lhb->length, rhb->length);
+      int ret = fmemcmp(lhb->content, rhb->content, minlen);
+      if (ret) {
+        return ret;
+      }
+      return lhb->length - rhb->length;
+    }
+  };
+
+  /**
    * cpp std::sort compare function
    */
-  static inline bool offset_lessthan(uint32_t lhs, uint32_t rhs) {
-    InplaceBuffer * lhb = (InplaceBuffer*) get_position(lhs);
-    InplaceBuffer * rhb = (InplaceBuffer*) get_position(rhs);
-    uint32_t minlen = std::min(lhb->length, rhb->length);
-    int ret = fmemcmp(lhb->content, rhb->content, minlen);
-    return ret < 0 || (ret == 0 && (lhb->length < rhb->length));
-  }
+  class OffsetLessThan {
+  public:
+    bool operator()(uint32_t lhs, uint32_t rhs) {
+      InplaceBuffer * lhb = (InplaceBuffer*) get_position(lhs);
+      InplaceBuffer * rhb = (InplaceBuffer*) get_position(rhs);
+      uint32_t minlen = std::min(lhb->length, rhb->length);
+      int ret = fmemcmp(lhb->content, rhb->content, minlen);
+      return ret < 0 || (ret == 0 && (lhb->length < rhb->length));
+    }
+  };
 
-  static void sort_c(std::vector<uint32_t> & kvpairs_offsets) {
-    qsort(&kvpairs_offsets[0], kvpairs_offsets.size(), sizeof(uint32_t),
-          compare_offset);
-  }
-
-  static void sort_cpp(std::vector<uint32_t> & kvpairs_offset) {
-    std::sort(kvpairs_offset.begin(), kvpairs_offset.end(), offset_lessthan);
-  }
+  static void sort(std::vector<uint32_t> & kvpairs_offsets, SortType type);
 
 };
 

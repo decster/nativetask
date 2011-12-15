@@ -28,8 +28,8 @@ EchoBatchHandler::EchoBatchHandler() {
 EchoBatchHandler::~EchoBatchHandler() {
 }
 
-void EchoBatchHandler::setup() {
-  LOG("EchoBatchHandler::setup()");
+void EchoBatchHandler::configure(Config & config) {
+  LOG("EchoBatchHandler::configure()");
 }
 
 void EchoBatchHandler::finish() {

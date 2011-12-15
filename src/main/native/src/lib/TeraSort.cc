@@ -135,7 +135,7 @@ bool TeraRecordReader::next(Buffer & key, Buffer & value) {
 
 ///////////////////////////////////////////////////////////
 
-void TeraRecordWriter::write(const void * key, uint32_t keyLen,
+void TeraRecordWriter::collect(const void * key, uint32_t keyLen,
                              const void * value, uint32_t valueLen) {
   _appendBuffer.write(key, keyLen);
   _appendBuffer.write(value, valueLen);

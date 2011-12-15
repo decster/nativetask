@@ -20,8 +20,8 @@
 #include "test_commons.h"
 
 TEST(LineRecordReader, Read) {
-  int32_t size = GlobalConfig.getInt("input.size", 100000);
-  string type = GlobalConfig.get("input.type", "bytes");
+  int32_t size = TestConfig.getInt("input.size", 100000);
+  string type = TestConfig.get("input.type", "bytes");
   vector<string> inputs;
   Generate(inputs, size, type);
   string input;
@@ -47,10 +47,10 @@ TEST(LineRecordReader, Read) {
 }
 
 void TestLineRecordReaderLen(uint32_t recordLength) {
-  int32_t size = GlobalConfig.getInt("input.size", 100000);
-  string type = GlobalConfig.get("input.type", "bytes");
-  int64_t origLength = GlobalConfig.getInt(GenerateLen, -1);
-  GlobalConfig.setInt(GenerateLen, recordLength);
+  int32_t size = TestConfig.getInt("input.size", 100000);
+  string type = TestConfig.get("input.type", "bytes");
+  int64_t origLength = TestConfig.getInt(GenerateLen, -1);
+  TestConfig.setInt(GenerateLen, recordLength);
   vector<string> inputs;
   Generate(inputs, size, type);
   string input;
@@ -70,7 +70,7 @@ void TestLineRecordReaderLen(uint32_t recordLength) {
   Timer timer;
   while (reader.next(key, value));
   LOG("Record Length: %u %s", recordLength, timer.getSpeedM2("read speed byte/record", input.length(), size).c_str());
-  GlobalConfig.setInt(GenerateLen, origLength);
+  TestConfig.setInt(GenerateLen, origLength);
 }
 
 TEST(Perf, LineRecordReader) {

@@ -213,4 +213,34 @@ void LineRecordReader::close() {
   _orig = NULL;
 }
 
+void KeyValueLineRecordReader::configure(Config & config) {
+  LineRecordReader::configure(config);
+  string sep = config.get("key.value.separator.in.input.line", "\t");
+  if (sep.length() > 0) {
+    _kvSeparator = sep[0];
+  }
+  else {
+    _kvSeparator = '\t';
+  }
+}
+
+bool KeyValueLineRecordReader::next(Buffer & key, Buffer & value) {
+  Buffer line;
+  uint32_t len = readLine(line);
+  if (len == 0) {
+    return false;
+  }
+  char * pos = (char*)memchr(line.data(), _kvSeparator, line.length());
+  if (pos != NULL) {
+    uint32_t keyLen = pos - line.data();
+    key.reset(line.data(), keyLen);
+    value.reset(pos+1, line.length() - keyLen - 1);
+  } else {
+    key.reset(line.data(), line.length());
+    value.reset(NULL, 0);
+  }
+  return true;
+}
+
+
 } // namespace Hadoop

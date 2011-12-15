@@ -41,8 +41,8 @@ noinst_PROGRAMS = nttest$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(top_srcdir)/configure config.guess \
-	config.sub depcomp install-sh ltmain.sh missing
+	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
+	config.guess config.sub depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -101,6 +101,7 @@ am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-EchoBatchHandler.lo \
 	libnativetask_la-MCollectorOutputHandler.lo \
 	libnativetask_la-MMapperHandler.lo \
+	libnativetask_la-MMapTaskHandler.lo \
 	libnativetask_la-RReducerHandler.lo \
 	libnativetask_la-GzipCodec.lo libnativetask_la-BlockCodec.lo \
 	libnativetask_la-SnappyCodec.lo libnativetask_la-Lz4Codec.lo \
@@ -119,10 +120,11 @@ am__objects_2 = nttest-test_commons.$(OBJEXT) \
 	nttest-TestCompressions.$(OBJEXT) \
 	nttest-TestChecksum.$(OBJEXT) \
 	nttest-TestRReducerHandler.$(OBJEXT) \
+	nttest-TestMMapTaskHandler.$(OBJEXT) \
 	nttest-TestStringUtil.$(OBJEXT) nttest-TestBuffers.$(OBJEXT) \
 	nttest-TestStream.$(OBJEXT) nttest-TestFileSystem.$(OBJEXT) \
 	nttest-TestHash.$(OBJEXT) nttest-TestIFile.$(OBJEXT) \
-	nttest-TestWritableUtils.$(OBJEXT) \
+	nttest-TestSort.$(OBJEXT) nttest-TestWritableUtils.$(OBJEXT) \
 	nttest-TestMapTask.$(OBJEXT) \
 	nttest-TestLineRecordReader.$(OBJEXT) \
 	nttest-TestMain.$(OBJEXT)
@@ -330,6 +332,7 @@ src/BatchHandler.cc                    \
 src/EchoBatchHandler.cc                \
 src/MCollectorOutputHandler.cc         \
 src/MMapperHandler.cc                  \
+src/MMapTaskHandler.cc                 \
 src/RReducerHandler.cc                 \
 src/codec/GzipCodec.cc                 \
 src/codec/BlockCodec.cc                \
@@ -356,12 +359,14 @@ test/TestPrimitives.cc                \
 test/TestCompressions.cc              \
 test/TestChecksum.cc                  \
 test/TestRReducerHandler.cc           \
+test/TestMMapTaskHandler.cc           \
 test/TestStringUtil.cc                \
 test/TestBuffers.cc                   \
 test/TestStream.cc                    \
 test/TestFileSystem.cc                \
 test/TestHash.cc                      \
 test/TestIFile.cc                     \
+test/TestSort.cc                      \
 test/TestWritableUtils.cc             \
 test/TestMapTask.cc                   \
 test/lib/TestLineRecordReader.cc      \
@@ -502,6 +507,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-LineRecordWriter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Lz4Codec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MCollectorOutputHandler.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MMapTaskHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MMapperHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MapOutputCollector.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MapOutputSpec.Plo@am__quote@
@@ -532,10 +538,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestHash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestIFile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestLineRecordReader.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMMapTaskHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMain.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMapTask.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestPrimitives.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestRReducerHandler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestSort.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStringUtil.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestWritableUtils.Po@am__quote@
@@ -794,6 +802,13 @@ libnativetask_la-MMapperHandler.lo: src/MMapperHandler.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-MMapperHandler.lo `test -f 'src/MMapperHandler.cc' || echo '$(srcdir)/'`src/MMapperHandler.cc
 
+libnativetask_la-MMapTaskHandler.lo: src/MMapTaskHandler.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-MMapTaskHandler.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-MMapTaskHandler.Tpo -c -o libnativetask_la-MMapTaskHandler.lo `test -f 'src/MMapTaskHandler.cc' || echo '$(srcdir)/'`src/MMapTaskHandler.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-MMapTaskHandler.Tpo $(DEPDIR)/libnativetask_la-MMapTaskHandler.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/MMapTaskHandler.cc' object='libnativetask_la-MMapTaskHandler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-MMapTaskHandler.lo `test -f 'src/MMapTaskHandler.cc' || echo '$(srcdir)/'`src/MMapTaskHandler.cc
+
 libnativetask_la-RReducerHandler.lo: src/RReducerHandler.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-RReducerHandler.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-RReducerHandler.Tpo -c -o libnativetask_la-RReducerHandler.lo `test -f 'src/RReducerHandler.cc' || echo '$(srcdir)/'`src/RReducerHandler.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-RReducerHandler.Tpo $(DEPDIR)/libnativetask_la-RReducerHandler.Plo
@@ -934,6 +949,20 @@ nttest-TestRReducerHandler.obj: test/TestRReducerHandler.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestRReducerHandler.obj `if test -f 'test/TestRReducerHandler.cc'; then $(CYGPATH_W) 'test/TestRReducerHandler.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestRReducerHandler.cc'; fi`
 
+nttest-TestMMapTaskHandler.o: test/TestMMapTaskHandler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestMMapTaskHandler.o -MD -MP -MF $(DEPDIR)/nttest-TestMMapTaskHandler.Tpo -c -o nttest-TestMMapTaskHandler.o `test -f 'test/TestMMapTaskHandler.cc' || echo '$(srcdir)/'`test/TestMMapTaskHandler.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestMMapTaskHandler.Tpo $(DEPDIR)/nttest-TestMMapTaskHandler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestMMapTaskHandler.cc' object='nttest-TestMMapTaskHandler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestMMapTaskHandler.o `test -f 'test/TestMMapTaskHandler.cc' || echo '$(srcdir)/'`test/TestMMapTaskHandler.cc
+
+nttest-TestMMapTaskHandler.obj: test/TestMMapTaskHandler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestMMapTaskHandler.obj -MD -MP -MF $(DEPDIR)/nttest-TestMMapTaskHandler.Tpo -c -o nttest-TestMMapTaskHandler.obj `if test -f 'test/TestMMapTaskHandler.cc'; then $(CYGPATH_W) 'test/TestMMapTaskHandler.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestMMapTaskHandler.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestMMapTaskHandler.Tpo $(DEPDIR)/nttest-TestMMapTaskHandler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestMMapTaskHandler.cc' object='nttest-TestMMapTaskHandler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestMMapTaskHandler.obj `if test -f 'test/TestMMapTaskHandler.cc'; then $(CYGPATH_W) 'test/TestMMapTaskHandler.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestMMapTaskHandler.cc'; fi`
+
 nttest-TestStringUtil.o: test/TestStringUtil.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestStringUtil.o -MD -MP -MF $(DEPDIR)/nttest-TestStringUtil.Tpo -c -o nttest-TestStringUtil.o `test -f 'test/TestStringUtil.cc' || echo '$(srcdir)/'`test/TestStringUtil.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestStringUtil.Tpo $(DEPDIR)/nttest-TestStringUtil.Po
@@ -1017,6 +1046,20 @@ nttest-TestIFile.obj: test/TestIFile.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestIFile.cc' object='nttest-TestIFile.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestIFile.obj `if test -f 'test/TestIFile.cc'; then $(CYGPATH_W) 'test/TestIFile.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestIFile.cc'; fi`
+
+nttest-TestSort.o: test/TestSort.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestSort.o -MD -MP -MF $(DEPDIR)/nttest-TestSort.Tpo -c -o nttest-TestSort.o `test -f 'test/TestSort.cc' || echo '$(srcdir)/'`test/TestSort.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestSort.Tpo $(DEPDIR)/nttest-TestSort.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestSort.cc' object='nttest-TestSort.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestSort.o `test -f 'test/TestSort.cc' || echo '$(srcdir)/'`test/TestSort.cc
+
+nttest-TestSort.obj: test/TestSort.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestSort.obj -MD -MP -MF $(DEPDIR)/nttest-TestSort.Tpo -c -o nttest-TestSort.obj `if test -f 'test/TestSort.cc'; then $(CYGPATH_W) 'test/TestSort.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestSort.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestSort.Tpo $(DEPDIR)/nttest-TestSort.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestSort.cc' object='nttest-TestSort.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestSort.obj `if test -f 'test/TestSort.cc'; then $(CYGPATH_W) 'test/TestSort.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestSort.cc'; fi`
 
 nttest-TestWritableUtils.o: test/TestWritableUtils.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestWritableUtils.o -MD -MP -MF $(DEPDIR)/nttest-TestWritableUtils.Tpo -c -o nttest-TestWritableUtils.o `test -f 'test/TestWritableUtils.cc' || echo '$(srcdir)/'`test/TestWritableUtils.cc

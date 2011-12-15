@@ -25,8 +25,8 @@ void TestChecksum(ChecksumType type, void * buff, uint32_t len) {
 }
 
 TEST(Perf, CRC) {
-  uint32_t len = GlobalConfig.getInt("checksum.perf.size", 1024*1024*50);
-  int testTime = GlobalConfig.getInt("checksum.perf.time", 2);
+  uint32_t len = TestConfig.getInt("checksum.perf.size", 1024*1024*50);
+  int testTime = TestConfig.getInt("checksum.perf.time", 2);
   char * buff = new char[len];
   memset(buff, 1, len);
   Timer timer;

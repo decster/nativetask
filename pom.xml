@@ -31,9 +31,9 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
-      <version>0.20.205.0</version>
-<!--       <scope>system</scope> -->
-<!--       <systemPath>/Users/decster/projects/hadoop-20-git/build/hadoop-core-0.20.205.1.jar</systemPath> -->
+      <version>0.20.205.1</version>
+       <scope>system</scope>  
+       <systemPath>/Users/decster/projects/hadoop-20-git/build/hadoop-core-0.20.205.1.jar</systemPath>
 <!--       <systemPath>/home/changbinglin/projects/hadoop-git/build/hadoop-core-0.20.205.1.jar</systemPath> -->
     </dependency>
     <dependency>
@@ -125,7 +125,7 @@
                 <id>compile</id>
                 <phase>compile</phase>
                 <goals>
-<!--                    <goal>configure</goal> -->
+                  <goal>configure</goal> 
                   <goal>make-install</goal>
                 </goals>
               </execution>
@@ -133,42 +133,10 @@
             <configuration>
               <!-- configure settings -->
               <configureCommand>${basedir}/src/main/native/configure</configureCommand>
-              <configureEnvironment>
-                <property>
-                  <name>OS_NAME</name>
-                  <value>${os.name}</value>
-                </property>
-                <property>
-                  <name>OS_ARCH</name>
-                  <value>${os.arch}</value>
-                </property>
-                <property>
-                  <name>JVM_DATA_MODEL</name>
-                  <value>${sun.arch.data.model}</value>
-                </property>
-              </configureEnvironment>
               <configureWorkDir>${project.build.directory}/native</configureWorkDir>
               <prefix>/usr/local</prefix>
 
               <!-- make settings -->
-              <installEnvironment>
-                <property>
-                  <name>OS_NAME</name>
-                  <value>${os.name}</value>
-                </property>
-                <property>
-                  <name>OS_ARCH</name>
-                  <value>${os.arch}</value>
-                </property>
-                <property>
-                  <name>JVM_DATA_MODEL</name>
-                  <value>${sun.arch.data.model}</value>
-                </property>
-                <property>
-                  <name>SNAPPY_PREFIX</name>
-                  <value>${snappy.prefix}</value>
-                </property>
-              </installEnvironment>
               <makeInstallWorkDir>${project.build.directory}/native</makeInstallWorkDir>
 
               <!-- configure & make settings -->

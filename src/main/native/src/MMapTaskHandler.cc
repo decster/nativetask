@@ -49,9 +49,7 @@ void MMapTaskHandler::reset() {
   _writer = NULL;
 }
 
-void MMapTaskHandler::setup() {
-  Config & config = NativeObjectFactory::GetConfig();
-
+void MMapTaskHandler::configure(Config & config) {
   _numPartition = config.getInt("mapred.reduce.tasks", 1);
 
   const char * readerClass = config.get("native.recordreader.class");
@@ -141,7 +139,7 @@ void MMapTaskHandler::collect(const void * key, uint32_t keyLen,
         _numPartition);
     collect(key, keyLen, value, valueLen, partition);
   } else {
-    _writer->write(key, keyLen, value, valueLen);
+    _writer->collect(key, keyLen, value, valueLen);
   }
 }
 

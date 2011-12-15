@@ -12,9 +12,10 @@ I think this work can help improving hadoop in many ways:
 1. Reduce total resource consumption, mainly CPU
 2. Speed up job execution, better query performance & response time
 3. More programming interface and library choice, c/cpp, python, etc.
-4. Opens up further optimization possibility.
+4. Opens up further optimization possibility. 
+   Such as using LLVM to compile hive logical query plan directly to native code. 
+   According to google's tenzing paper and some recent research projects, this will surely speed up query performance a lot.
 
-In fact I hope to open another project after this project can work, which is an utility/tool to compile query plan(like in Hive) to native code directly using LLVM(of course), and run it on nativetask. I think this will make Hadoop much faster to run ETL/OLAP kind workloads.
 This project is in very early stages currently.
 
 Demo and some early test results in Hadoop JIRA:

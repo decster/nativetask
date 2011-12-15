@@ -34,6 +34,7 @@ using std::string;
 enum SortType {
   CQSORT = 0,
   CPPSORT = 1,
+  DUALPIVOTSORT = 2,
 };
 
 

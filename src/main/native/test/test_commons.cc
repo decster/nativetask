@@ -22,7 +22,7 @@
 #include "lib/TeraSort.h"
 #include "test_commons.h"
 
-Config GlobalConfig = Config();
+Config TestConfig = Config();
 
 const char * GenerateSeed = "generate.seed";
 const char * GenerateChoice = "generate.choice";
@@ -47,12 +47,6 @@ vector<string> & MakeStringArray(vector<string> & dest, ...) {
   return dest;
 }
 
-enum GenerateType {
-  GenWord,
-  GenNumber,
-  GenBytes,
-};
-
 GenerateType GetGenerateType(const string & type) {
   if (type == "word") {
     return GenWord;
@@ -66,7 +60,7 @@ GenerateType GetGenerateType(const string & type) {
 }
 
 string & GenerateOne(string & dest, Random & r, GenerateType gtype,
-                     int64_t choice, int64_t len, int64_t range = 0) {
+                     int64_t choice, int64_t len, int64_t range) {
   switch (gtype) {
   case GenWord:
     r.nextWord(dest, choice);
@@ -127,13 +121,13 @@ vector<string> & Generate(vector<string> & dest, uint64_t size,
     return dest;
   }
   Random r;
-  if (GlobalConfig.get(GenerateSeed)!=NULL) {
-    r.setSeed(GlobalConfig.getInt(GenerateSeed,0));
+  if (TestConfig.get(GenerateSeed)!=NULL) {
+    r.setSeed(TestConfig.getInt(GenerateSeed,0));
   }
   GenerateType gtype = GetGenerateType(type);
-  int64_t choice = GlobalConfig.getInt(GenerateChoice, -1);
-  int64_t len = GlobalConfig.getInt(GenerateLen, -1);
-  int64_t range = GlobalConfig.getInt(GenerateRange, 1);
+  int64_t choice = TestConfig.getInt(GenerateChoice, -1);
+  int64_t len = TestConfig.getInt(GenerateLen, -1);
+  int64_t range = TestConfig.getInt(GenerateRange, 1);
   string temp;
   for (uint64_t i = 0; i < size; i++) {
     dest.push_back(GenerateOne(temp, r, gtype, choice, len, range));
@@ -158,20 +152,58 @@ vector<pair<string, string> > & Generate(vector<pair<string, string> > & dest,
     return dest;
   }
   Random r;
-  if (GlobalConfig.get(GenerateSeed)!=NULL) {
-    r.setSeed(GlobalConfig.getInt(GenerateSeed,0));
+  if (TestConfig.get(GenerateSeed)!=NULL) {
+    r.setSeed(TestConfig.getInt(GenerateSeed,0));
   }
   GenerateType gtype = GetGenerateType(type);
-  int64_t choice = GlobalConfig.getInt(GenerateChoice, -1);
-  int64_t keylen = GlobalConfig.getInt(GenerateKeyLen, -1);
-  int64_t valuelen = GlobalConfig.getInt(GenerateValueLen, -1);
-  int64_t keyRange = GlobalConfig.getInt(GenerateKeyRange, 1);
-  int64_t valueRange = GlobalConfig.getInt(GenerateValueRange, 1);
+  int64_t choice = TestConfig.getInt(GenerateChoice, -1);
+  int64_t keylen = TestConfig.getInt(GenerateKeyLen, -1);
+  int64_t valuelen = TestConfig.getInt(GenerateValueLen, -1);
+  int64_t keyRange = TestConfig.getInt(GenerateKeyRange, 1);
+  int64_t valueRange = TestConfig.getInt(GenerateValueRange, 1);
   string key, value;
   for (uint64_t i = 0; i < size; i++) {
     GenerateOne(key, r, gtype, choice, keylen, keyRange);
     GenerateOne(value, r, gtype, choice, valuelen, valueRange);
     dest.push_back(std::make_pair(key, value));
+  }
+  return dest;
+}
+
+/**
+ * Generate random string pair sequences
+ * @param dest dest array
+ * @param length output bytes count
+ * @param type string type (word|number|bytes|tera)
+ */
+vector<pair<string, string> > & GenerateLength(vector<pair<string, string> > & dest,
+                                               uint64_t length, const string & type) {
+  if (type=="tera") {
+    TeraGen tera = TeraGen(length/100,1,0);
+    dest.reserve(length/100+2);
+    string k,v;
+    while (tera.next(k,v)) {
+      dest.push_back(std::make_pair(k,v));
+    }
+    return dest;
+  }
+  Random r;
+  if (TestConfig.get(GenerateSeed)!=NULL) {
+    r.setSeed(TestConfig.getInt(GenerateSeed,0));
+  }
+  GenerateType gtype = GetGenerateType(type);
+  int64_t choice = TestConfig.getInt(GenerateChoice, -1);
+  int64_t keylen = TestConfig.getInt(GenerateKeyLen, -1);
+  int64_t valuelen = TestConfig.getInt(GenerateValueLen, -1);
+  int64_t keyRange = TestConfig.getInt(GenerateKeyRange, 1);
+  int64_t valueRange = TestConfig.getInt(GenerateValueRange, 1);
+  string key, value;
+  dest.reserve((size_t)(length/(keylen+valuelen)*1.2));
+  for (uint64_t i = 0; i < length; ) {
+    GenerateOne(key, r, gtype, choice, keylen, keyRange);
+    GenerateOne(value, r, gtype, choice, valuelen, valueRange);
+    dest.push_back(std::make_pair(key, value));
+    i += (key.length() + value.length() + 2);
   }
   return dest;
 }
@@ -196,15 +228,15 @@ string & GenerateKVText(string & dest, uint64_t size, const string & type) {
     return dest;
   }
   Random r;
-  if (GlobalConfig.get(GenerateSeed)!=NULL) {
-    r.setSeed(GlobalConfig.getInt(GenerateSeed,0));
+  if (TestConfig.get(GenerateSeed)!=NULL) {
+    r.setSeed(TestConfig.getInt(GenerateSeed,0));
   }
   GenerateType gtype = GetGenerateType(type);
-  int64_t choice = GlobalConfig.getInt(GenerateChoice, -1);
-  int64_t keylen = GlobalConfig.getInt(GenerateKeyLen, -1);
-  int64_t valuelen = GlobalConfig.getInt(GenerateValueLen, -1);
-  int64_t keyRange = GlobalConfig.getInt(GenerateKeyRange, 1);
-  int64_t valueRange = GlobalConfig.getInt(GenerateValueRange, 1);
+  int64_t choice = TestConfig.getInt(GenerateChoice, -1);
+  int64_t keylen = TestConfig.getInt(GenerateKeyLen, -1);
+  int64_t valuelen = TestConfig.getInt(GenerateValueLen, -1);
+  int64_t keyRange = TestConfig.getInt(GenerateKeyRange, 1);
+  int64_t valueRange = TestConfig.getInt(GenerateValueRange, 1);
   string key, value;
   for (uint64_t i = 0; i < size; i++) {
     GenerateOne(key, r, gtype, choice, keylen, keyRange);
@@ -239,15 +271,15 @@ string & GenerateKVTextLength(string & dest, uint64_t length,
     return dest;
   }
   Random r;
-  if (GlobalConfig.get(GenerateSeed)!=NULL) {
-    r.setSeed(GlobalConfig.getInt(GenerateSeed,0));
+  if (TestConfig.get(GenerateSeed)!=NULL) {
+    r.setSeed(TestConfig.getInt(GenerateSeed,0));
   }
   GenerateType gtype = GetGenerateType(type);
-  int64_t choice = GlobalConfig.getInt(GenerateChoice, -1);
-  int64_t keylen = GlobalConfig.getInt(GenerateKeyLen, -1);
-  int64_t valuelen = GlobalConfig.getInt(GenerateValueLen, -1);
-  int64_t keyRange = GlobalConfig.getInt(GenerateKeyRange, 1);
-  int64_t valueRange = GlobalConfig.getInt(GenerateValueRange, 1);
+  int64_t choice = TestConfig.getInt(GenerateChoice, -1);
+  int64_t keylen = TestConfig.getInt(GenerateKeyLen, -1);
+  int64_t valuelen = TestConfig.getInt(GenerateValueLen, -1);
+  int64_t keyRange = TestConfig.getInt(GenerateKeyRange, 1);
+  int64_t valueRange = TestConfig.getInt(GenerateValueRange, 1);
   string key, value;
   while (dest.length() < length) {
     GenerateOne(key, r, gtype, choice, keylen, keyRange);

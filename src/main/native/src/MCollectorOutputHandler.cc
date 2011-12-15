@@ -43,8 +43,7 @@ void MCollectorOutputHandler::reset() {
   _collector = NULL;
 }
 
-void MCollectorOutputHandler::setup() {
-  Config & config = NativeObjectFactory::GetConfig();
+void MCollectorOutputHandler::configure(Config & config) {
   uint32_t partition = config.getInt("mapred.reduce.tasks", 1);
   _collector = new MapOutputCollector(partition);
   _collector->configure(config);

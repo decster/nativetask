@@ -33,11 +33,10 @@ WordCountMapper::WordCountMapper() {
   _spaces['\f'] = 1;
 }
 
-void WordCountMapper::map(const char * key, uint32_t keyLen,
-                          const char * value, uint32_t valueLen) {
+void WordCountMapper::wordCount(const char * buff, uint32_t length) {
   uint32_t count = 1;
-  uint8_t * pos = (uint8_t*)value;
-  uint8_t * end = (uint8_t*)value + valueLen;
+  uint8_t * pos = (uint8_t*)buff;
+  uint8_t * end = (uint8_t*)buff + length;
   uint8_t * start = NULL;
   uint32_t len = 0;
   while (pos != end) {
@@ -58,6 +57,16 @@ void WordCountMapper::map(const char * key, uint32_t keyLen,
   }
 }
 
+void WordCountMapper::map(const char * key, uint32_t keyLen,
+                          const char * value, uint32_t valueLen) {
+  if (keyLen>0) {
+    wordCount(key, keyLen);
+  }
+  if (valueLen>0) {
+    wordCount(value, valueLen);
+  }
+}
+
 void WordCountReducer::reduce(KeyGroup & input) {
   const char * key;
   const char * value;
@@ -69,6 +78,28 @@ void WordCountReducer::reduce(KeyGroup & input) {
     count += *(uint32_t*)value;
   }
   collect(key, keyLen, &count, 4);
+}
+
+void WordCountRMapper::map(const char * key, uint32_t keyLen,
+                           const char * value, uint32_t valueLen) {
+  if (_count>0) {
+    if (fmemcmp2(_key.data(), _key.length(), key, keyLen) != 0) {
+      collect(_key.data(), _key.length(), &_count, 4);
+      _key.assign(key, keyLen);
+      _count = 1;
+    } else {
+      _count++;
+    }
+  } else {
+    _key.assign(key, keyLen);
+    _count=1;
+  }
+}
+
+void WordCountRMapper::close() {
+  if (_count>0) {
+    collect(_key.data(), _key.length(), &_count, 4);
+  }
 }
 
 void WordCountRecordWriter::write(const Buffer & key, const Buffer & value) {

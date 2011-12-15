@@ -29,5 +29,12 @@ void FileSplit::readFields(const string & data) {
   _length = WritableUtils::ReadLong(&input);
 }
 
+void FileSplit::writeFields(string & dest) {
+  OutputStringStream out = OutputStringStream(dest);
+  WritableUtils::WriteString(&out, _file);
+  WritableUtils::WriteLong(&out, _start);
+  WritableUtils::WriteLong(&out, _length);
+}
+
 } // namespace Hadoop
 

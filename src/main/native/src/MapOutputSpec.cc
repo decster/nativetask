@@ -23,13 +23,18 @@ namespace Hadoop {
 
 void MapOutputSpec::getSpecFromConfig(Config & config, MapOutputSpec & spec) {
   spec.checksumType = CHECKSUM_CRC32;
-  spec.sortType = CPPSORT;
+  string sortType = config.get("native.sort.type", "CPPSORT");
+  if (sortType == "DUALPIVOTSORT") {
+    spec.sortType = DUALPIVOTSORT;
+  } else {
+    spec.sortType = CPPSORT;
+  }
   if (config.get("mapred.compress.map.output","false")=="true") {
     spec.codec = config.get("mapred.map.output.compression.codec");
   } else {
     spec.codec = "";
   }
-  if (config.getBool("mapred.map.output.sort", false)) {
+  if (config.getBool("mapred.map.output.sort", true)) {
     spec.orderType = FULLSORT;
   } else {
     spec.orderType = NOSORT;

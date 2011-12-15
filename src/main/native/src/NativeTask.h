@@ -197,12 +197,12 @@ public:
   virtual uint64_t getLength() = 0;
   virtual vector<string> & getLocations() = 0;
   virtual void readFields(const string & data) = 0;
+  virtual void writeFields(string & dest) = 0;
 };
 
 class Configurable : public NativeObject {
 public:
-  Configurable() {
-  }
+  Configurable() {}
 
   virtual void configure(Config & config) {}
 };
@@ -274,20 +274,17 @@ public:
   virtual void close() = 0;
 };
 
-class RecordWriter : public Configurable {
+class RecordWriter : public Collector, public Configurable {
 public:
   virtual NativeObjectType type() {
     return RecordWriterType;
   }
 
-  virtual void write(const void * key, uint32_t keyLen,
-                     const void * value, uint32_t valueLen) = 0;
+  virtual void collect(const void * key, uint32_t keyLen,
+                     const void * value, uint32_t valueLen) {}
 
-  virtual void close() = 0;
+  virtual void close() {}
 
-  void write(const Buffer & key, const Buffer & value) {
-    write(key.data(), key.length(), value.data(), value.length());
-  }
 };
 
 

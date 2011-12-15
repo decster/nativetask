@@ -71,7 +71,7 @@ void LineRecordWriter::configure(Config & config) {
   }
 }
 
-void LineRecordWriter::write(const void * key, uint32_t keyLen,
+void LineRecordWriter::collect(const void * key, uint32_t keyLen,
                              const void * value, uint32_t valueLen) {
   if (keyLen > 0) {
     _appendBuffer.write(key, keyLen);

@@ -66,6 +66,18 @@ public:
   virtual void close();
 };
 
+class KeyValueLineRecordReader : public LineRecordReader {
+protected:
+  char _kvSeparator;
+
+public:
+  KeyValueLineRecordReader() : _kvSeparator('\t') {}
+
+  virtual void configure(Config & config);
+
+  virtual bool next(Buffer & key, Buffer & value);
+};
+
 } // namespace Hadoop
 
 #endif /* LINERECORDREADER_H_ */

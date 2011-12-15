@@ -94,7 +94,7 @@ TEST(Perf, fmemcmp) {
   int b = test_fmemcmp();
   LOG("%s", t.getInterval(" fmemcmp ").c_str());
   // prevent compiler optimization
-  GlobalConfig.setInt("tempvalue", a+b);
+  TestConfig.setInt("tempvalue", a+b);
 }
 
 static void test_memcpy_perf_len(char * src, char * dest, size_t len,
@@ -223,7 +223,7 @@ inline int memchr_sse(const char *s, int c, int len) {
 TEST(Perf, memchr) {
   Random r;
   int32_t size = 100*1024*1024;
-  int32_t lineLength = GlobalConfig.getInt("memchr.line.length", 100);
+  int32_t lineLength = TestConfig.getInt("memchr.line.length", 100);
   char * buff = new char[size+16];
   memset(buff, 'a', size);
   for (int i=0;i<size/lineLength;i++) {
@@ -294,8 +294,8 @@ TEST(Perf, memchr) {
 }
 
 TEST(Perf, memcpy) {
-  int32_t size = GlobalConfig.getInt("input.size", 32*1024);
-  size_t mb = GlobalConfig.getInt("input.mb", 320) * 1024*1024UL;
+  int32_t size = TestConfig.getInt("input.size", 32*1024);
+  size_t mb = TestConfig.getInt("input.mb", 320) * 1024*1024UL;
   char * src = new char[size];
   char * dest = new char[size];
   memset(src, 0, size);

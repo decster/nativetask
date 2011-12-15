@@ -34,8 +34,8 @@ void TestVLong(int64_t v) {
 }
 
 TEST(WritableUtils, VLong) {
-  int num = GlobalConfig.getInt("test.size", 3000);
-  int seed = GlobalConfig.getInt("test.seed", -1);
+  int num = TestConfig.getInt("test.size", 3000);
+  int seed = TestConfig.getInt("test.seed", -1);
   Random r(seed);
   for (int i = 0; i < num; i++) {
     uint64_t v = r.nextLog2(UINT64_MAX/2-3);

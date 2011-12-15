@@ -44,11 +44,11 @@ virtual void collect(const void * key, uint32_t keyLen,
 
 TEST(Perf, MapTask) {
   Timer timer;
-  string inputfile = GlobalConfig.get("input.file", "terainput");
-  uint32_t numPartition = GlobalConfig.getInt("mapred.reduce.tasks", 100);
-  string outputfile = GlobalConfig.get("output.file", "map.output");
-  bool sort = GlobalConfig.getBool("mapred.map.output.sort", true);
-  bool compressMapOutput = GlobalConfig.getBool("mapred.compress.map.output", true);
+  string inputfile = TestConfig.get("input.file", "terainput");
+  uint32_t numPartition = TestConfig.getInt("mapred.reduce.tasks", 100);
+  string outputfile = TestConfig.get("output.file", "map.output");
+  bool sort = TestConfig.getBool("mapred.map.output.sort", true);
+  bool compressMapOutput = TestConfig.getBool("mapred.compress.map.output", true);
   Config & config = NativeObjectFactory::GetConfig();
   config.set("mapred.output.key.class", "org.apache.hadoop.io.Text");
   config.set("mapred.output.value.class", "org.apache.hadoop.io.Text");

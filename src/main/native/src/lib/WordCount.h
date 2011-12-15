@@ -30,6 +30,8 @@ protected:
 public:
   WordCountMapper();
 
+  void wordCount(const char * buff, uint32_t len);
+
   virtual void map(const char * key, uint32_t keyLen,
                    const char * value, uint32_t valueLen);
 };
@@ -37,6 +39,17 @@ public:
 class WordCountReducer : public Reducer {
 public:
   virtual void reduce(KeyGroup & input);
+};
+
+class WordCountRMapper : public Mapper {
+public:
+  string _key;
+  uint32_t _count;
+public:
+  WordCountRMapper() : _count(0) {}
+  virtual void map(const char * key, uint32_t keyLen,
+                   const char * value, uint32_t valueLen);
+  virtual void close();
 };
 
 class WordCountRecordWriter : public LineRecordWriter {

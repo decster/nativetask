@@ -21,7 +21,7 @@
 
 static uint64_t test_length(int64_t len, size_t size, size_t loopTime) {
   vector<string> data;
-  GlobalConfig.setInt(GenerateLen, len);
+  TestConfig.setInt(GenerateLen, len);
   Generate(data, size, "bytes");
   Timer t;
   uint64_t ret;

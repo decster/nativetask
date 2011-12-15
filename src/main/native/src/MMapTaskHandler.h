@@ -46,7 +46,7 @@ public:
   MMapTaskHandler();
   virtual ~MMapTaskHandler();
 
-  virtual void setup();
+  virtual void configure(Config & config);
   virtual string command(const string & cmd);
 
   // Collector methods

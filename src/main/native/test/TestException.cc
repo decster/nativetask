@@ -16,31 +16,5 @@
  * limitations under the License.
  */
 
-#ifndef LZ4CODEC_H_
-#define LZ4CODEC_H_
 
-#include "Compressions.h"
-#include "BlockCodec.h"
 
-namespace Hadoop {
-
-class Lz4CompressStream : public BlockCompressStream {
-public:
-  Lz4CompressStream(OutputStream * stream, uint32_t bufferSizeHint);
-protected:
-  virtual uint64_t maxCompressedLength(uint64_t origLength);
-  virtual void compressOneBlock(const void * buff, uint32_t length);
-};
-
-class Lz4DecompressStream : public BlockDecompressStream {
-public:
-  Lz4DecompressStream(InputStream * stream, uint32_t bufferSizeHint);
-protected:
-  virtual uint64_t maxCompressedLength(uint64_t origLength);
-  virtual uint32_t decompressOneBlock(uint32_t compressedSize, void * buff,
-                                      uint32_t length);
-};
-
-} // namespace Hadoop
-
-#endif /* LZ4CODEC_H_ */

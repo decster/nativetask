@@ -34,7 +34,7 @@ using std::string;
 
 using namespace Hadoop;
 
-extern Config GlobalConfig;
+extern Config TestConfig;
 
 /**
  * e.g. MakeStringArray(dest, "a", "b", "c", NULL) = {"a","b","c"}
@@ -50,6 +50,16 @@ extern const char * GenerateRange;
 extern const char * GenerateKeyRange;
 extern const char * GenerateValueRange;
 
+enum GenerateType {
+  GenWord,
+  GenNumber,
+  GenBytes,
+};
+
+GenerateType GetGenerateType(const string & type);
+
+string & GenerateOne(string & dest, Random & r, GenerateType gtype,
+                     int64_t choice, int64_t len, int64_t range = 0);
 /**
  * Generate random string sequences
  * @param dest dest array
@@ -67,6 +77,16 @@ vector<string> & Generate(vector<string> & dest, uint64_t size,
  */
 vector<pair<string, string> > & Generate(vector<pair<string, string> > & dest,
                                          uint64_t size, const string & type);
+
+/**
+ * Generate random string pair sequences
+ * @param dest dest array
+ * @param length output bytes count
+ * @param type string type (word|number|bytes|tera)
+ */
+vector<pair<string, string> > & GenerateLength(vector<pair<string, string> > & dest,
+                                               uint64_t length,
+                                               const string & type);
 
 /**
  * Generate random KV text:

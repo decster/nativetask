@@ -108,7 +108,7 @@ private:
   uint32_t _num_partition;
   std::vector<PartitionIndex *> _spills;
   MapOutputSpec _mapOutputSpec;
-
+  bool _sortFirst;
 private:
   void init_memory(uint32_t memory_capacity);
 

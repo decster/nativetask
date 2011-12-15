@@ -100,12 +100,7 @@ void PartitionBucket::spill(IFileWriter & writer)
 
 void PartitionBucket::sort(SortType type) {
   if ((!_sorted) && (_kv_offsets.size()>1)) {
-    if (type == CQSORT) {
-      MemoryBlockPool::sort_c(_kv_offsets);
-    }
-    else {
-      MemoryBlockPool::sort_cpp(_kv_offsets);
-    }
+    MemoryBlockPool::sort(_kv_offsets, type);
   }
   _sorted = true;
 }
@@ -128,7 +123,8 @@ void PartitionBucket::dump(int fd, uint64_t offset, uint32_t & crc) {
 // MapOutputCollector
 /////////////////////////////////////////////////////////////////
 
-MapOutputCollector::MapOutputCollector(uint32_t num_partition) {
+MapOutputCollector::MapOutputCollector(uint32_t num_partition) :
+  _sortFirst(false) {
   _num_partition = num_partition;
   _buckets = new PartitionBucket*[num_partition];
   memset(_buckets, 0, sizeof(PartitionBucket*) * num_partition);
@@ -176,6 +172,7 @@ void MapOutputCollector::reset() {
 }
 
 void MapOutputCollector::configure(Config & config) {
+  _sortFirst = config.getBool("native.spill.sort.first", false);
   MapOutputSpec::getSpecFromConfig(config, _mapOutputSpec);
   init_memory(config.getInt("io.sort.mb", 300) * 1024 * 1024);
 }
@@ -208,6 +205,17 @@ void MapOutputCollector::spill_range(uint32_t start_partition,
     THROW_EXCEPTION(UnsupportException, "GROUPBY not supported");
   }
   IndexEntry * ret = new IndexEntry[_num_partition];
+  Timer timer;
+  if (_sortFirst && orderType==FULLSORT) {
+    Timer timer;
+    for (uint32_t i = 0; i < num_partition; i++) {
+      PartitionBucket * pb = _buckets[start_partition+i];
+      if ((NULL != pb) && (pb->current_block_idx() != NULL_BLOCK_INDEX)) {
+        pb->sort(sortType);
+      }
+    }
+    LOG("%s", timer.getInterval("Sort all buckets").c_str());
+  }
   for (uint32_t i = 0; i < num_partition; i++) {
     writer.startPartition();
     PartitionBucket * pb = _buckets[start_partition+i];
