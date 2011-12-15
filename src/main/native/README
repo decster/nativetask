@@ -24,3 +24,57 @@ Perfect timing             Total 9.25s
 100 10s
 10 100s
 
+[ RUN      ] Perf.LineRecordReader  use memchr for loop unroll by 2
+11/12/11 01:52:25 INFO Record Length: 2 read speed byte/record time: 0.00152s size: 0.334M/0.095M speed: 220.32M/62.95M
+11/12/11 01:52:25 INFO Record Length: 13 read speed byte/record time: 0.00184s size: 1.383M/0.095M speed: 751.95M/51.86M
+11/12/11 01:52:25 INFO Record Length: 55 read speed byte/record time: 0.00449s size: 5.388M/0.095M speed: 1200.06M/21.24M
+11/12/11 01:52:25 INFO Record Length: 100 read speed byte/record time: 0.00831s size: 9.680M/0.095M speed: 1164.56M/11.47M
+11/12/11 01:52:26 INFO Record Length: 200 read speed byte/record time: 0.01463s size: 19.217M/0.095M speed: 1313.68M/6.52M
+11/12/11 01:52:26 INFO Record Length: 400 read speed byte/record time: 0.02778s size: 38.290M/0.095M speed: 1378.38M/3.43M
+
+[ RUN      ] Perf.LineRecordReader  use memchr for loop
+11/12/11 01:41:12 INFO Record Length: 2 read speed byte/record time: 0.00158s size: 0.334M/0.095M speed: 211.66M/60.47M
+11/12/11 01:41:13 INFO Record Length: 16 read speed byte/record time: 0.00329s size: 1.669M/0.095M speed: 506.97M/28.97M
+11/12/11 01:41:13 INFO Record Length: 64 read speed byte/record time: 0.00725s size: 6.247M/0.095M speed: 861.60M/13.15M
+11/12/11 01:41:13 INFO Record Length: 100 read speed byte/record time: 0.01010s size: 9.680M/0.095M speed: 958.49M/9.44M
+11/12/11 01:41:13 INFO Record Length: 200 read speed byte/record time: 0.01912s size: 19.217M/0.095M speed: 1005.00M/4.99M
+11/12/11 01:41:14 INFO Record Length: 400 read speed byte/record time: 0.03523s size: 38.290M/0.095M speed: 1086.98M/2.71M
+11/12/11 01:41:16 INFO Record Length: 1000 read speed byte/record time: 0.09022s size: 95.510M/0.095M speed: 1058.69M/1.06M
+
+[ RUN      ] Perf.LineRecordReader use system memchr
+11/12/11 01:43:42 INFO Record Length: 2 read speed byte/record time: 0.00208s size: 0.334M/0.095M speed: 160.86M/45.96M
+11/12/11 01:43:43 INFO Record Length: 13 read speed byte/record time: 0.00371s size: 1.383M/0.095M speed: 372.83M/25.71M
+11/12/11 01:43:43 INFO Record Length: 55 read speed byte/record time: 0.00938s size: 5.388M/0.095M speed: 574.44M/10.17M
+11/12/11 01:43:43 INFO Record Length: 100 read speed byte/record time: 0.01454s size: 9.680M/0.095M speed: 665.83M/6.56M
+11/12/11 01:43:43 INFO Record Length: 200 read speed byte/record time: 0.02602s size: 19.217M/0.095M speed: 738.56M/3.67M
+11/12/11 01:43:44 INFO Record Length: 400 read speed byte/record time: 0.04981s size: 38.290M/0.095M speed: 768.75M/1.91M
+
+
+[ RUN      ] Perf.MapTask
+11/12/11 19:35:08 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
+11/12/11 19:35:08 INFO prepare time time: 0.00028s
+11/12/11 19:35:09 INFO Spill 0 range [0,100) record: 2500000, avg: 102.000, block: 400, size 255000202, real: 63550688, time: 1.193
+11/12/11 19:35:09 INFO MapTask time: 1.77169s
+
+
+memset time : 300M / 0.1466s ~ 2GB/s
+page miss fault : same;
+
+11/12/11 19:37:11 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
+11/12/11 19:37:12 INFO prepare time time: 0.14662s
+11/12/11 19:37:13 INFO Spill 0 range [0,100) record: 2500000, avg: 102.000, block: 400, size 255000202, real: 63550688, time: 1.172
+11/12/11 19:37:13 INFO MapTask time: 1.62748s
+
+11/12/14 18:48:17 INFO NativeTask library initialized
+11/12/14 18:48:17 INFO Native Mapper with MapOutputCollector
+11/12/14 18:48:17 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
+11/12/14 18:48:18 INFO Sort all buckets time: 0.37336s
+11/12/14 18:48:19 INFO Spill 0 range [0,100) record: 2500000, avg: 102.000, block: 400, size 255000200, real: 54670588, time: 0.919
+11/12/14 18:48:19 INFO Map Task time: 1.45632s
+
+decompress & read & map & collect 0.57s
+sort 0.6s
+ifile serializaton & compress 0.6s
+local writer io 56M -> 0.61s
+Total 1.75 1.35s
+
