@@ -7,7 +7,7 @@ SNAPPY_PREFIX ?= $(HOME)/local
 if PLATFORM_IS_MACOS
 # macos 
 JNI_INCLUDE ?= -I/System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers/
-TESTLDFLAGS = 
+TESTLDFLAGS = -framework JavaVM
 endif
 
 if PLATFORM_IS_LINUX
@@ -21,7 +21,7 @@ PRFLAGS=-DSIMPLE_MEMCPY
 #-DCHECKSUM_CRC32C             
 #-DSPILLRECORD_CHECKSUM_UINT   
 
-AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl
+AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl -lz
 AM_CFLAGS = $(PRFLAGS) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src
 
 COMMONSOURCES = \
@@ -30,6 +30,7 @@ cityhash/city.cc                       \
 src/commons.cc                         \
 src/Hash.cc                            \
 src/mempool.cc                         \
+src/SyncUtils.cc                       \
 src/jniutils.cc                        \
 src/NativeRuntimeJniImpl.cc            \
 src/Timer.cc                           \
@@ -83,6 +84,7 @@ test/test_commons.cc                  \
 test/TestPrimitives.cc                \
 test/TestCompressions.cc              \
 test/TestChecksum.cc                  \
+test/TestSyncUtils.cc                 \
 test/TestRReducerHandler.cc           \
 test/TestMMapTaskHandler.cc           \
 test/TestStringUtil.cc                \

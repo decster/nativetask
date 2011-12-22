@@ -18,6 +18,7 @@
 
 #include <zconf.h>
 #include <zlib.h>
+#include "commons.h"
 #include "GzipCodec.h"
 
 namespace Hadoop {
@@ -25,27 +26,93 @@ namespace Hadoop {
 GzipCompressStream::GzipCompressStream(
     OutputStream * stream,
     uint32_t bufferSizeHint) :
-    CompressStream(stream) {
-
+    CompressStream(stream),
+    _compressedBytesWritten(0),
+    _zstream(NULL),
+    _finished(false) {
+  _buffer = new char[bufferSizeHint];
+  _capacity = bufferSizeHint;
+  _zstream = malloc(sizeof(z_stream));
+  z_stream * zstream = (z_stream*)_zstream;
+  memset(zstream, 0, sizeof(z_stream));
+  if (Z_OK != deflateInit2(zstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY)) {
+    free(_zstream);
+    _zstream = NULL;
+    THROW_EXCEPTION(IOException, "deflateInit2 failed");
+  }
+  zstream->next_out = (Bytef *)_buffer;
+  zstream->avail_out = _capacity;
 }
 
 GzipCompressStream::~GzipCompressStream() {
-
+  if (_zstream != NULL) {
+    free(_zstream);
+    _zstream = NULL;
+  }
+  delete [] _buffer;
+  _buffer = NULL;
 }
 
 void GzipCompressStream::write(const void * buff, uint32_t length) {
+  z_stream * zstream = (z_stream*)_zstream;
+  zstream->next_in = (Bytef*)buff;
+  zstream->avail_in = length;
+  while (true) {
+    int ret = deflate(zstream, Z_NO_FLUSH);
+    if (ret == Z_OK) {
+      if (zstream->avail_out == 0) {
+        _stream->write(_buffer, _capacity);
+        _compressedBytesWritten += _capacity;
+        zstream->next_out = (Bytef *)_buffer;
+        zstream->avail_out = _capacity;
+      }
+      if (zstream->avail_in == 0) {
+        break;
+      }
+    } else {
+      THROW_EXCEPTION(IOException, "deflate return error");
+    }
+  }
+  _finished = false;
 }
 
 void GzipCompressStream::flush() {
-
+  z_stream * zstream = (z_stream*)_zstream;
+  while (true) {
+    int ret = deflate(zstream, Z_FINISH);
+    if (ret == Z_OK) {
+      if (zstream->avail_out == 0) {
+        _stream->write(_buffer, _capacity);
+        _compressedBytesWritten += _capacity;
+        zstream->next_out = (Bytef *)_buffer;
+        zstream->avail_out = _capacity;
+      } else {
+        THROW_EXCEPTION(IOException, "flush state error");
+      }
+    } else if (ret == Z_STREAM_END){
+      size_t wt = zstream->next_out-(Bytef*)_buffer;
+      _stream->write(_buffer, wt);
+      _compressedBytesWritten += wt;
+      zstream->next_out = (Bytef *)_buffer;
+      zstream->avail_out = _capacity;
+      break;
+    }
+  }
+  _finished = true;
 }
 
 void GzipCompressStream::close() {
-
+  if (!_finished) {
+    flush();
+  }
 }
 
 void GzipCompressStream::writeDirect(const void * buff, uint32_t length) {
-
+  if (!_finished) {
+    flush();
+  }
+  _stream->write(buff, length);
+  _compressedBytesWritten += length;
 }
 
 //////////////////////////////////////////////////////////////
@@ -53,24 +120,75 @@ void GzipCompressStream::writeDirect(const void * buff, uint32_t length) {
 GzipDecompressStream::GzipDecompressStream(
     InputStream * stream,
     uint32_t bufferSizeHint) :
-    DecompressStream(stream) {
-
+    DecompressStream(stream),
+    _compressedBytesRead(0),
+    _zstream(NULL) {
+  _buffer = new char[bufferSizeHint];
+  _capacity = bufferSizeHint;
+  _zstream = malloc(sizeof(z_stream));
+  z_stream * zstream = (z_stream*)_zstream;
+  memset(zstream, 0, sizeof(z_stream));
+  if (Z_OK != inflateInit2(zstream, 31)) {
+    free(_zstream);
+    _zstream = NULL;
+    THROW_EXCEPTION(IOException, "inflateInit2 failed");
+  }
+  zstream->next_in = NULL;
+  zstream->avail_in = 0;
+  _eof = false;
 }
 
 GzipDecompressStream::~GzipDecompressStream() {
-
+  if (_zstream != NULL) {
+    free(_zstream);
+    _zstream = NULL;
+  }
+  delete [] _buffer;
+  _buffer = NULL;
 }
 
 int32_t GzipDecompressStream::read(void * buff, uint32_t length) {
-  return 0;
+  z_stream * zstream = (z_stream*)_zstream;
+  z_stream & stream = *zstream;
+  zstream->next_out = (Bytef*)buff;
+  zstream->avail_out = length;
+  while (true) {
+    if (zstream->avail_in == 0) {
+      int32_t rd = _stream->read(_buffer, _capacity);
+      if (rd <= 0) {
+        _eof = true;
+        size_t wt = zstream->next_out - (Bytef*)buff;
+        return wt > 0 ? wt : -1;
+      } else {
+        _compressedBytesRead += rd;
+        zstream->next_in = (Bytef*) _buffer;
+        zstream->avail_in = rd;
+      }
+    }
+    //printf("before in: %p/%u out: %p/%u total: %lu/%lu\n", stream.next_in, stream.avail_in, stream.next_out, stream.avail_out, stream.total_in, stream.total_out);
+    int ret = inflate(zstream, Z_NO_FLUSH);
+    //printf(" after in: %p/%u out: %p/%u total: %lu/%lu\n", stream.next_in, stream.avail_in, stream.next_out, stream.avail_out, stream.total_in, stream.total_out);
+    if (ret == Z_OK || ret == Z_STREAM_END) {
+      if (zstream->avail_out == 0) {
+        printf("return %d\n", length);
+        return length;
+      }
+    } else {
+      printf("Error: %d\n", ret);
+      return -1;
+    }
+  }
 }
 
 void GzipDecompressStream::close() {
-
 }
 
 int32_t GzipDecompressStream::readDirect(void * buff, uint32_t length) {
-  return 0;
+  int32_t ret = _stream->readFully(buff, length);
+  if (ret>0) {
+    _compressedBytesRead += ret;
+  }
+  return ret;
 }
 
 } // namespace Hadoop

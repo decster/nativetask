@@ -21,6 +21,7 @@
 #include "MapOutputCollector.h"
 #include "FileSystem.h"
 #include "lib/TeraSort.h"
+#include "lib/WordCount.h"
 #include "test_commons.h"
 
 class MapTaskRunner : public Collector {
@@ -42,7 +43,7 @@ virtual void collect(const void * key, uint32_t keyLen,
 
 };
 
-TEST(Perf, MapTask) {
+TEST(Perf, TeraSortMapTask) {
   Timer timer;
   string inputfile = TestConfig.get("input.file", "terainput");
   uint32_t numPartition = TestConfig.getInt("mapred.reduce.tasks", 100);
@@ -54,7 +55,7 @@ TEST(Perf, MapTask) {
   config.set("mapred.output.value.class", "org.apache.hadoop.io.Text");
   config.setBool("mapred.map.output.sort", sort);
   config.setBool("mapred.compress.map.output", compressMapOutput);
-  config.set("mapred.map.output.compression.codec", Compressions::SnappyCodec.name);
+  config.set("mapred.map.output.compression.codec", Compressions::Lz4Codec.name);
   config.set("io.sort.mb", "300");
   TeraRecordReader reader = TeraRecordReader();
   Partitioner partitioner = Partitioner();
@@ -77,7 +78,44 @@ TEST(Perf, MapTask) {
   vector<string> outputpath;
   outputpath.push_back(outputfile);
   moc.final_merge_and_spill(outputpath, "map.output.index", moc.getMapOutputSpec());
-  LOG("%s", timer.getInterval("MapTask").c_str());
+  LOG("%s", timer.getInterval("TeraSortMapTask").c_str());
 }
 
+TEST(Perf, WordCountMapTask) {
+  Timer timer;
+  string inputfile = TestConfig.get("input.file", "wordinput");
+  uint32_t numPartition = TestConfig.getInt("mapred.reduce.tasks", 100);
+  string outputfile = TestConfig.get("output.file", "map.output");
+  bool sort = TestConfig.getBool("mapred.map.output.sort", true);
+  bool compressMapOutput = TestConfig.getBool("mapred.compress.map.output", true);
+  Config & config = NativeObjectFactory::GetConfig();
+  config.set("mapred.output.key.class", "org.apache.hadoop.io.Text");
+  config.set("mapred.output.value.class", "org.apache.hadoop.io.Text");
+  config.setBool("mapred.map.output.sort", sort);
+  config.setBool("mapred.compress.map.output", compressMapOutput);
+  config.set("mapred.map.output.compression.codec", Compressions::Lz4Codec.name);
+  config.set("io.sort.mb", "300");
+  LineRecordReader reader = LineRecordReader();
+  Partitioner partitioner = Partitioner();
+  MapOutputCollector moc = MapOutputCollector(100);
+  moc.configure(config);
+  LOG("%s", timer.getInterval("prepare time").c_str());
+  timer.reset();
+  MapTaskRunner runner = MapTaskRunner();
+  runner.collector = &moc;
+  runner.numPartition = numPartition;
+  runner.numSpill = 0;
+  runner.partitioner = &partitioner;
+  WordCountMapper mapper = WordCountMapper();
+  mapper.setCollector(&runner);
+  reader.init(inputfile, 0, FileSystem::getRaw().getLength(inputfile), config);
+  Buffer key, value;
+  while (reader.next(key, value)) {
+    mapper.map(key.data(), key.length(), value.data(), value.length());
+  }
+  vector<string> outputpath;
+  outputpath.push_back(outputfile);
+  moc.final_merge_and_spill(outputpath, "map.output.index", moc.getMapOutputSpec());
+  LOG("%s", timer.getInterval("WordCountMapTask").c_str());
+}
 

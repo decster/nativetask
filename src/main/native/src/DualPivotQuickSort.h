@@ -24,6 +24,7 @@
 
 namespace Hadoop {
 
+// TODO: definitely needs refactoring..
 template <typename _Compare>
 void DualPivotQuicksort(std::vector<uint32_t> & elements, int left, int right, int div, _Compare compare) {
   uint32_t * e = &(elements[0]);

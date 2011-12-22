@@ -82,7 +82,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libnativetask_la_LIBADD =
 am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-commons.lo libnativetask_la-Hash.lo \
-	libnativetask_la-mempool.lo libnativetask_la-jniutils.lo \
+	libnativetask_la-mempool.lo libnativetask_la-SyncUtils.lo \
+	libnativetask_la-jniutils.lo \
 	libnativetask_la-NativeRuntimeJniImpl.lo \
 	libnativetask_la-Timer.lo libnativetask_la-StringUtil.lo \
 	libnativetask_la-WritableUtils.lo libnativetask_la-Random.lo \
@@ -118,7 +119,7 @@ PROGRAMS = $(noinst_PROGRAMS)
 am__objects_2 = nttest-test_commons.$(OBJEXT) \
 	nttest-TestPrimitives.$(OBJEXT) \
 	nttest-TestCompressions.$(OBJEXT) \
-	nttest-TestChecksum.$(OBJEXT) \
+	nttest-TestChecksum.$(OBJEXT) nttest-TestSyncUtils.$(OBJEXT) \
 	nttest-TestRReducerHandler.$(OBJEXT) \
 	nttest-TestMMapTaskHandler.$(OBJEXT) \
 	nttest-TestStringUtil.$(OBJEXT) nttest-TestBuffers.$(OBJEXT) \
@@ -293,13 +294,13 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 @PLATFORM_IS_LINUX_TRUE@TESTLDFLAGS = -lrt
-@PLATFORM_IS_MACOS_TRUE@TESTLDFLAGS = 
+@PLATFORM_IS_MACOS_TRUE@TESTLDFLAGS = -framework JavaVM
 
 # primatives configs 
 PRFLAGS = -DSIMPLE_MEMCPY        
 #-DCHECKSUM_CRC32C             
 #-DSPILLRECORD_CHECKSUM_UINT   
-AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl
+AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl -lz
 AM_CFLAGS = $(PRFLAGS) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src
 COMMONSOURCES = \
 lz4/lz4.c                              \
@@ -307,6 +308,7 @@ cityhash/city.cc                       \
 src/commons.cc                         \
 src/Hash.cc                            \
 src/mempool.cc                         \
+src/SyncUtils.cc                       \
 src/jniutils.cc                        \
 src/NativeRuntimeJniImpl.cc            \
 src/Timer.cc                           \
@@ -358,6 +360,7 @@ test/test_commons.cc                  \
 test/TestPrimitives.cc                \
 test/TestCompressions.cc              \
 test/TestChecksum.cc                  \
+test/TestSyncUtils.cc                 \
 test/TestRReducerHandler.cc           \
 test/TestMMapTaskHandler.cc           \
 test/TestStringUtil.cc                \
@@ -522,6 +525,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-SnappyCodec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Streams.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-StringUtil.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-SyncUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-TeraSort.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-WordCount.Plo@am__quote@
@@ -546,6 +550,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestSort.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStringUtil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestSyncUtils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestWritableUtils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-gtest-all.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-test_commons.Po@am__quote@
@@ -626,6 +631,13 @@ libnativetask_la-mempool.lo: src/mempool.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/mempool.cc' object='libnativetask_la-mempool.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-mempool.lo `test -f 'src/mempool.cc' || echo '$(srcdir)/'`src/mempool.cc
+
+libnativetask_la-SyncUtils.lo: src/SyncUtils.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-SyncUtils.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-SyncUtils.Tpo -c -o libnativetask_la-SyncUtils.lo `test -f 'src/SyncUtils.cc' || echo '$(srcdir)/'`src/SyncUtils.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-SyncUtils.Tpo $(DEPDIR)/libnativetask_la-SyncUtils.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/SyncUtils.cc' object='libnativetask_la-SyncUtils.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-SyncUtils.lo `test -f 'src/SyncUtils.cc' || echo '$(srcdir)/'`src/SyncUtils.cc
 
 libnativetask_la-jniutils.lo: src/jniutils.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-jniutils.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-jniutils.Tpo -c -o libnativetask_la-jniutils.lo `test -f 'src/jniutils.cc' || echo '$(srcdir)/'`src/jniutils.cc
@@ -934,6 +946,20 @@ nttest-TestChecksum.obj: test/TestChecksum.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestChecksum.cc' object='nttest-TestChecksum.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestChecksum.obj `if test -f 'test/TestChecksum.cc'; then $(CYGPATH_W) 'test/TestChecksum.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestChecksum.cc'; fi`
+
+nttest-TestSyncUtils.o: test/TestSyncUtils.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestSyncUtils.o -MD -MP -MF $(DEPDIR)/nttest-TestSyncUtils.Tpo -c -o nttest-TestSyncUtils.o `test -f 'test/TestSyncUtils.cc' || echo '$(srcdir)/'`test/TestSyncUtils.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestSyncUtils.Tpo $(DEPDIR)/nttest-TestSyncUtils.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestSyncUtils.cc' object='nttest-TestSyncUtils.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestSyncUtils.o `test -f 'test/TestSyncUtils.cc' || echo '$(srcdir)/'`test/TestSyncUtils.cc
+
+nttest-TestSyncUtils.obj: test/TestSyncUtils.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestSyncUtils.obj -MD -MP -MF $(DEPDIR)/nttest-TestSyncUtils.Tpo -c -o nttest-TestSyncUtils.obj `if test -f 'test/TestSyncUtils.cc'; then $(CYGPATH_W) 'test/TestSyncUtils.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestSyncUtils.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestSyncUtils.Tpo $(DEPDIR)/nttest-TestSyncUtils.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestSyncUtils.cc' object='nttest-TestSyncUtils.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestSyncUtils.obj `if test -f 'test/TestSyncUtils.cc'; then $(CYGPATH_W) 'test/TestSyncUtils.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestSyncUtils.cc'; fi`
 
 nttest-TestRReducerHandler.o: test/TestRReducerHandler.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestRReducerHandler.o -MD -MP -MF $(DEPDIR)/nttest-TestRReducerHandler.Tpo -c -o nttest-TestRReducerHandler.o `test -f 'test/TestRReducerHandler.cc' || echo '$(srcdir)/'`test/TestRReducerHandler.cc

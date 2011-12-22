@@ -30,6 +30,9 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.serializer.SerializationFactory;
+import org.apache.hadoop.io.serializer.Serializer;
+import org.apache.hadoop.mapred.JobConf;
 
 public class NativeUtils {  
   public enum KVType {
@@ -79,6 +82,18 @@ public class NativeUtils {
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException(e.getMessage());
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static <T> byte [] serialize(JobConf conf, Object obj) throws IOException {
+    SerializationFactory factory = new SerializationFactory(conf);
+    Serializer<T> serializer = (Serializer<T>) factory.getDeserializer(obj.getClass());
+    DataOutputBuffer out = new DataOutputBuffer(1024);
+    serializer.open(out);
+    serializer.serialize((T)obj);
+    byte [] ret = new byte[out.getLength()];
+    System.arraycopy(out.getData(), 0, ret, 0, out.getLength());
+    return ret;
   }
 
   @SuppressWarnings("unchecked")

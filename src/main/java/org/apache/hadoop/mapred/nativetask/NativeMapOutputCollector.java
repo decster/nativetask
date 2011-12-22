@@ -70,7 +70,7 @@ public class NativeMapOutputCollector
   }
 
   public NativeMapOutputCollector(JobConf conf, TaskAttemptID taskAttemptID) {
-    super("MCollectorOutputHandler", conf.getInt(
+    super("NativeTask.MCollectorOutputHandler", conf.getInt(
         NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB, 1024) * 1024, 0);
     this.taskAttemptID = taskAttemptID;
     this.mapOutputFile = new OutputPathUtil();

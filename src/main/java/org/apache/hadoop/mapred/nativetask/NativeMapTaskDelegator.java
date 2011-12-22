@@ -50,6 +50,19 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
       throws IOException, InterruptedException {
     NativeRuntime.configure(job);
 
+    if (job.get("native.recordreader.class") != null) {
+      // delegate entire map task
+      byte [] splitData = NativeUtils.serialize(job, split);
+      NativeRuntime.set("native.input.split", splitData);
+      MapTaskProcessor processor = new MapTaskProcessor(job, taskAttemptID);
+      try {
+        processor.command(NativeUtils.toBytes("run"));
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
+      return;
+    }
+
     RecordReader<INKEY,INVALUE> rawIn =
       job.getInputFormat().getRecordReader((InputSplit)split, job, reporter);
 
@@ -100,6 +113,44 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
   /**
    * Mapper processor with partitioner, output collector, and maybe combiner 
    */
+  public static class MapTaskProcessor
+      extends NativeBatchProcessor {
+    private OutputPathUtil mapOutputFile;
+    private TaskAttemptID taskAttemptID;
+    private int spillNumber = 0;
+
+    public MapTaskProcessor(JobConf conf, TaskAttemptID taskAttemptID)
+        throws IOException {
+      super("NativeTask.MMapTaskHandler", 0, 0);
+      this.mapOutputFile = new OutputPathUtil();
+      this.mapOutputFile.setConf(conf);
+      this.taskAttemptID = taskAttemptID;
+    }
+
+    @Override
+    protected byte[] sendCommandToJava(byte[] data) throws IOException {
+      String cmd = NativeUtils.fromBytes(data);
+      Path p = null;
+      if (cmd.equals("GetOutputPath")) {
+        p = mapOutputFile.getOutputFileForWrite(-1);
+      } else if (cmd.equals("GetOutputIndexPath")) {
+        p = mapOutputFile.getOutputIndexFileForWrite(-1);
+      } else if (cmd.equals("GetSpillPath")) {
+        p = mapOutputFile.getSpillFileForWrite(spillNumber++, -1);
+      } else {
+        LOG.warn("Illegal command: " + cmd);
+      }
+      if (p != null) {
+        return NativeUtils.toBytes(p.toUri().getPath());
+      } else {
+        throw new IOException("MapOutputFile can't allocate spill/output file");
+      }
+    }
+  }
+
+  /**
+   * Mapper processor with partitioner, output collector, and maybe combiner 
+   */
   public static class MapperOutputProcessor<IK, IV>
       extends KeyValueBatchProcessor<IK, IV> {
     private OutputPathUtil mapOutputFile;
@@ -109,7 +160,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
     public MapperOutputProcessor(int bufferCapacity, Class<IK> keyClass,
         Class<IV> valueClass, JobConf conf, TaskAttemptID taskAttemptID)
         throws IOException {
-      super("MMapperHandler", bufferCapacity, 0, keyClass, valueClass);
+      super("NativeTask.MMapperHandler", bufferCapacity, 0, keyClass, valueClass);
       this.mapOutputFile = new OutputPathUtil();
       this.mapOutputFile.setConf(conf);
       this.taskAttemptID = taskAttemptID;
@@ -155,7 +206,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
     public MapperProcessor(int inputBufferCapacity, int outputBufferCapacity,
         Class<IK> iKClass, Class<IV> iVClass, Class<OK> oKClass, Class<OV> oVClass,
         JobConf conf, RecordWriter<OK, OV> writer) throws IOException {
-      super("MMapperHandler", inputBufferCapacity, outputBufferCapacity, iKClass, iVClass);
+      super("NativeTask.MMapperHandler", inputBufferCapacity, outputBufferCapacity, iKClass, iVClass);
       this.writer = writer;
       tmpKey = ReflectionUtils.newInstance(oKClass, conf);
       tmpValue = ReflectionUtils.newInstance(oVClass, conf);

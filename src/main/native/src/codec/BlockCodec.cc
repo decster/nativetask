@@ -58,6 +58,7 @@ void BlockCompressStream::close() {
 
 void BlockCompressStream::writeDirect(const void * buff, uint32_t length) {
   _stream->write(buff, length);
+  _compressedBytesWritten += length;
 }
 
 uint64_t BlockCompressStream::compressedBytesWritten() {
@@ -163,7 +164,11 @@ int32_t BlockDecompressStream::readDirect(void * buff, uint32_t length) {
   if (_tempDecompressBufferSize > 0) {
     THROW_EXCEPTION(IOException, "temp decompress data exists when call readDirect()");
   }
-  return _stream->readFully(buff, length);
+  int32_t ret = _stream->readFully(buff, length);
+  if (ret>0) {
+    _compressedBytesRead += ret;
+  }
+  return ret;
 }
 
 uint64_t BlockDecompressStream::compressedBytesRead() {

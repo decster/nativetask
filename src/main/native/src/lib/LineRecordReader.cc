@@ -141,7 +141,7 @@ void LineRecordReader::init(InputStream * stream, const string & codec) {
 void LineRecordReader::init(const string & file, uint64_t start, uint64_t length, Config & config) {
   close();
   _bufferHint = 128*1024;
-  _orig = FileSystem::getRaw().open(file);
+  _orig = FileSystem::get(config).open(file);
   _hasOrig = true;
   _start = start;
   _pos = _start;

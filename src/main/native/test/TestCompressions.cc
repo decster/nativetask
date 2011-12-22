@@ -33,8 +33,11 @@ void TestCodec(const string & codec, const string & data, char * buff,
 
   LOG("%s", codec.c_str());
   timer.reset();
-  compressor->write(data.c_str(), data.length());
-  LOG("%s", timer.getSpeedM2("snappy compress origin/compressed", data.length(), outputBuffer.tell()).c_str());
+  for (size_t i=0;i<data.length();i+=128*1024) {
+    compressor->write(data.c_str()+i, std::min(data.length()-i, (size_t)(128*1024)));
+  }
+  compressor->flush();
+  LOG("%s", timer.getSpeedM2("compress origin/compressed", data.length(), outputBuffer.tell()).c_str());
 
   InputBuffer decompInputBuffer = InputBuffer(buff, outputBuffer.tell());
   DecompressStream * decompressor =
@@ -51,7 +54,7 @@ void TestCodec(const string & codec, const string & data, char * buff,
     }
     total += rd;
   }
-  LOG("%s", timer.getSpeedM2("snappy decompress orig/uncompressed", outputBuffer.tell(), total).c_str());
+  LOG("%s", timer.getSpeedM2("decompress orig/uncompressed", outputBuffer.tell(), total).c_str());
   LOG("ratio: %.3lf", outputBuffer.tell()/(double)total);
   ASSERT_EQ(data.length(), total);
   ASSERT_EQ(0, memcmp(data.c_str(), buff2, total));
@@ -81,9 +84,8 @@ TEST(Perf, Compressions) {
 
   TestCodec("org.apache.hadoop.io.compress.SnappyCodec", data, buff, buff2, buffLen, buffhint);
   TestCodec("org.apache.hadoop.io.compress.Lz4Codec", data, buff, buff2, buffLen, buffhint);
+  TestCodec("org.apache.hadoop.io.compress.GzipCodec", data, buff, buff2, buffLen, buffhint);
 
   delete [] buff;
   delete [] buff2;
 }
-
-

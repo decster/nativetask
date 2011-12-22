@@ -210,7 +210,7 @@ public:
     }
     NativeRuntimeClass = (jclass)env->NewGlobalRef(cls);
     OpenFileMethodID = env->GetStaticMethodID(cls, "openFile", "([B)Lorg/apache/hadoop/fs/FSDataInputStream;");
-    CreateFileMethodID = env->GetStaticMethodID(cls, "openFile", "([BZ)Lorg/apache/hadoop/fs/FSDataOutputStream;");
+    CreateFileMethodID = env->GetStaticMethodID(cls, "createFile", "([BZ)Lorg/apache/hadoop/fs/FSDataOutputStream;");
     GetFileLengthMethodID = env->GetStaticMethodID(cls, "getFileLength", "([B)J");
     ExistsMethodID = env->GetStaticMethodID(cls, "exists", "([B)Z");
     RemoveMethodID = env->GetStaticMethodID(cls, "remove", "([B)Z");
@@ -218,27 +218,27 @@ public:
     env->DeleteLocalRef(cls);
 
     jclass fsincls = env->FindClass("org/apache/hadoop/fs/FSDataInputStream");
-    if (fsincls) {
+    if (fsincls == NULL) {
       LOG("Can not found class org/apache/hadoop/fs/FSDataInputStream");
       return false;
     }
     FSDataInputStreamClass = (jclass)env->NewGlobalRef(fsincls);
-    ReadMethodID = env->GetStaticMethodID(fsincls, "read", "([BII)I");
-    SeekMethodID = env->GetStaticMethodID(fsincls, "seek", "(J)V");
-    IGetPosMethodID = env->GetStaticMethodID(fsincls, "getPos", "()J");
-    ICloseMethodID = env->GetStaticMethodID(fsincls, "close", "()V");
+    ReadMethodID = env->GetMethodID(fsincls, "read", "([BII)I");
+    SeekMethodID = env->GetMethodID(fsincls, "seek", "(J)V");
+    IGetPosMethodID = env->GetMethodID(fsincls, "getPos", "()J");
+    ICloseMethodID = env->GetMethodID(fsincls, "close", "()V");
     env->DeleteLocalRef(fsincls);
 
     jclass fsoutcls = env->FindClass("org/apache/hadoop/fs/FSDataOutputStream");
-    if (fsoutcls) {
+    if (fsoutcls == NULL) {
       LOG("Can not found class org/apache/hadoop/fs/FSDataOutputStream");
       return false;
     }
     FSDataOutputStreamClass = (jclass)env->NewGlobalRef(fsincls);
-    WriteMethodID = env->GetStaticMethodID(fsoutcls, "read", "([BII)V");
-    IGetPosMethodID = env->GetStaticMethodID(fsoutcls, "getPos", "()J");
-    OFlushMethodID = env->GetStaticMethodID(fsoutcls, "flush", "()V");
-    ICloseMethodID = env->GetStaticMethodID(fsoutcls, "close", "()V");
+    WriteMethodID = env->GetMethodID(fsoutcls, "write", "([BII)V");
+    OGetPosMethodID = env->GetMethodID(fsoutcls, "getPos", "()J");
+    OFlushMethodID = env->GetMethodID(fsoutcls, "flush", "()V");
+    OCloseMethodID = env->GetMethodID(fsoutcls, "close", "()V");
     env->DeleteLocalRef(fsoutcls);
     return true;
   }
@@ -264,10 +264,12 @@ public:
     JNIEnv * env = JNU_GetJNIEnv();
     jbyteArray pathobject = env->NewByteArray(path.length());
     env->SetByteArrayRegion(pathobject, 0, path.length(), (jbyte*)path.c_str());
-    jobject ret = env->CallObjectMethod(NativeRuntimeClass, OpenFileMethodID, pathobject);
+    jobject ret = env->CallStaticObjectMethod(NativeRuntimeClass, OpenFileMethodID, pathobject);
     env->DeleteLocalRef(pathobject);
     if (env->ExceptionCheck()) {
-      THROW_EXCEPTION_EX(HadoopException, "open java file %s got exception", path.c_str());
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      THROW_EXCEPTION_EX(HadoopException, "open java file [%s] got exception", path.c_str());
     }
     jobject fref = (jclass)env->NewGlobalRef(ret);
     env->DeleteLocalRef(ret);
@@ -279,11 +281,13 @@ public:
     JNIEnv * env = JNU_GetJNIEnv();
     jbyteArray pathobject = env->NewByteArray(path.length());
     env->SetByteArrayRegion(pathobject, 0, path.length(), (jbyte*)path.c_str());
-    jobject ret = env->CallObjectMethod(NativeRuntimeClass, CreateFileMethodID,
+    jobject ret = env->CallStaticObjectMethod(NativeRuntimeClass, CreateFileMethodID,
                                         pathobject, (jboolean) overwrite);
     env->DeleteLocalRef(pathobject);
     if (env->ExceptionCheck()) {
-      THROW_EXCEPTION_EX(HadoopException, "create java file %s got exception", path.c_str());
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      THROW_EXCEPTION_EX(HadoopException, "create java file [%s] got exception", path.c_str());
     }
     jobject fref = (jclass)env->NewGlobalRef(ret);
     env->DeleteLocalRef(ret);
@@ -295,11 +299,13 @@ public:
     JNIEnv * env = JNU_GetJNIEnv();
     jbyteArray pathobject = env->NewByteArray(path.length());
     env->SetByteArrayRegion(pathobject, 0, path.length(), (jbyte*)path.c_str());
-    jlong ret = env->CallLongMethod(NativeRuntimeClass, GetFileLengthMethodID,
+    jlong ret = env->CallStaticLongMethod(NativeRuntimeClass, GetFileLengthMethodID,
                                         pathobject);
     env->DeleteLocalRef(pathobject);
     if (env->ExceptionCheck()) {
-      THROW_EXCEPTION_EX(HadoopException, "getLength file %s got exception", path.c_str());
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      THROW_EXCEPTION_EX(HadoopException, "getLength file [%s] got exception", path.c_str());
     }
     return (uint64_t)ret;
   }
@@ -309,14 +315,16 @@ public:
     JNIEnv * env = JNU_GetJNIEnv();
     jbyteArray pathobject = env->NewByteArray(path.length());
     env->SetByteArrayRegion(pathobject, 0, path.length(), (jbyte*)path.c_str());
-    jboolean ret = env->CallBooleanMethod(NativeRuntimeClass, RemoveMethodID,
+    jboolean ret = env->CallStaticBooleanMethod(NativeRuntimeClass, RemoveMethodID,
                                         pathobject);
     env->DeleteLocalRef(pathobject);
     if (env->ExceptionCheck()) {
-      THROW_EXCEPTION_EX(HadoopException, "remove path %s got exception", path.c_str());
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      THROW_EXCEPTION_EX(HadoopException, "remove path [%s] got exception", path.c_str());
     }
     if (!ret) {
-      THROW_EXCEPTION_EX(HadoopException, "remove path %s return false", path.c_str());
+      THROW_EXCEPTION_EX(HadoopException, "remove path [%s] return false", path.c_str());
     }
   }
 
@@ -325,11 +333,13 @@ public:
     JNIEnv * env = JNU_GetJNIEnv();
     jbyteArray pathobject = env->NewByteArray(path.length());
     env->SetByteArrayRegion(pathobject, 0, path.length(), (jbyte*)path.c_str());
-    jboolean ret = env->CallBooleanMethod(NativeRuntimeClass, ExistsMethodID,
+    jboolean ret = env->CallStaticBooleanMethod(NativeRuntimeClass, ExistsMethodID,
                                         pathobject);
     env->DeleteLocalRef(pathobject);
     if (env->ExceptionCheck()) {
-      THROW_EXCEPTION_EX(HadoopException, "test exists() path %s got exception", path.c_str());
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      THROW_EXCEPTION_EX(HadoopException, "test exists() path [%s] got exception", path.c_str());
     }
     return ret;
   }
@@ -339,14 +349,16 @@ public:
     JNIEnv * env = JNU_GetJNIEnv();
     jbyteArray pathobject = env->NewByteArray(path.length());
     env->SetByteArrayRegion(pathobject, 0, path.length(), (jbyte*)path.c_str());
-    jboolean ret = env->CallBooleanMethod(NativeRuntimeClass, ExistsMethodID,
+    jboolean ret = env->CallStaticBooleanMethod(NativeRuntimeClass, MkdirsMethodID,
                                         pathobject);
     env->DeleteLocalRef(pathobject);
     if (env->ExceptionCheck()) {
-      THROW_EXCEPTION_EX(HadoopException, "mkdirs path %s got exception", path.c_str());
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      THROW_EXCEPTION_EX(HadoopException, "mkdirs path [%s] got exception", path.c_str());
     }
     if (!ret) {
-      THROW_EXCEPTION_EX(HadoopException, "mkdirs path %s return false", path.c_str());
+      THROW_EXCEPTION_EX(HadoopException, "mkdirs path [%s] return false", path.c_str());
     }
   }
 };
@@ -490,12 +502,33 @@ extern JavaFileSystem JavaFileSystemInstance;
 RawFileSystem RawFileSystemInstance = RawFileSystem();
 JavaFileSystem JavaFileSystemInstance = JavaFileSystem();
 
+string FileSystem::getDefaultUri(Config & config) {
+  const char * nm = config.get("fs.default.name");
+  if (nm == NULL) {
+    nm = config.get("fs.defaultFS");
+  }
+  if (nm == NULL) {
+    return string("file:///");
+  } else {
+    return string(nm);
+  }
+}
+
 FileSystem & FileSystem::getRaw() {
   return RawFileSystemInstance;
 }
 
 FileSystem & FileSystem::getJava(Config & config) {
   return JavaFileSystemInstance;
+}
+
+FileSystem & FileSystem::get(Config & config) {
+  string uri = getDefaultUri(config);
+  if (uri == "file:///") {
+    return RawFileSystemInstance;
+  } else {
+    return JavaFileSystemInstance;
+  }
 }
 
 } // namespace Hadoap

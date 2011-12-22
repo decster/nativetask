@@ -53,6 +53,7 @@ DEFINE_NATIVE_LIBRARY(NativeTask) {
   REGISTER_CLASS(EchoBatchHandler, NativeTask);
   REGISTER_CLASS(MCollectorOutputHandler, NativeTask);
   REGISTER_CLASS(MMapperHandler, NativeTask);
+  REGISTER_CLASS(MMapTaskHandler, NativeTask);
   REGISTER_CLASS(RReducerHandler, NativeTask);
   REGISTER_CLASS(Mapper, NativeTask);
   REGISTER_CLASS(Reducer, NativeTask);

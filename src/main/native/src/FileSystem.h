@@ -128,8 +128,10 @@ public:
   virtual bool exists(const string & path) {}
   virtual void mkdirs(const string & path) {}
 
+  static string getDefaultUri(Config & config);
   static FileSystem & getRaw();
   static FileSystem & getJava(Config & config);
+  static FileSystem & get(Config & config);
 };
 
 } // namespace Hadoop

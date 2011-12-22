@@ -54,22 +54,82 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
 
     Class keyClass = job.getMapOutputKeyClass();
     Class valueClass = job.getMapOutputValueClass();
-
-    String finalName = OutputPathUtil.getOutputName(taskAttemptID.getTaskID().getId());
-    FileSystem fs = FileSystem.get(job);
-    RecordWriter<OK, OV> writer = job.getOutputFormat().getRecordWriter(
-        fs, job, finalName, reporter);
-    Class<OK> okeyClass = (Class<OK>) job.getOutputKeyClass();
-    Class<OV> ovalueClass = (Class<OV>) job.getOutputValueClass();
     int bufferCapacity = job.getInt(
         NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB,
         NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB_DEFAULT) * 1024;
-    ReducerProcessor<IK, IV, OK, OV> processor = 
-        new ReducerProcessor<IK, IV, OK, OV>(
-        bufferCapacity, bufferCapacity, keyClass, valueClass, okeyClass,
-        ovalueClass, job, writer, reporter);
-    processor.process(rIter);
-    processor.close();
+    String finalName = OutputPathUtil.getOutputName(taskAttemptID.getTaskID().getId());
+
+    if (job.get("native.recordwriter.class") != null) {
+      // delegate whole reduce task
+      NativeRuntime.set("native.output.file.name", finalName);
+      ReduceTaskProcessor<IK, IV> processor = new ReduceTaskProcessor<IK, IV>(
+          bufferCapacity, keyClass, valueClass, job, reporter);
+      processor.process(rIter);
+      processor.close();
+    } else {
+      FileSystem fs = FileSystem.get(job);
+      RecordWriter<OK, OV> writer = job.getOutputFormat().getRecordWriter(
+          fs, job, finalName, reporter);
+      Class<OK> okeyClass = (Class<OK>) job.getOutputKeyClass();
+      Class<OV> ovalueClass = (Class<OV>) job.getOutputValueClass();
+      ReducerProcessor<IK, IV, OK, OV> processor =
+          new ReducerProcessor<IK, IV, OK, OV>(
+          bufferCapacity, bufferCapacity, keyClass, valueClass, okeyClass,
+          ovalueClass, job, writer, reporter);
+      processor.process(rIter);
+      processor.close();
+    }
+  }
+
+  public static class ReduceTaskProcessor<IK, IV> extends NativeBatchProcessor {
+    final private JobConf conf;
+    final private KVType iKType;
+    final private KVType iVType;
+    public ReduceTaskProcessor(int inputBufferCapacity, Class<IK> iKClass,
+        Class<IV> iVClass, JobConf conf, Progressable progress) {
+      super("NativeTask.RReducerHandler", inputBufferCapacity, 0);
+      this.iKType = KVType.getType(iKClass);
+      this.iVType = KVType.getType(iVClass);
+      this.conf = conf;
+    }
+
+    public void process(RawKeyValueIterator rIter) throws IOException {
+      while (rIter.next()) {
+        DataInputBuffer keyBuffer = rIter.getKey();
+        int keyStart = keyBuffer.getPosition();
+        switch (iKType) {
+        case TEXT:
+          keyStart += WritableUtils.decodeVIntSize(keyBuffer.getData()[keyBuffer.getPosition()]);
+          break;
+        case BYTES:
+          keyStart += 4;
+          break;
+        }
+        int keyLen = keyBuffer.getLength() - keyStart;
+        DataInputBuffer valueBuffer = rIter.getValue();
+        int valueStart = valueBuffer.getPosition();
+        switch (iVType) {
+        case TEXT:
+          valueStart += WritableUtils.decodeVIntSize(valueBuffer.getData()[valueBuffer.getPosition()]);
+          break;
+        case BYTES:
+          valueStart += 4;
+          break;
+        }
+        int valueLen = valueBuffer.getLength() - valueStart;
+        putInt(keyLen, valueLen);
+        put(keyBuffer.getData(), keyStart, keyLen);
+        put(valueBuffer.getData(), valueStart, valueLen);
+      }
+      rIter.close();
+    }
+
+    public void close() throws IOException, InterruptedException {
+      if (!isFinished()) {
+        finish();
+      }
+      releaseNative();
+    }
   }
 
   public static class ReducerProcessor<IK, IV, OK, OV> extends
@@ -93,7 +153,7 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
         Class<IK> iKClass, Class<IV> iVClass, Class<OK> oKClass, Class<OV> oVClass,
         JobConf conf, RecordWriter<OK, OV> writer,
         Progressable progress) throws IOException {
-      super("RReducerHandler", inputBufferCapacity, outputBufferCapacity);
+      super("NativeTask.RReducerHandler", inputBufferCapacity, outputBufferCapacity);
       this.iKType = KVType.getType(iKClass);
       this.iVType = KVType.getType(iVClass);
       this.conf = conf;

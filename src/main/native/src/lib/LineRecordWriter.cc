@@ -39,7 +39,7 @@ void LineRecordWriter::init(OutputStream * stream, const string & codec) {
 
 void LineRecordWriter::init(const string & file, Config & config) {
   close();
-  _stream = FileSystem::getRaw().create(file);
+  _stream = FileSystem::get(config).create(file);
   _hasStream = true;
   string codec = Compressions::getCodecByFile(file);
   _appendBuffer.init(_bufferHint, _stream, codec);

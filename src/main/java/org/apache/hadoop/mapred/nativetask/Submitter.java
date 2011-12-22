@@ -38,7 +38,7 @@ public class Submitter extends Configured implements Tool  {
   public Submitter() {
     this(new Configuration());
   }
-  
+
   public Submitter(Configuration conf) {
     setConf(conf);
   }
@@ -85,7 +85,7 @@ public class Submitter extends Configured implements Tool  {
    */
   static class CommandLineParser {
     private Options options = new Options();
-    
+
     @SuppressWarnings("static-access")
     void addOption(String longName, boolean required, String description,
         String paramName) {
@@ -106,7 +106,7 @@ public class Submitter extends Configured implements Tool  {
       Parser result = new BasicParser();
       return result;
     }
-    
+
     void printUsage() {
       // The CLI package should do this for us, but I can't figure out how
       // to make it print something reasonable.
@@ -121,10 +121,10 @@ public class Submitter extends Configured implements Tool  {
       GenericOptionsParser.printGenericCommandUsage(System.out);
     }
   }
-  
-  private static <InterfaceType> 
-  Class<? extends InterfaceType> getClass(CommandLine cl, String key, 
-                                          JobConf conf, 
+
+  private static <InterfaceType>
+  Class<? extends InterfaceType> getClass(CommandLine cl, String key,
+                                          JobConf conf,
                                           Class<InterfaceType> cls
                                          ) throws ClassNotFoundException {
     return conf.getClassByName((String) cl.getOptionValue(key)).asSubclass(cls);
@@ -142,30 +142,28 @@ public class Submitter extends Configured implements Tool  {
     cli.addOption("output", false, "output path from the reduces", "path");
 
     cli.addOption("jar", false, "job jar file", "path");
-    
-    cli.addOption("inputformat", false, "java classname of InputFormat", 
-                  "class");
-    cli.addOption("outputformat", false, "java classname of OutputFormat", 
-                  "class");
+
+    cli.addOption("inputformat", false, "java classname of InputFormat", "class");
+    cli.addOption("outputformat", false, "java classname of OutputFormat", "class");
     cli.addOption("reduces", false, "number of reduces", "num");
-    cli.addOption("jobconf", false, 
+    cli.addOption("jobconf", false,
         "\"n1=v1,n2=v2,..\" (Deprecated) Optional. Add or override a JobConf property.",
         "key=val");
     Parser parser = cli.createParser();
     try {
-      
+
       GenericOptionsParser genericParser = new GenericOptionsParser(getConf(), args);
-      CommandLine results = 
+      CommandLine results =
         parser.parse(cli.options, genericParser.getRemainingArgs());
-      
+
       JobConf job = new JobConf(getConf());
-      
+
       if (results.hasOption("input")) {
-        FileInputFormat.setInputPaths(job, 
+        FileInputFormat.setInputPaths(job,
                           (String) results.getOptionValue("input"));
       }
       if (results.hasOption("output")) {
-        FileOutputFormat.setOutputPath(job, 
+        FileOutputFormat.setOutputPath(job,
           new Path((String) results.getOptionValue("output")));
       }
       if (results.hasOption("jar")) {
@@ -195,7 +193,7 @@ public class Submitter extends Configured implements Tool  {
         final URL[] urls = new URL[]{ FileSystem.getLocal(job).
             pathToFile(new Path(jarFile)).toURL()};
         //FindBugs complains that creating a URLClassLoader should be
-        //in a doPrivileged() block. 
+        //in a doPrivileged() block.
         ClassLoader loader =
           AccessController.doPrivileged(
               new PrivilegedAction<ClassLoader>() {
@@ -206,7 +204,7 @@ public class Submitter extends Configured implements Tool  {
             );
         job.setClassLoader(loader);
       }
-      
+
       runJob(job);
       return 0;
     } catch (ParseException pe) {

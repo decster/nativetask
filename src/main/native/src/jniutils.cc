@@ -81,7 +81,7 @@ JNIEnv* JNU_GetJNIEnv(void) {
     //Create the VM
     JavaVMInitArgs vm_args;
     JavaVM *vm;
-    vm_args.version = JNI_VERSION_1_2;
+    vm_args.version = JNI_VERSION_1_6;
     vm_args.options = options;
     vm_args.nOptions = noArgs;
     vm_args.ignoreUnrecognized = 1;

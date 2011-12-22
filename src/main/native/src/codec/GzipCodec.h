@@ -24,6 +24,12 @@
 namespace Hadoop {
 
 class GzipCompressStream : public CompressStream {
+protected:
+  uint64_t _compressedBytesWritten;
+  char * _buffer;
+  uint32_t _capacity;
+  void * _zstream;
+  bool _finished;
 public:
   GzipCompressStream(OutputStream * stream,
                        uint32_t bufferSizeHint);
@@ -38,9 +44,18 @@ public:
 
   virtual void writeDirect(const void * buff, uint32_t length);
 
+  virtual uint64_t compressedBytesWritten() {
+    return _compressedBytesWritten;
+  }
 };
 
 class GzipDecompressStream : public DecompressStream {
+protected:
+  uint64_t _compressedBytesRead;
+  char * _buffer;
+  uint32_t _capacity;
+  void * _zstream;
+  bool _eof;
 public:
   GzipDecompressStream(InputStream * stream,
                          uint32_t bufferSizeHint);
@@ -52,6 +67,10 @@ public:
   virtual void close();
 
   virtual int32_t readDirect(void * buff, uint32_t length);
+
+  virtual uint64_t compressedBytesRead() {
+    return _compressedBytesRead;
+  }
 };
 
 } // namespace Hadoop

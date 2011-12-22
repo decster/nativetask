@@ -40,17 +40,12 @@ import org.apache.hadoop.mapred.nativetask.NativeUtils;
 public class NativeRuntime {
   private static Log LOG = LogFactory.getLog(NativeRuntime.class);
   private static boolean nativeLibraryLoaded = false;
-  private static JobConf conf = null;
+  private static JobConf conf = new JobConf();
   // TODO: use this to do bookkeeping
   // private static HashSet<Long> NativeObjects = new HashSet<Long>();
   // All configs native side needed
   private static String[] usefulExternalConfigsKeys = {
       "mapred.map.tasks",
-      "mapred.reduce.tasks",
-      "mapred.mapper.class",
-      "mapred.reducer.class",
-      "mapred.partitioner.class",
-      "mapred.combiner.class",
       "mapred.task.partition",
       "mapred.mapoutput.key.class",
       "mapred.mapoutput.value.class",
@@ -58,9 +53,12 @@ public class NativeRuntime {
       "mapred.output.value.class",
       "mapred.input.format.class",
       "mapred.output.format.class",
+      "mapred.work.output.dir",
+      "mapred.textoutputformat.separator",
       "io.sort.mb",
       "io.file.buffer.size",
       "fs.default.name",
+      "fs.defaultFS",
   };
 
   static {
@@ -126,7 +124,7 @@ public class NativeRuntime {
     String pathStr = NativeUtils.fromBytes(pathUTF8);
     Path path = new Path(pathStr);
     FileSystem fs = path.getFileSystem(conf);
-    return fs.exists(path);    
+    return fs.exists(path);
   }
   
   public static boolean remove(byte [] pathUTF8) throws IOException {
@@ -140,22 +138,22 @@ public class NativeRuntime {
     String pathStr = NativeUtils.fromBytes(pathUTF8);
     Path path = new Path(pathStr);
     FileSystem fs = path.getFileSystem(conf);
-    return fs.mkdirs(path);
+    boolean ret = fs.mkdirs(path);
+    return ret;
   }
 
   public static void configure(JobConf jobConf) {
     asserNativeLibraryLoaded();
-    if (conf != null) {
-      LOG.warn("Native runtime configure again!");
-    }
     conf = jobConf;
     List<byte[]> nativeConfigs = new ArrayList<byte[]>();
     // add needed external configs
     for (int i = 0; i < usefulExternalConfigsKeys.length; i++) {
       String key = usefulExternalConfigsKeys[i];
       String value = conf.get(key);
-      nativeConfigs.add(NativeUtils.toBytes(key));
-      nativeConfigs.add(NativeUtils.toBytes(value));
+      if (value != null) {
+        nativeConfigs.add(NativeUtils.toBytes(key));
+        nativeConfigs.add(NativeUtils.toBytes(value));
+      }
     }
     // add native.* configs
     for (Map.Entry<String, String> e : conf) {
@@ -168,10 +166,14 @@ public class NativeRuntime {
   }
 
   public static void set(String key, String value) {
+    set(key, NativeUtils.toBytes(value));
+  }
+
+  public static void set(String key, byte [] value) {
     asserNativeLibraryLoaded();
     byte [][] jniConfig = new byte [2][];
     jniConfig[0] = NativeUtils.toBytes(key);
-    jniConfig[1] = NativeUtils.toBytes(value);
+    jniConfig[1] = value;
     JNIConfigure(jniConfig);
   }
 
@@ -200,6 +202,9 @@ public class NativeRuntime {
     ReducerType,
     PartitionerType,
     CombinerType,
+    FolderType,
+    RecordReaderType,
+    RecordWriterType
   }
 
   public synchronized static long createDefaultObject(NativeObjectType type) {

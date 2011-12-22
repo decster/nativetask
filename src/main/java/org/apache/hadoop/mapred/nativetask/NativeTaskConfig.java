@@ -29,6 +29,9 @@ public interface NativeTaskConfig {
   public static String NATIVE_REDUCER_CLASS = "native.reducer.class";
   public static String NATIVE_PARTITIONER_CLASS = "native.partitioner.class";
   public static String NATIVE_COMBINER_CLASS = "native.combiner.class";
+  
+  public static String NATIVE_RECORDREADER_CLASS = "native.recordreader.class";
+  public static String NATIVE_RECORDWRITER_CLASS = "native.recordwriter.class";
 
   public static String NATIVE_PROCESSOR_BUFFER_KB = "native.processor.buffer.kb";
   public static int NATIVE_PROCESSOR_BUFFER_KB_DEFAULT = 64;
