@@ -22,6 +22,8 @@
 #include "jniutils.h"
 #include "NativeObjectFactory.h"
 
+using namespace Hadoop;
+
 ///////////////////////////////////////////////////////////////
 // NativeRuntime JNI methods
 ///////////////////////////////////////////////////////////////
@@ -44,6 +46,10 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeRuntime_JN
   }
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
+  }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
   }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
@@ -79,6 +85,10 @@ JNIEXPORT void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeRuntime_JN
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
+  }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
@@ -106,6 +116,10 @@ jlong JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeRuntime_JNICreateNa
   }
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
+  }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
   }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
@@ -136,6 +150,10 @@ JNIEXPORT jlong JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeRuntime_J
   }
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
+  }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
   }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
@@ -171,6 +189,10 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeRuntime_JNIReleaseNa
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
+  }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
@@ -201,6 +223,10 @@ jint JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeRuntime_registerModu
   }
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
+  }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
   }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());

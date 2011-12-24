@@ -24,9 +24,12 @@
 namespace Hadoop {
 
 MMapperHandler::MMapperHandler() :
+    _config(NULL),
     _moc(NULL),
     _mapper(NULL),
     _partitioner(NULL),
+    _combinerCreator(NULL),
+    _numPartition(1),
     _dest(NULL),
     _remain(0) {
 }
@@ -44,27 +47,39 @@ void MMapperHandler::reset() {
   _moc = NULL;
   delete _partitioner;
   _partitioner = NULL;
+  _combinerCreator = NULL;
 }
 
 void MMapperHandler::configure(Config & config) {
-  // partitioner
-  const char * partitionerClass = config.get("native.partitioner.class");
-  if (NULL != partitionerClass) {
-    _partitioner
-        = (Partitioner *) NativeObjectFactory::CreateObject(partitionerClass);
-  }
-  else {
-    _partitioner
-        = (Partitioner *) NativeObjectFactory::CreateDefaultObject(PartitionerType);
-  }
-  if (NULL == _partitioner) {
-    THROW_EXCEPTION(UnsupportException, "Partitioner not found");
-  }
-  _partitioner->configure(config);
+  _config = &config;
 
   // collector
   _numPartition = config.getInt("mapred.reduce.tasks", 1);
   if (_numPartition > 0) {
+    // combiner
+    const char * combinerClass = config.get("native.combiner.class");
+    if (NULL != combinerClass) {
+      _combinerCreator = NativeObjectFactory::GetObjectCreator(combinerClass);
+      if (NULL == _combinerCreator) {
+        THROW_EXCEPTION_EX(UnsupportException, "Combiner not found: %s", combinerClass);
+      }
+    }
+
+    // partitioner
+    const char * partitionerClass = config.get("native.partitioner.class");
+    if (NULL != partitionerClass) {
+      _partitioner
+          = (Partitioner *) NativeObjectFactory::CreateObject(partitionerClass);
+    }
+    else {
+      _partitioner
+          = (Partitioner *) NativeObjectFactory::CreateDefaultObject(PartitionerType);
+    }
+    if (NULL == _partitioner) {
+      THROW_EXCEPTION_EX(UnsupportException, "Partitioner not found: %s", partitionerClass);
+    }
+    _partitioner->configure(config);
+
     LOG("Native Mapper with MapOutputCollector");
     _moc = new MapOutputCollector(_numPartition);
     _moc->configure(config);
@@ -82,7 +97,7 @@ void MMapperHandler::configure(Config & config) {
     _mapper = (Mapper *) NativeObjectFactory::CreateDefaultObject(MapperType);
   }
   if (NULL == _mapper) {
-    THROW_EXCEPTION(UnsupportException, "Mapper not found");
+    THROW_EXCEPTION_EX(UnsupportException, "Mapper not found: %s", mapperClass);
   }
   _mapper->configure(config);
   _mapper->setCollector(this);

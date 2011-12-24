@@ -47,61 +47,50 @@ public:
       _inputData.append(buff,len-1);
       _inputData.append(buff,len);
     }
-    uint32_t len = (uint32_t)-1;
-    _inputData.append((const char*)(&len), 4);
-    _inputData.append((const char*)(&len), 4);
     _inputDataUsed = 0;
     _inputKeyGroup = (cnt+9)/10;
   }
+
   virtual void flushOutput(uint32_t length) {
     _outputData.append(_ob.buff, length);
   }
-  virtual void waitRead() {
+
+  virtual void finish() {
+    flush();
+  }
+
+  virtual int32_t refill() {
     uint32_t rest = _inputData.length() - _inputDataUsed;
     uint32_t cp = 13500 < rest ? 13500 : rest;
-    memcpy(_ib.buff, _inputData.c_str()+_inputDataUsed, cp);
+    if (cp>0) {
+      memcpy(_ib.buff, _inputData.c_str()+_inputDataUsed, cp);
+    }
     _inputDataUsed += cp;
     _ib.position = cp;
-    _ibPosition = cp;
     _current = _ib.buff;
-    _remain = _ibPosition;
+    _remain = cp;
+    return cp;
   }
-  void process() {
+
+  void varifyData() {
+    ASSERT_EQ(_inputData.length(), _outputData.length());
+    //ASSERT_EQ(_inputData, _outputData);
+  }
+
+  void prepare() {
     initBuffers();
     makeInputData(10000);
-    uint32_t outputKeyGroup = 0;
-    while (nextKey()) {
-      outputKeyGroup++;
-      const char * key;
-      const char * value;
-      uint32_t keyLen;
-      uint32_t valLen;
-      key = getKey(keyLen);
-      //printf("key: [%s]\n", string(key, keyLen).c_str());
-      //int maxt = 3;
-      while ((value=nextValue(valLen)) != NULL) {
-        //printf("value: [%s]\n", string(value, valLen).c_str());
-        //if (--maxt==0)
-        //  break;
-        _outputData.append((const char *)&keyLen, 4);
-        _outputData.append((const char *)&valLen, 4);
-        _outputData.append(key, keyLen);
-        _outputData.append(value,valLen);
-      }
-    }
-    uint32_t eofLen = (uint32_t)-1;
-    _outputData.append((const char *)&eofLen, 4);
-    _outputData.append((const char *)&eofLen, 4);
-    //printf("input key group: %u output key group: %u\n", _inputKeyGroup, outputKeyGroup);
-    assert(outputKeyGroup==_inputKeyGroup);
-    assert(_outputData==_inputData);
   }
 };
 
 }
 
-TEST(RReducerHandler, Process) {
-  RReducerHandlerTester * t = new RReducerHandlerTester();
-  t->process();
+TEST(RReducerHandler, ReducerOnly) {
+  Config jobconf;
+  RReducerHandlerTester t = RReducerHandlerTester();
+  t.configure(jobconf);
+  t.prepare();
+  t.command("run");
+  t.varifyData();
 }
 

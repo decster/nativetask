@@ -24,7 +24,9 @@ import java.nio.ByteBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hdfs.web.resources.RecursiveParam;
 import org.apache.hadoop.io.DataInputBuffer;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RawKeyValueIterator;
@@ -63,9 +65,8 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
       // delegate whole reduce task
       NativeRuntime.set("native.output.file.name", finalName);
       ReduceTaskProcessor<IK, IV> processor = new ReduceTaskProcessor<IK, IV>(
-          bufferCapacity, keyClass, valueClass, job, reporter);
-      processor.process(rIter);
-      processor.close();
+          bufferCapacity, 0, keyClass, valueClass, job, reporter, rIter);
+      processor.run();
     } else {
       FileSystem fs = FileSystem.get(job);
       RecordWriter<OK, OV> writer = job.getOutputFormat().getRecordWriter(
@@ -75,9 +76,9 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
       ReducerProcessor<IK, IV, OK, OV> processor =
           new ReducerProcessor<IK, IV, OK, OV>(
           bufferCapacity, bufferCapacity, keyClass, valueClass, okeyClass,
-          ovalueClass, job, writer, reporter);
-      processor.process(rIter);
-      processor.close();
+          ovalueClass, job, writer, reporter, rIter);
+      processor.run();
+      writer.close(reporter);
     }
   }
 
@@ -85,64 +86,143 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
     final private JobConf conf;
     final private KVType iKType;
     final private KVType iVType;
+    final private byte [] refillRet = new byte[4];
+    RawKeyValueIterator rIter;
+    DataInputBuffer keyBuffer;
+    DataInputBuffer valueBuffer;
+    int keyStart;
+    int valueStart;
+    int keyLen;
+    int valueLen;
+    int copied;
+    enum FillState {
+      NEW,
+      KVLENGTH,
+      KV,
+    }
+    FillState fillState;
+
     public ReduceTaskProcessor(int inputBufferCapacity, Class<IK> iKClass,
-        Class<IV> iVClass, JobConf conf, Progressable progress) {
-      super("NativeTask.RReducerHandler", inputBufferCapacity, 0);
+        Class<IV> iVClass, JobConf conf, Progressable progress,
+        RawKeyValueIterator rIter) {
+      this(inputBufferCapacity, 0, iKClass, iVClass, conf, progress, rIter);
+    }
+
+    public ReduceTaskProcessor(int inputBufferCapacity, int outputBufferCapacity, Class<IK> iKClass,
+        Class<IV> iVClass, JobConf conf, Progressable progress,
+        RawKeyValueIterator rIter) {
+      super("NativeTask.RReducerHandler", inputBufferCapacity, outputBufferCapacity);
       this.iKType = KVType.getType(iKClass);
       this.iVType = KVType.getType(iVClass);
       this.conf = conf;
+      this.fillState = FillState.NEW;
+      this.rIter = rIter;
     }
 
-    public void process(RawKeyValueIterator rIter) throws IOException {
-      while (rIter.next()) {
-        DataInputBuffer keyBuffer = rIter.getKey();
-        int keyStart = keyBuffer.getPosition();
-        switch (iKType) {
-        case TEXT:
-          keyStart += WritableUtils.decodeVIntSize(keyBuffer.getData()[keyBuffer.getPosition()]);
-          break;
-        case BYTES:
-          keyStart += 4;
-          break;
-        }
-        int keyLen = keyBuffer.getLength() - keyStart;
-        DataInputBuffer valueBuffer = rIter.getValue();
-        int valueStart = valueBuffer.getPosition();
-        switch (iVType) {
-        case TEXT:
-          valueStart += WritableUtils.decodeVIntSize(valueBuffer.getData()[valueBuffer.getPosition()]);
-          break;
-        case BYTES:
-          valueStart += 4;
-          break;
-        }
-        int valueLen = valueBuffer.getLength() - valueStart;
-        putInt(keyLen, valueLen);
-        put(keyBuffer.getData(), keyStart, keyLen);
-        put(valueBuffer.getData(), valueStart, valueLen);
+    private byte [] currentInputBufferPosition() {
+      int count = inputBuffer.position();
+      refillRet[0] = (byte)(count & 0xff);
+      refillRet[1] = (byte)((count>>8) & 0xff);
+      refillRet[2] = (byte)((count>>16) & 0xff);
+      refillRet[3] = (byte)((count>>24) & 0xff);
+      return refillRet;
+    }
+
+    @Override
+    protected byte[] sendCommandToJava(byte[] data) throws IOException {
+      // must be refill
+      if (data[0] != (byte)'r') {
+        throw new IOException("command not support");
       }
-      rIter.close();
+      inputBuffer.position(0);
+      while (true) {
+        switch (fillState) {
+        case NEW:
+          if (!rIter.next()) {
+            return currentInputBufferPosition();
+          }
+          keyBuffer = rIter.getKey();
+          keyStart = keyBuffer.getPosition();
+          switch (iKType) {
+          case TEXT:
+            keyStart += WritableUtils.decodeVIntSize(keyBuffer.getData()[keyBuffer.getPosition()]);
+            break;
+          case BYTES:
+            keyStart += 4;
+            break;
+          }
+          keyLen = keyBuffer.getLength() - keyStart;
+          valueBuffer = rIter.getValue();
+          valueStart = valueBuffer.getPosition();
+          switch (iVType) {
+          case TEXT:
+            valueStart += WritableUtils.decodeVIntSize(valueBuffer.getData()[valueBuffer.getPosition()]);
+            break;
+          case BYTES:
+            valueStart += 4;
+            break;
+          }
+          valueLen = valueBuffer.getLength() - valueStart;
+          if (inputBuffer.remaining() >= keyLen+valueLen+8) {
+            inputBuffer.putInt(keyLen);
+            inputBuffer.putInt(valueLen);
+            inputBuffer.put(keyBuffer.getData(), keyStart, keyLen);
+            inputBuffer.put(valueBuffer.getData(), valueStart, valueLen);
+          } else {
+            fillState = FillState.KVLENGTH;
+            if (inputBuffer.position()>0) {
+              // if already have some data, return those
+              return currentInputBufferPosition();
+            }
+          }
+          break;
+        case KVLENGTH:
+          inputBuffer.putInt(keyLen);
+          inputBuffer.putInt(valueLen);
+          copied = 0;
+          fillState = FillState.KV;
+          break;
+        case KV:
+          if (copied<keyLen) {
+            int cp = Math.min(keyLen - copied, inputBuffer.remaining());
+            if (cp>0) {
+              inputBuffer.put(keyBuffer.getData(), keyStart+copied, cp);
+              copied += cp;
+            }
+          }
+          if (copied>=keyLen) {
+            int vcopied = copied - keyLen;
+            int cp = Math.min(valueLen - vcopied, inputBuffer.remaining());
+            if (cp>0) {
+              inputBuffer.put(valueBuffer.getData(), valueStart+vcopied, cp);
+              copied += cp;
+            }
+            if (copied==keyLen+valueLen) {
+              fillState = FillState.NEW;
+            }
+          }
+          return currentInputBufferPosition();
+        }
+      }
     }
 
-    public void close() throws IOException, InterruptedException {
-      if (!isFinished()) {
-        finish();
+    public void run() throws IOException {
+      try {
+        command(NativeUtils.toBytes("run"));
+      } catch (Exception e) {
+        throw new IOException(e);
       }
       releaseNative();
     }
   }
 
   public static class ReducerProcessor<IK, IV, OK, OV> extends
-      NativeBatchProcessor {
+      ReduceTaskProcessor<IK, IV> {
     enum KVState {
       KEY, VALUE
     }
 
-    final private JobConf conf;
     final private RecordWriter<OK, OV> writer;
-    final private Progressable progress;
-    final private KVType iKType;
-    final private KVType iVType;
     OK tmpKey;
     OV tmpValue;
     NativeDeserializer<OK> keyDeserializer;
@@ -152,13 +232,9 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
     public ReducerProcessor(int inputBufferCapacity, int outputBufferCapacity,
         Class<IK> iKClass, Class<IV> iVClass, Class<OK> oKClass, Class<OV> oVClass,
         JobConf conf, RecordWriter<OK, OV> writer,
-        Progressable progress) throws IOException {
-      super("NativeTask.RReducerHandler", inputBufferCapacity, outputBufferCapacity);
-      this.iKType = KVType.getType(iKClass);
-      this.iVType = KVType.getType(iVClass);
-      this.conf = conf;
+        Progressable progress, RawKeyValueIterator rIter) throws IOException {
+      super(inputBufferCapacity, outputBufferCapacity, iKClass, iVClass, conf, progress, rIter);
       this.writer = writer;
-      this.progress = progress;
       tmpKey = ReflectionUtils.newInstance(oKClass, conf);
       tmpValue = ReflectionUtils.newInstance(oVClass, conf);
       keyDeserializer = NativeUtils.createDeserializer(oKClass);
@@ -183,44 +259,6 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
         }
       }
       return true;
-    }
-
-    public void process(RawKeyValueIterator rIter) throws IOException {
-      while (rIter.next()) {
-        DataInputBuffer keyBuffer = rIter.getKey();
-        int keyStart = keyBuffer.getPosition();
-        switch (iKType) {
-        case TEXT:
-          keyStart += WritableUtils.decodeVIntSize(keyBuffer.getData()[keyBuffer.getPosition()]);
-          break;
-        case BYTES:
-          keyStart += 4;
-          break;
-        }
-        int keyLen = keyBuffer.getLength() - keyStart;
-        DataInputBuffer valueBuffer = rIter.getValue();
-        int valueStart = valueBuffer.getPosition();
-        switch (iVType) {
-        case TEXT:
-          valueStart += WritableUtils.decodeVIntSize(valueBuffer.getData()[valueBuffer.getPosition()]);
-          break;
-        case BYTES:
-          valueStart += 4;
-          break;
-        }
-        int valueLen = valueBuffer.getLength() - valueStart;
-        putInt(keyLen, valueLen);
-        put(keyBuffer.getData(), keyStart, keyLen);
-        put(valueBuffer.getData(), valueStart, valueLen);
-      }
-      rIter.close();
-    }
-
-    public void close() throws IOException, InterruptedException {
-      if (!isFinished()) {
-        finish();
-      }
-      releaseNative();
     }
   }
 }

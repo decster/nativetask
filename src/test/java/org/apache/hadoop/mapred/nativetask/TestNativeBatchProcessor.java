@@ -34,7 +34,7 @@ public class TestNativeBatchProcessor extends TestCase {
     public boolean finished = false;
 
     public EchoBatchProcessor() {
-      init("EchoBatchHandler", BUFFER_SIZE, BUFFER_SIZE);
+      init("NativeTask.EchoBatchHandler", BUFFER_SIZE, BUFFER_SIZE);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class TestNativeBatchProcessor extends TestCase {
   public void testNullOutputBuffer() throws Exception {
     // just check dummy BatchProcessor without output buffer won't have any problem
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
-    NativeBatchProcessor processor = new NativeBatchProcessor("BatchHandler", 64 * 1024, 0);
+    NativeBatchProcessor processor = new NativeBatchProcessor("NativeTask.BatchHandler", 64 * 1024, 0);
     byte [] ret = processor.command(NativeUtils.toBytes("asdfasdf"));
     byte [][] inputs = createDatas(0, 1023, 329);
     for (byte []input:inputs) {

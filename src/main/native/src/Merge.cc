@@ -71,8 +71,6 @@ void Merger::initHeap() {
   make_heap(&(_heap[0]), &(_heap[0])+_heap.size(), MergeEntryCompare);
 }
 
-
-
 void Merger::merge() {
   Timer timer;
   uint64_t total_record = 0;
@@ -84,7 +82,6 @@ void Merger::merge() {
     while (cur_heap_size>0) {
       MergeEntryPtr top = base[0];
       _writer->writeKey(top->_key, top->_key_len, top->_value_len);
-      // TODO: handle big value
       _writer->writeValue(top->getValue(), top->_value_len);
       total_record++;
       if (0 == top->next()) { // have more, adjust heap
@@ -98,12 +95,7 @@ void Merger::merge() {
           adjust_heap(base, 1, cur_heap_size, MergeEntryCompare);
         }
       } else { // no more, pop heap
-        if (cur_heap_size>2) {
-          pop_heap(base, base+cur_heap_size, MergeEntryCompare);
-        }
-        else if (cur_heap_size==2) {
-          base[0] = base[1];
-        }
+        pop_heap(base, base+cur_heap_size, MergeEntryCompare);
         cur_heap_size--;
       }
     }

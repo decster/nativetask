@@ -33,7 +33,7 @@ import junit.framework.TestCase;
 public class TestNativeMapTaskDelegatorPerf extends TestCase {
   final static int NUM_REDUCE = 100;
   final static int INPUTSIZE = 250000000;
-  final static int KVSIZE = 256;
+  final static int KVSIZE = 64;
 
   public void perfMapperOutputProcessor(int numReduce, int kvSize, int inputSize)
       throws IOException, InterruptedException {
@@ -43,10 +43,11 @@ public class TestNativeMapTaskDelegatorPerf extends TestCase {
     conf.setBoolean(NativeTaskConfig.NATIVE_TASK_ENABLED, true);
     conf.setMapOutputKeyClass(Text.class);
     conf.setMapOutputValueClass(Text.class);
+    conf.setCompressMapOutput(true);
+    conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec");
     conf.setInt("io.sort.mb", 400);
     conf.setInt(NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB, 128);
     
-    conf.set("native.compression.type", "SNAPPY");
 
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
     NativeRuntime.configure(conf);

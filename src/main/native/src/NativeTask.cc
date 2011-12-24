@@ -17,13 +17,62 @@
  */
 
 #include "commons.h"
+#include "NativeTask.h"
 #include "Hash.h"
 #include "EchoBatchHandler.h"
 #include "MCollectorOutputHandler.h"
 #include "NativeObjectFactory.h"
-#include "NativeTask.h"
 
 namespace Hadoop {
+
+
+//////////////////////////////////////////////////////////////////
+// NativeObjectType methods
+//////////////////////////////////////////////////////////////////
+
+const string NativeObjectTypeToString(NativeObjectType type) {
+  switch (type) {
+  case BatchHandlerType:
+    return string("BatchHandlerType");
+  case MapperType:
+    return string("MapperType");
+  case ReducerType:
+    return string("ReducerType");
+  case PartitionerType:
+    return string("PartitionerType");
+  case CombinerType:
+    return string("CombinerType");
+  case FolderType:
+    return string("FolderType");
+  case RecordReaderType:
+    return string("RecordReaderType");
+  case RecordWriterType:
+    return string("RecordWriterType");
+  default:
+    return string("UnknownObjectType");
+  }
+}
+
+NativeObjectType NativeObjectTypeFromString(const string type) {
+  if (type == "BatchHandlerType") {
+    return BatchHandlerType;
+  } else if (type == "MapperType") {
+    return MapperType;
+  } else if (type == "ReducerType") {
+    return ReducerType;
+  } else if (type == "PartitionerType") {
+    return PartitionerType;
+  } else if (type == "CombinerType") {
+    return CombinerType;
+  } else if (type == "FolderType") {
+    return CombinerType;
+  } else if (type == "RecordReaderType") {
+    return RecordReaderType;
+  } else if (type == "RecordWriterType") {
+    return RecordWriterType;
+  }
+  return UnknownObjectType;
+}
 
 HadoopException::HadoopException(const string & what) {
   // remove long path prefix
@@ -197,6 +246,23 @@ uint32_t Partitioner::getPartition(const char * key, uint32_t & keyLen, uint32_t
     return 0;
   }
   return (Hash::BytesHash(key, keyLen) & 0x7fffffff) % numPartition;
+}
+
+///////////////////////////////////////////////////////////
+
+bool KeyGroupIterator::nextKey() {
+  // TODO: impl
+  return false;
+}
+
+const char * KeyGroupIterator::getKey(uint32_t & len) {
+  // TODO: impl
+  return NULL;
+}
+
+const char * KeyGroupIterator::nextValue(uint32_t & len) {
+  // TODO: impl
+  return NULL;
 }
 
 }

@@ -28,7 +28,7 @@ public class TestNativeRuntime extends TestCase {
     JobConf conf = new JobConf();
     NativeRuntime.configure(conf);
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
-    long obj = NativeRuntime.createNativeObject("MCollectorOutputHandler");
+    long obj = NativeRuntime.createNativeObject("NativeTask.MCollectorOutputHandler");
     assertTrue(obj != 0);
     NativeRuntime.releaseNativeObject(obj);
     long handler = NativeRuntime.createDefaultObject(NativeObjectType.BatchHandlerType);

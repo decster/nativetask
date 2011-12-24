@@ -62,7 +62,7 @@ public class NativeBatchProcessor {
     setupHandler(nativeHandlerAddr);    
   }
 
-  protected void releaseNative() {
+  protected synchronized void releaseNative() {
     if (nativeHandlerAddr != 0) {
       NativeRuntime.releaseNativeObject(nativeHandlerAddr);
       nativeHandlerAddr = 0;

@@ -23,41 +23,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "NativeObject.h"
-
-/**
- * Entrance for an object library, all user level object
- * libraries with library name "LIBRARYNAME" should provide
- * two function of the type defined below with the function
- * name:
- *  <LIBRARYNAME>CreateObject
- *  <LIBRARYNAME>Init
- * The return value for CreateObjectFunc must be an pointer of
- * NativeObject instance or NULL.
- *
- * These two interfaces provide a simple way to register classes,
- * and create classes objects by class name at runtime(like
- * java reflection).
- * Normally, users doesn't need to define these two functions
- * explicitly, just use these two predefined macro:
- *   DEFINE_NATIVE_LIBRARY(Library)
- *   REGISTER_CLASS(Type, Library)
- * For example, suppose we have a demo application, which has
- * defined class MyDemoMapper and MyDemoReducer, to register
- * this module & these two classes, you need to add following
- * code to you source code.
- *   DEFINE_NATIVE_LIBRARY(MyDemo) {
- *     REGISTER_CLASS(MyDemoMapper, MyDemo);
- *     REGISTER_CLASS(MyDemoReducer, MyDemo);
- *   }
- * The class name for MyDemoMapper will be MyDemo.MyDemoMapper,
- * and similar for MyDemoReducer.
- * Then you can set native.mapper.class to MyDemo.MyDemoMapper
- * in JobConf.
- */
-typedef void * (*CreateObjectFunc)(const char * name);
-typedef int32_t (*InitLibraryFunc)();
-
 
 namespace Hadoop {
 
@@ -65,6 +30,48 @@ using std::string;
 using std::vector;
 using std::map;
 using std::pair;
+
+/**
+ * NativeObjectType
+ */
+enum NativeObjectType {
+  UnknownObjectType = 0,
+  BatchHandlerType = 1,
+  MapperType = 2,
+  ReducerType = 3,
+  PartitionerType = 4,
+  CombinerType = 5,
+  FolderType = 6,
+  RecordReaderType = 7,
+  RecordWriterType = 8
+};
+
+extern const std::string NativeObjectTypeToString(NativeObjectType type);
+extern NativeObjectType NativeObjectTypeFromString(const std::string type);
+
+/**
+ * Objects that can be loaded dynamically from shared library,
+ * and managed by NativeObjectFactory
+ */
+class NativeObject {
+public:
+  virtual NativeObjectType type() {
+    return UnknownObjectType;
+  }
+
+  virtual ~NativeObject() {};
+};
+
+template<typename T>
+NativeObject * ObjectCreator() {
+  return new T();
+}
+
+typedef NativeObject * (*ObjectCreatorFunc)();
+
+typedef ObjectCreatorFunc (*GetObjectCreatorFunc)(const std::string & name);
+
+typedef int32_t (*InitLibraryFunc)();
 
 /**
  * Exceptions
@@ -98,6 +105,16 @@ public:
 class UnsupportException : public HadoopException {
 public:
   UnsupportException(const string & what) :
+    HadoopException(what) {
+  }
+};
+
+/**
+ * Exception when call java methods using JNI
+ */
+class JavaException: public HadoopException {
+public:
+  JavaException(const string & what) :
     HadoopException(what) {
   }
 };
@@ -261,7 +278,13 @@ public:
   }
 };
 
-class RecordReader : public Configurable {
+class KVIterator {
+public:
+  virtual ~KVIterator() {}
+  virtual bool next(Buffer & key, Buffer & value) = 0;
+};
+
+class RecordReader : public KVIterator, public Configurable {
 public:
   virtual NativeObjectType type() {
     return RecordReaderType;
@@ -289,7 +312,7 @@ public:
 
 
 class ProcessorBase : public Configurable {
-private:
+protected:
   Collector * _collector;
 public:
   ProcessorBase():_collector(NULL) {
@@ -297,6 +320,10 @@ public:
 
   void setCollector(Collector * collector) {
     _collector = collector;
+  }
+
+  Collector * getCollector() {
+    return _collector;
   }
 
   void collect(const void * key, uint32_t keyLen,
@@ -349,6 +376,7 @@ public:
 
 class KeyGroup {
 public:
+  virtual ~KeyGroup() {}
   /**
    * Get key of this input group
    */
@@ -359,6 +387,31 @@ public:
    * @return NULL if no more
    */
   virtual const char * nextValue(uint32_t & len) = 0;
+};
+
+class KeyGroupIterator : public KeyGroup {
+protected:
+  KVIterator & _kvIterator;
+  string _currentKey;
+  Buffer _key;
+  Buffer _value;
+public:
+  KeyGroupIterator(KVIterator & kvIterator);
+  /**
+   * Move to nextKey, or begin this iterator
+   */
+  virtual bool nextKey();
+
+  /**
+   * Get key of this input group
+   */
+  virtual const char * getKey(uint32_t & len);
+
+  /**
+   * Get next value of this input group
+   * @return NULL if no more
+   */
+  virtual const char * nextValue(uint32_t & len);
 };
 
 class Reducer: public ProcessorBase {
@@ -434,5 +487,36 @@ public:
 };
 
 } // namespace Hadoop;
+
+/**
+ * Use these two predefined macro to define a class library:
+ *   DEFINE_NATIVE_LIBRARY(Library)
+ *   REGISTER_CLASS(Type, Library)
+ * For example, suppose we have a demo application, which has
+ * defined class MyDemoMapper and MyDemoReducer, to register
+ * this module & these two classes, you need to add following
+ * code to you source code.
+ *   DEFINE_NATIVE_LIBRARY(MyDemo) {
+ *     REGISTER_CLASS(MyDemoMapper, MyDemo);
+ *     REGISTER_CLASS(MyDemoReducer, MyDemo);
+ *   }
+ * The class name for MyDemoMapper will be MyDemo.MyDemoMapper,
+ * and similar for MyDemoReducer.
+ * Then you can set native.mapper.class to MyDemo.MyDemoMapper
+ * in JobConf.
+ */
+#define DEFINE_NATIVE_LIBRARY(Library) \
+  static std::map<std::string, Hadoop::ObjectCreatorFunc> Library##ClassMap__; \
+  extern "C" Hadoop::ObjectCreatorFunc Library##GetObjectCreator(const std::string & name) { \
+    NativeObject * ret = NULL; \
+    std::map<std::string, Hadoop::ObjectCreatorFunc>::iterator itr = Library##ClassMap__.find(name); \
+    if (itr != Library##ClassMap__.end()) { \
+      return itr->second; \
+    } \
+    return NULL; \
+  } \
+  extern "C" int Library##Init()
+
+#define REGISTER_CLASS(Type, Library) Library##ClassMap__[#Library"."#Type] = Hadoop::ObjectCreator<Type>
 
 #endif /* NATIVETASK_H_ */

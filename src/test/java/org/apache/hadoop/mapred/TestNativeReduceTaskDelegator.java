@@ -43,6 +43,8 @@ public class TestNativeReduceTaskDelegator extends TestCase {
   private static Log LOG = LogFactory.getLog(TestNativeReduceTaskDelegator.class);
   static int INPUT_SIZE = 500000;
   static int GROUP_SIZE =  48697;
+//  static int INPUT_SIZE = 100;
+//  static int GROUP_SIZE =  20;
 
   List<Text[]> createData(int count) {
     List<Text[]> ret = new ArrayList<Text[]>();
@@ -136,7 +138,7 @@ public class TestNativeReduceTaskDelegator extends TestCase {
     conf.setOutputKeyClass(Text.class);
     conf.setOutputValueClass(Text.class);
     // use passive reducer
-    conf.set(NativeTaskConfig.NATIVE_REDUCER_CLASS, "Mapper");
+    conf.set(NativeTaskConfig.NATIVE_REDUCER_CLASS, "NativeTask.Mapper");
 
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
     NativeRuntime.configure(conf);
@@ -151,9 +153,8 @@ public class TestNativeReduceTaskDelegator extends TestCase {
 
     ReducerProcessor<Text, Text, Text, Text> processor =
         new ReducerProcessor<Text, Text, Text, Text>(bufferCapacity, bufferCapacity,
-            Text.class, Text.class, Text.class, Text.class, conf, writer, new NullProgress());
-    processor.process(rIter);
-    processor.close();
+            Text.class, Text.class, Text.class, Text.class, conf, writer, new NullProgress(), rIter);
+    processor.run();
   }
 
   public void testActiveReducerProcessor() throws Exception {
@@ -162,7 +163,7 @@ public class TestNativeReduceTaskDelegator extends TestCase {
     conf.setOutputKeyClass(Text.class);
     conf.setOutputValueClass(Text.class);
     // use active reducer
-    conf.set(NativeTaskConfig.NATIVE_REDUCER_CLASS, "Reducer");
+    conf.set(NativeTaskConfig.NATIVE_REDUCER_CLASS, "NativeTask.Reducer");
 
     assertTrue(NativeRuntime.isNativeLibraryLoaded());
     NativeRuntime.configure(conf);
@@ -177,8 +178,8 @@ public class TestNativeReduceTaskDelegator extends TestCase {
 
     ReducerProcessor<Text, Text, Text, Text> processor =
         new ReducerProcessor<Text, Text, Text, Text>(bufferCapacity, bufferCapacity,
-            Text.class, Text.class, Text.class, Text.class, conf, writer, new NullProgress());
-    processor.process(rIter);
-    processor.close();
+            Text.class, Text.class, Text.class, Text.class, conf, writer, new NullProgress(), rIter);
+    processor.run();
+    writer.close(null);
   }
 }

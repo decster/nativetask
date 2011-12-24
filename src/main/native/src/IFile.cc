@@ -124,13 +124,13 @@ void IFileWriter::endPartition() {
   info->realEndPosition = _stream->tell();
 }
 
-void IFileWriter::writeKey(const char * key, uint32_t key_len, uint32_t value_len) {
+void IFileWriter::writeKey(const char * key, uint32_t keyLen, uint32_t valueLen) {
   // append KeyLength ValueLength KeyBytesLength
-  uint32_t keyBuffLen = key_len;
-  uint32_t valBuffLen = value_len;
+  uint32_t keyBuffLen = keyLen;
+  uint32_t valBuffLen = valueLen;
   switch (_kType) {
   case TextType:
-    keyBuffLen += WritableUtils::GetVLongSize(key_len);
+    keyBuffLen += WritableUtils::GetVLongSize(keyLen);
     break;
   case BytesType:
     keyBuffLen += 4;
@@ -138,7 +138,7 @@ void IFileWriter::writeKey(const char * key, uint32_t key_len, uint32_t value_le
   }
   switch (_vType) {
   case TextType:
-    valBuffLen += WritableUtils::GetVLongSize(value_len);
+    valBuffLen += WritableUtils::GetVLongSize(valueLen);
     break;
   case BytesType:
     valBuffLen += 4;
@@ -146,28 +146,28 @@ void IFileWriter::writeKey(const char * key, uint32_t key_len, uint32_t value_le
   _appendBuffer.write_vuint2(keyBuffLen, valBuffLen);
   switch (_kType) {
   case TextType:
-    _appendBuffer.write_vuint(key_len);
+    _appendBuffer.write_vuint(keyLen);
     break;
   case BytesType:
-    _appendBuffer.write_uint32_be(key_len);
+    _appendBuffer.write_uint32_be(keyLen);
     break;
   }
-  if (key_len>0) {
-    _appendBuffer.write(key, key_len);
+  if (keyLen>0) {
+    _appendBuffer.write(key, keyLen);
   }
 }
 
-void IFileWriter::writeValue(const char * value, uint32_t value_len) {
+void IFileWriter::writeValue(const char * value, uint32_t valueLen) {
   switch (_vType) {
   case TextType:
-    _appendBuffer.write_vuint(value_len);
+    _appendBuffer.write_vuint(valueLen);
     break;
   case BytesType:
-    _appendBuffer.write_uint32_be(value_len);
+    _appendBuffer.write_uint32_be(valueLen);
     break;
   }
-  if (value_len>0) {
-    _appendBuffer.write(value, value_len);
+  if (valueLen>0) {
+    _appendBuffer.write(value, valueLen);
   }
 }
 
@@ -180,13 +180,13 @@ IndexRange * IFileWriter::getIndex(uint32_t start) {
   return new IndexRange(start, (uint32_t) _spillInfo.size(), "", segs);
 }
 
-void IFileWriter::getStatistics(uint64_t & offset, uint64_t & realoffset) {
+void IFileWriter::getStatistics(uint64_t & offset, uint64_t & realOffset) {
   if (_spillInfo.size()>0) {
     offset = _spillInfo[_spillInfo.size()-1].endPosition;
-    realoffset = _spillInfo[_spillInfo.size()-1].realEndPosition;
+    realOffset = _spillInfo[_spillInfo.size()-1].realEndPosition;
   } else{
     offset = 0;
-    realoffset = 0;
+    realOffset = 0;
   }
 }
 

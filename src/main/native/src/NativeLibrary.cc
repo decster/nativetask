@@ -19,7 +19,6 @@
 #include <dlfcn.h>
 
 #include "commons.h"
-#include "NativeObject.h"
 #include "NativeObjectFactory.h"
 #include "NativeLibrary.h"
 
@@ -29,8 +28,8 @@ namespace Hadoop {
 // NativeLibrary methods
 //////////////////////////////////////////////////////////////////
 
-NativeLibrary::NativeLibrary(const string path, const string name)
-    :_path(path), _name(name), _create_object_func(NULL) {
+NativeLibrary::NativeLibrary(const string & path, const string & name)
+    :_path(path), _name(name), _getObjectCreatorFunc(NULL) {
 
 }
 
@@ -44,9 +43,9 @@ bool NativeLibrary::init() {
   dlerror();
   LOG("Load object library %s(%s):", _name.c_str(), _path.c_str())
 
-  string create_object_func_name = _name + "CreateObject";
-  _create_object_func = (CreateObjectFunc)dlsym(library, create_object_func_name.c_str());
-  if (NULL==_create_object_func) {
+  string create_object_func_name = _name + "GetObjectCreator";
+  _getObjectCreatorFunc = (GetObjectCreatorFunc)dlsym(library, create_object_func_name.c_str());
+  if (NULL==_getObjectCreatorFunc) {
     LOG("Do not have object factory: %s", create_object_func_name.c_str());
   }
 
@@ -67,11 +66,18 @@ bool NativeLibrary::init() {
   return true;
 }
 
-NativeObject * NativeLibrary::createObject(const string clz) {
-  if (NULL == _create_object_func) {
+NativeObject * NativeLibrary::createObject(const string & clz) {
+  if (NULL == _getObjectCreatorFunc) {
     return NULL;
   }
-  return (NativeObject*)(_create_object_func(clz.c_str()));
+  return (NativeObject*)((_getObjectCreatorFunc(clz))());
+}
+
+ObjectCreatorFunc NativeLibrary::getObjectCreator(const string & clz) {
+  if (NULL == _getObjectCreatorFunc) {
+    return NULL;
+  }
+  return _getObjectCreatorFunc(clz);
 }
 
 }

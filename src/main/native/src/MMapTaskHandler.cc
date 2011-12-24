@@ -24,10 +24,12 @@
 namespace Hadoop {
 
 MMapTaskHandler::MMapTaskHandler() :
-    _numPartition(0),
+    _numPartition(1),
+    _config(NULL),
     _reader(NULL),
     _mapper(NULL),
     _partitioner(NULL),
+    _combinerCreator(NULL),
     _moc(NULL),
     _writer(NULL) {
 }
@@ -41,6 +43,7 @@ void MMapTaskHandler::reset() {
   _reader = NULL;
   delete _mapper;
   _mapper = NULL;
+  _combinerCreator = NULL;
   delete _partitioner;
   _partitioner = NULL;
   delete _moc;
@@ -50,6 +53,7 @@ void MMapTaskHandler::reset() {
 }
 
 void MMapTaskHandler::configure(Config & config) {
+  _config = &config;
   _numPartition = config.getInt("mapred.reduce.tasks", 1);
 
   const char * readerClass = config.get("native.recordreader.class");
@@ -64,6 +68,15 @@ void MMapTaskHandler::configure(Config & config) {
     LOG("Native Mapper with MapOutputCollector");
     _moc = new MapOutputCollector(_numPartition);
     _moc->configure(config);
+
+    // combiner
+    const char * combinerClass = config.get("native.combiner.class");
+    if (NULL != combinerClass) {
+      _combinerCreator = NativeObjectFactory::GetObjectCreator(combinerClass);
+      if (NULL == _combinerCreator) {
+        THROW_EXCEPTION_EX(UnsupportException, "Combiner not found: %s", combinerClass);
+      }
+    }
 
     // partitioner
     const char * partitionerClass = config.get("native.partitioner.class");

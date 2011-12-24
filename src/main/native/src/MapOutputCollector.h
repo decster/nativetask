@@ -29,6 +29,39 @@
 namespace Hadoop {
 
 /**
+ * Memory Key-Value buffer pair with direct address content, so can be
+ * easily copied or dumped to file
+ */
+struct KVBuffer {
+  InplaceBuffer key;
+
+  InplaceBuffer & get_key() {
+    return key;
+  }
+
+  InplaceBuffer & get_value() {
+    return key.next();
+  }
+
+  KVBuffer & next() {
+    InplaceBuffer & value = get_value();
+    return *(KVBuffer*) (value.content + value.length);
+  }
+
+  uint32_t memory() {
+    return key.memory() + get_value().memory();
+  }
+
+  std::string str() {
+    return get_key().str() + "\t" + get_value().str();
+  }
+
+  void copy_to(char * dest) {
+    memcpy(dest, this, memory());
+  }
+};
+
+/**
  * Buffer for a single partition
  */
 class PartitionBucket {
@@ -92,11 +125,43 @@ public:
   void sort(SortType type);
 
   uint64_t estimate_spill_size(OutputFileType output_type, KeyValueType ktype,
-      KeyValueType vtype);
+                               KeyValueType vtype);
 
-  void spill(IFileWriter & writer) throw (IOException, UnsupportException);
+  void spill(IFileWriter & writer, ObjectCreatorFunc combinerCreator, Config & config)
+      throw (IOException, UnsupportException);
 
   void dump(int fd, uint64_t offset, uint32_t & crc);
+
+protected:
+  class Iterator : public KVIterator {
+  protected:
+    PartitionBucket & pb;
+    size_t index;
+  public:
+    Iterator(PartitionBucket & pb):pb(pb),index(0){}
+    virtual ~Iterator(){}
+    virtual bool next(Buffer & key, Buffer & value);
+  };
+
+  class KeyGroupIterator : public KeyGroup {
+  protected:
+    PartitionBucket & pb;
+    size_t index;
+    KVBuffer * pkvbuffer;
+    InplaceBuffer * currentKey;
+    const char * key;
+    uint32_t keyLen;
+    bool currentKeyFinished;
+  public:
+    KeyGroupIterator(PartitionBucket & pb) :
+        pb(pb), index(0), pkvbuffer(NULL), currentKey(NULL), key(NULL),
+        keyLen(0), currentKeyFinished(true) {
+    }
+    virtual ~KeyGroupIterator(){}
+    bool nextKey();
+    virtual const char * getKey(uint32_t & len);
+    virtual const char * nextValue(uint32_t & len);
+  };
 };
 
 /**
@@ -104,6 +169,7 @@ public:
  */
 class MapOutputCollector {
 private:
+  Config * _config;
   PartitionBucket ** _buckets;
   uint32_t _num_partition;
   std::vector<PartitionIndex *> _spills;
@@ -157,7 +223,8 @@ public:
                    SortType sortType,
                    IFileWriter & writer,
                    uint64_t & blockCount,
-                   uint64_t & recordCount);
+                   uint64_t & recordCount,
+                   ObjectCreatorFunc combinerCreator);
 
   /**
    * normal spill use options in _config
@@ -165,7 +232,8 @@ public:
    */
   void mid_spill(std::vector<std::string> & filepaths,
                  const std::string & idx_file_path,
-                 MapOutputSpec & spec);
+                 MapOutputSpec & spec,
+                 ObjectCreatorFunc combinerCreator=NULL);
 
   /**
    * final merge and/or spill use options in _config, and

@@ -24,7 +24,7 @@
 #include <set>
 #include <map>
 
-#include "NativeObject.h"
+#include "NativeTask.h"
 
 namespace Hadoop {
 
@@ -59,6 +59,7 @@ public:
   static Counter * GetCounter(const string & group, const string & name);
   static const vector<Counter *> GetAllCounters();
   static NativeObject * CreateObject(const string & clz);
+  static ObjectCreatorFunc GetObjectCreator(const string & clz);
   static void ReleaseObject(NativeObject * obj);
   static bool RegisterLibrary(const string & path, const string & name);
   static void SetDefaultClass(NativeObjectType type, const string & clz);

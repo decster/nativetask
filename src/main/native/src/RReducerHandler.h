@@ -19,7 +19,6 @@
 #ifndef RREDUCERHANDLER_H_
 #define RREDUCERHANDLER_H_
 
-#include <pthread.h>
 #include "NativeTask.h"
 #include "BatchHandler.h"
 
@@ -29,8 +28,6 @@ class RReducerHandler :
     public BatchHandler,
     public Collector,
     public KeyGroup {
-  friend void * ReducerThreadFunction(void *);
-  static const uint32_t EndOfInput = (uint32_t)-1;
   enum KeyGroupIterState {
     INIT,
     NEW_KEY,
@@ -48,24 +45,11 @@ protected:
   // RecordWriter
   RecordWriter * _writer;
   // state info KV pairs
-  char * _dest;
   char * _current;
   uint32_t _remain;
   uint32_t _kvlength;
   uint32_t _klength;
   uint32_t _vlength;
-  // thread for run active _reducer
-  pthread_t _reducerThread;
-  pthread_mutex_t _mutex;
-  pthread_cond_t _mainThreadCond;
-  pthread_cond_t _reducerThreadCond;
-  volatile bool _inputBufferFull;
-  volatile bool _needFlushOutput;
-  bool _reducerThreadError;
-  std::string _errorMessage;
-
-  volatile uint32_t _ibPosition;
-  volatile uint32_t _obPosition;
 
   KeyGroupIterState _keyGroupIterState;
   std::string _currentGroupKey;
@@ -77,10 +61,7 @@ public:
   virtual ~RReducerHandler();
 
   virtual void configure(Config & config);
-  virtual void finish();
   virtual std::string command(const std::string & cmd);
-  virtual void handleInput(char * buff, uint32_t length);
-  virtual void flushOutput(uint32_t length);
 
   // KeyGroup methods
   bool nextKey();
@@ -93,12 +74,8 @@ public:
   virtual void collect(const void * key, uint32_t keyLen, const void * value,
       uint32_t valueLen);
 private:
-  void syncHandleInput(char * buff, uint32_t length);
-  void asynHandleInput(char * buff, uint32_t length);
-  void startReducerThread();
-  void joinReducerThread();
-  void runReducer();
-  virtual void waitRead();
+  void run();
+  virtual int32_t refill();
   char * readKVPair(); // return key position
   void reset();
 };

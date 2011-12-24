@@ -36,33 +36,4 @@ public interface NativeTaskConfig {
   public static String NATIVE_PROCESSOR_BUFFER_KB = "native.processor.buffer.kb";
   public static int NATIVE_PROCESSOR_BUFFER_KB_DEFAULT = 64;
   public static int NATIVE_ASYNC_PROCESSOR_BUFFER_KB_DEFAULT = 1024;
-
-  enum RecordOrderType {
-    FULLSORT,
-    GROUPBY,
-    NOSORT
-  };
-
-  public static String NATIVE_RECORD_ORDER = "native.record.order.type";
-
-  enum SortType {
-    CQSORT,
-    CPPSORT,
-  };
-
-  public static String NATIVE_SORT_TYPE = "native.sort.type";
-
-  enum CompressionType {
-    PLAIN,
-    SNAPPY
-  };
-
-  public static String NATIVE_COMPRESSION_TYPE = "native.compression.type";
-
-  enum OutputFileType {
-    INTERMEDIATE,
-    IFILE
-  };
-
-  public static String NATIVE_MAPOUTPUT_FILE_TYPE = "native.mapoutput.file.type";
 }

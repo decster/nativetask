@@ -48,7 +48,7 @@ src/KVFile.cc                          \
 src/IFile.cc                           \
 src/MapOutputSpec.cc                   \
 src/MapOutputCollector.cc              \
-src/NativeObject.cc                    \
+src/Merge.cc                           \
 src/NativeObjectFactory.cc             \
 src/NativeTask.cc                      \
 src/NativeLibrary.cc                   \
@@ -71,7 +71,6 @@ src/lib/WordCount.cc
 
 COMMONHEADERS = \
 src/NativeTask.h                      \
-src/NativeObject.h                    \
 src/Checksum.h                        \
 src/Streams.h                         \
 src/StringUtil.h                      \

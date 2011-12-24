@@ -63,7 +63,7 @@ public:
    * NOTICE: before value() is called, the return pointer value is
    *         guaranteed to be valid
    */
-  const char * nextKey(uint32_t & key_len) {
+  const char * nextKey(uint32_t & keyLen) {
     int64_t t1 = _reader.readVLong();
     int64_t t2 = _reader.readVLong();
     if (t1 == -1) {
@@ -73,18 +73,18 @@ public:
     uint32_t len;
     switch (_kType) {
     case TextType:
-      key_len = WritableUtils::ReadVInt(kvbuff, len);
+      keyLen = WritableUtils::ReadVInt(kvbuff, len);
       break;
     case BytesType:
-      key_len = bswap(*(uint32_t*)kvbuff);
+      keyLen = bswap(*(uint32_t*)kvbuff);
       len = 4;
       break;
     default:
-      key_len = t1;
+      keyLen = t1;
       len = 0;
     }
     const char * kbuff = kvbuff + len;
-    const char * vbuff = kbuff + key_len;
+    const char * vbuff = kbuff + keyLen;
     switch (_vType) {
     case TextType:
       _valueLen = WritableUtils::ReadVInt(vbuff, len);
@@ -111,8 +111,8 @@ public:
   /**
    * get current value
    */
-  const char * value(uint32_t & value_len) {
-    value_len = _valueLen;
+  const char * value(uint32_t & valueLen) {
+    valueLen = _valueLen;
     return _valuePos;
   }
 };
@@ -120,7 +120,7 @@ public:
 /**
  * IFile Writer
  */
-class IFileWriter {
+class IFileWriter : public Collector {
 protected:
   OutputStream * _stream;
   ChecksumOutputStream * _dest;
@@ -141,19 +141,24 @@ public:
 
   void endPartition();
 
-  void writeKey(const char * key, uint32_t key_len, uint32_t value_len);
+  void writeKey(const char * key, uint32_t keyLen, uint32_t valueLen);
 
-  void writeValue(const char * value, uint32_t value_len);
+  void writeValue(const char * value, uint32_t valueLen);
 
-  void write(const char * key, uint32_t key_len, const char * value,
-             uint32_t value_len) {
-    writeKey(key, key_len, value_len);
-    writeValue(value, value_len);
+  void write(const char * key, uint32_t keyLen, const char * value,
+             uint32_t valueLen) {
+    writeKey(key, keyLen, valueLen);
+    writeValue(value, valueLen);
   }
 
   IndexRange * getIndex(uint32_t start);
 
-  void getStatistics(uint64_t & offset, uint64_t & realoffset);
+  void getStatistics(uint64_t & offset, uint64_t & realOffset);
+
+  virtual void collect(const void * key, uint32_t keyLen,
+                       const void * value, uint32_t valueLen) {
+    write((const char*)key, keyLen, (const char*)value, valueLen);
+  }
 };
 
 

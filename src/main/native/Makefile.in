@@ -94,7 +94,7 @@ am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-PartitionIndex.lo libnativetask_la-KVFile.lo \
 	libnativetask_la-IFile.lo libnativetask_la-MapOutputSpec.lo \
 	libnativetask_la-MapOutputCollector.lo \
-	libnativetask_la-NativeObject.lo \
+	libnativetask_la-Merge.lo \
 	libnativetask_la-NativeObjectFactory.lo \
 	libnativetask_la-NativeTask.lo \
 	libnativetask_la-NativeLibrary.lo \
@@ -326,7 +326,7 @@ src/KVFile.cc                          \
 src/IFile.cc                           \
 src/MapOutputSpec.cc                   \
 src/MapOutputCollector.cc              \
-src/NativeObject.cc                    \
+src/Merge.cc                           \
 src/NativeObjectFactory.cc             \
 src/NativeTask.cc                      \
 src/NativeLibrary.cc                   \
@@ -348,7 +348,6 @@ src/lib/WordCount.cc
 
 COMMONHEADERS = \
 src/NativeTask.h                      \
-src/NativeObject.h                    \
 src/Checksum.h                        \
 src/Streams.h                         \
 src/StringUtil.h                      \
@@ -514,8 +513,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MMapperHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MapOutputCollector.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MapOutputSpec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Merge.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeLibrary.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeObject.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeObjectFactory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeRuntimeJniImpl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeTask.Plo@am__quote@
@@ -758,12 +757,12 @@ libnativetask_la-MapOutputCollector.lo: src/MapOutputCollector.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-MapOutputCollector.lo `test -f 'src/MapOutputCollector.cc' || echo '$(srcdir)/'`src/MapOutputCollector.cc
 
-libnativetask_la-NativeObject.lo: src/NativeObject.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-NativeObject.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-NativeObject.Tpo -c -o libnativetask_la-NativeObject.lo `test -f 'src/NativeObject.cc' || echo '$(srcdir)/'`src/NativeObject.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-NativeObject.Tpo $(DEPDIR)/libnativetask_la-NativeObject.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/NativeObject.cc' object='libnativetask_la-NativeObject.lo' libtool=yes @AMDEPBACKSLASH@
+libnativetask_la-Merge.lo: src/Merge.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Merge.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Merge.Tpo -c -o libnativetask_la-Merge.lo `test -f 'src/Merge.cc' || echo '$(srcdir)/'`src/Merge.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Merge.Tpo $(DEPDIR)/libnativetask_la-Merge.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/Merge.cc' object='libnativetask_la-Merge.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-NativeObject.lo `test -f 'src/NativeObject.cc' || echo '$(srcdir)/'`src/NativeObject.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Merge.lo `test -f 'src/Merge.cc' || echo '$(srcdir)/'`src/Merge.cc
 
 libnativetask_la-NativeObjectFactory.lo: src/NativeObjectFactory.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-NativeObjectFactory.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-NativeObjectFactory.Tpo -c -o libnativetask_la-NativeObjectFactory.lo `test -f 'src/NativeObjectFactory.cc' || echo '$(srcdir)/'`src/NativeObjectFactory.cc

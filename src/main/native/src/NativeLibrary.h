@@ -35,13 +35,15 @@ class NativeLibrary {
 private:
   string _path;
   string _name;
-  CreateObjectFunc _create_object_func;
+  GetObjectCreatorFunc _getObjectCreatorFunc;
 public:
-  NativeLibrary(const string path, const string name);
+  NativeLibrary(const string & path, const string & name);
 
   bool init();
 
-  NativeObject * createObject(const string clz);
+  NativeObject * createObject(const string & clz);
+
+  ObjectCreatorFunc getObjectCreator(const string & clz);
 
   ~NativeLibrary() {}
 };

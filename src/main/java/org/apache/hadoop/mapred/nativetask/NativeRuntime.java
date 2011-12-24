@@ -46,6 +46,7 @@ public class NativeRuntime {
   // All configs native side needed
   private static String[] usefulExternalConfigsKeys = {
       "mapred.map.tasks",
+      "mapred.reduce.tasks",
       "mapred.task.partition",
       "mapred.mapoutput.key.class",
       "mapred.mapoutput.value.class",
@@ -55,6 +56,11 @@ public class NativeRuntime {
       "mapred.output.format.class",
       "mapred.work.output.dir",
       "mapred.textoutputformat.separator",
+      "mapred.compress.map.output",
+      "mapred.map.output.compression.codec",
+      "mapred.output.compress",
+      "mapred.output.compression.codec",
+      "mapred.map.output.sort",
       "io.sort.mb",
       "io.file.buffer.size",
       "fs.default.name",

@@ -37,9 +37,11 @@ class MMapTaskHandler :
     public Collector {
 private:
   uint32_t _numPartition;
+  Config * _config;
   RecordReader * _reader;
   Mapper * _mapper;
   Partitioner * _partitioner;
+  ObjectCreatorFunc _combinerCreator;
   MapOutputCollector * _moc;
   RecordWriter * _writer;
 public:

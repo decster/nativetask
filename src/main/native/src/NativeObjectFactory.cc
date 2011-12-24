@@ -25,6 +25,7 @@
 #include "EchoBatchHandler.h"
 #include "MCollectorOutputHandler.h"
 #include "MMapperHandler.h"
+#include "MMapTaskHandler.h"
 #include "RReducerHandler.h"
 #include "lib/LineRecordReader.h"
 #include "lib/LineRecordWriter.h"
@@ -105,7 +106,7 @@ bool NativeObjectFactory::Init() {
     return false;
   }
   NativeLibrary * library = new NativeLibrary("nativetask.so", "NativeTask");
-  library->_create_object_func = NativeTaskCreateObject;
+  library->_getObjectCreatorFunc = NativeTaskGetObjectCreator;
   LOG("NativeTask library initialized");
   Libraries.push_back(library);
   return true;
@@ -164,11 +165,15 @@ const vector<Counter *> NativeObjectFactory::GetAllCounters() {
 }
 
 NativeObject * NativeObjectFactory::CreateObject(const string & clz) {
+  ObjectCreatorFunc creator = GetObjectCreator(clz);
+  return creator ? creator() : NULL;
+}
+
+ObjectCreatorFunc NativeObjectFactory::GetObjectCreator(const string & clz) {
   CheckInit();
-  // Iterate libraries from last registered NativeLibrary to NativeTask library
   for (vector<NativeLibrary*>::reverse_iterator ritr = Libraries.rbegin();
       ritr != Libraries.rend(); ritr++) {
-    NativeObject * ret = (*ritr)->createObject(clz);
+    ObjectCreatorFunc ret = (*ritr)->getObjectCreator(clz);
     if (NULL!=ret) {
       return ret;
     }

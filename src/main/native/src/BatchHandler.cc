@@ -100,8 +100,7 @@ std::string BatchHandler::sendCommand(const std::string & data) {
     _hasJavaException = true;
     return std::string("");
   }
-  std::string rets = JNU_ByteArrayToString(((JNIEnv*) _tempJNIEnv), ret);
-  return rets;
+  return JNU_ByteArrayToString(((JNIEnv*) _tempJNIEnv), ret);
 }
 
 } // namespace Hadoop
@@ -150,6 +149,10 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setup
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
+  }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
@@ -184,6 +187,10 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
+  }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
@@ -217,6 +224,10 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
   }
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
+  }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
   }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
@@ -257,6 +268,10 @@ jbyteArray JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor
   }
   catch (Hadoop::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
+  }
+  catch (Hadoop::JavaException e) {
+    LOG("JavaException: %s", e.what());
+    // Do nothing, let java side handle
   }
   catch (std::exception e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
