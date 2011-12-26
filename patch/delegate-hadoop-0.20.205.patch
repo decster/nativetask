@@ -42,7 +42,7 @@ index 19faa87..a058d22 100644
     */
    public void clear() {
 diff --git a/src/mapred/org/apache/hadoop/mapred/MapTask.java b/src/mapred/org/apache/hadoop/mapred/MapTask.java
-index 8a469ac..aec2807 100644
+index 8a469ac..727f84c 100644
 --- a/src/mapred/org/apache/hadoop/mapred/MapTask.java
 +++ b/src/mapred/org/apache/hadoop/mapred/MapTask.java
 @@ -41,6 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
@@ -53,24 +53,26 @@ index 8a469ac..aec2807 100644
  import org.apache.hadoop.fs.FSDataInputStream;
  import org.apache.hadoop.fs.FSDataOutputStream;
  import org.apache.hadoop.fs.FileSystem;
-@@ -366,7 +367,15 @@ class MapTask extends Task {
+@@ -366,6 +367,18 @@ class MapTask extends Task {
        return;
      }
  
--    if (useNewApi) {
 +    if (TaskDelegation.canDelegateMapTask(job)) {
 +      TaskDelegation.delegateMapTask(
 +          this,
 +          job,
 +          umbilical,
 +          reporter,
-+          getSplitDetails(new Path(splitMetaInfo.getSplitLocation()),
-+                          splitMetaInfo.getStartOffset()));
-+    } if (useNewApi) {
++          getSplitDetails(
++              new Path(splitMetaInfo.getSplitLocation()),
++                       splitMetaInfo.getStartOffset()));
++      done(umbilical, reporter);
++      return;
++    }
+     if (useNewApi) {
        runNewMapper(job, splitMetaInfo, umbilical, reporter);
      } else {
-       runOldMapper(job, splitMetaInfo, umbilical, reporter);
-@@ -425,7 +434,9 @@ class MapTask extends Task {
+@@ -425,7 +438,9 @@ class MapTask extends Task {
      LOG.info("numReduceTasks: " + numReduceTasks);
      MapOutputCollector collector = null;
      if (numReduceTasks > 0) {
@@ -81,7 +83,7 @@ index 8a469ac..aec2807 100644
      } else { 
        collector = new DirectMapOutputCollector(umbilical, job, reporter);
      }
-@@ -671,7 +682,8 @@ class MapTask extends Task {
+@@ -671,7 +686,8 @@ class MapTask extends Task {
                         TaskUmbilicalProtocol umbilical,
                         TaskReporter reporter
                         ) throws IOException, ClassNotFoundException {
@@ -92,20 +94,20 @@ index 8a469ac..aec2807 100644
        if (partitions > 0) {
          partitioner = (org.apache.hadoop.mapreduce.Partitioner<K,V>)
 diff --git a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-index 980b988..e51bff2 100644
+index 980b988..0f44e71 100644
 --- a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
 +++ b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-@@ -413,7 +413,9 @@ class ReduceTask extends Task {
+@@ -413,6 +413,10 @@ class ReduceTask extends Task {
      Class valueClass = job.getMapOutputValueClass();
      RawComparator comparator = job.getOutputValueGroupingComparator();
  
--    if (useNewApi) {
 +    if (TaskDelegation.catDelegateReduceTask(job)) {
 +      TaskDelegation.delegateReduceTask(this, job, umbilical, reporter, rIter);
-+    } else if (useNewApi) {
++      done(umbilical, reporter);
++    }
+     if (useNewApi) {
        runNewReducer(job, umbilical, reporter, rIter, comparator, 
                      keyClass, valueClass);
-     } else {
 diff --git a/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
 new file mode 100644
 index 0000000..16cafbd
