@@ -19,6 +19,7 @@
 #ifndef SYNCUTILS_H_
 #define SYNCUTILS_H_
 
+#include <unistd.h>
 #include <string.h>
 #ifdef __MACH__
 #include <libkern/OSAtomic.h>

@@ -23,7 +23,7 @@ TEST(StringUtil, Convertion) {
   ASSERT_FLOAT_EQ(StringUtil::toFloat("1.333"), 1.333);
   ASSERT_FLOAT_EQ(StringUtil::toFloat(StringUtil::ToString(1.333f)), 1.333);
   ASSERT_EQ(StringUtil::ToString(76957382U), "76957382");
-  ASSERT_EQ(StringUtil::ToString(76957382234233432ULL), "76957382234233432");
+  ASSERT_EQ(StringUtil::ToString((uint64_t)76957382234233432ULL), "76957382234233432");
   ASSERT_EQ(StringUtil::ToString(111, ' ', 40), "                                     111");
 }
 

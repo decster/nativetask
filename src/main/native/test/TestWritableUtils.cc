@@ -38,7 +38,7 @@ TEST(WritableUtils, VLong) {
   int seed = TestConfig.getInt("test.seed", -1);
   Random r(seed);
   for (int i = 0; i < num; i++) {
-    uint64_t v = r.nextLog2(UINT64_MAX/2-3);
+    uint64_t v = r.nextLog2(((uint64_t)-1)/2-3);
     TestVLong(v);
     TestVLong(-v);
   }

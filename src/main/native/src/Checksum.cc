@@ -1115,6 +1115,9 @@ const uint32_t CRC32C_T8_7[256] = {
   0xC451B7CC, 0x8D6DCAEB, 0x56294D82, 0x1F1530A5
 };
 
+#define USE_HARDWARE_CRC32C
+
+#ifdef USE_HARDWARE_CRC32C
 
 static int cached_cpu_supports_crc32; // initialized by constructor below
 static uint32_t crc32c_hardware(uint32_t crc, const uint8_t* data, size_t length);
@@ -1228,6 +1231,8 @@ void __attribute__ ((constructor)) init_cpu_support_flag(void) {
   cached_cpu_supports_crc32 = ecx & SSE42_FEATURE_BIT;
 }
 
+#endif
+
 /**
  * Computes the CRC32c checksum for the specified buffer using the slicing by 8
  * algorithm over 64 bit quantities.
@@ -1270,11 +1275,15 @@ uint32_t crc32c_sb8_software(uint32_t crc, const uint8_t *buf, size_t length) {
 #endif
 
 uint32_t crc32c_sb8(uint32_t crc, const uint8_t *buf, size_t length) {
+#ifdef USE_HARDWARE_CRC32C
   if (likely(cached_cpu_supports_crc32)) {
     return crc32c_hardware(crc, buf, length);
   } else {
     return crc32c_sb8_software(crc, buf, length);
   }
+#else
+  return crc32c_sb8_software(crc, buf, length);
+#endif
 }
 
 } // namespace Hadoop

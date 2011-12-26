@@ -13,7 +13,7 @@ endif
 if PLATFORM_IS_LINUX
 # linux
 JNI_INCLUDE ?= -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(PLATFORM)
-TESTLDFLAGS = -lrt
+TESTLDFLAGS = -lrt -L$(JAVA_HOME)/jre/lib/amd64/server -ljvm
 endif
 
 # primatives configs 

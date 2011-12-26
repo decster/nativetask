@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <tr1/functional>
 #include "commons.h"
 #include "SyncUtils.h"
 
