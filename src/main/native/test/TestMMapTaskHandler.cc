@@ -51,17 +51,15 @@ public:
   }
 };
 
-TEST(Perf, MMapTaskHandler) {
-  string inputfile = TestConfig.get("maptask.inputfile", "mmaptaskhandler.input");
+TEST(Perf, MMapTaskTeraSort) {
+  string inputfile = TestConfig.get("maptask.inputfile", "tera.input");
   string outputfile = TestConfig.get("maptask.outputfile", "map.output");
-  string inputcodec = TestConfig.get("maptask.inputcodec", Compressions::Lz4Codec.name);
-  string sorttype = TestConfig.get("native.sort.type", "CPPSORT");
-  bool sortFirst = TestConfig.getBool("native.spill.sort.first", false);
-  if (inputcodec.length()>0) {
-    inputfile.append(Compressions::getExtension(inputcodec));
-  }
+  string inputcodec = Compressions::getCodecByFile(inputfile);
+  string sorttype = TestConfig.get("native.sort.type", "DUALPIVOTSORT");
+  bool sortFirst = TestConfig.getBool("native.spill.sort.first", true);
   string inputtype = TestConfig.get("maptask.inputtype", "tera");
   int64_t inputLength = TestConfig.getInt("maptask.inputlength", 250000000);
+  int64_t iosortmb = TestConfig.getInt("io.sort.mb", 300);
   bool isTeraInput = inputtype == "tera";
   uint64_t inputFileLength = 0;
   Timer timer;
@@ -92,7 +90,7 @@ TEST(Perf, MMapTaskHandler) {
   timer.reset();
   Config jobconf;
   jobconf.setInt("mapred.reduce.tasks", 100);
-  jobconf.setInt("io.sort.mb", 300);
+  jobconf.setInt("io.sort.mb", iosortmb);
   jobconf.set("mapred.mapoutput.key.class", "org.apache.hadoop.io.Text");
   jobconf.set("mapred.mapoutput.value.class", "org.apache.hadoop.io.Text");
   jobconf.setBool("native.spill.sort.first", sortFirst);
@@ -108,6 +106,75 @@ TEST(Perf, MMapTaskHandler) {
   } else if (inputtype == "word") {
     jobconf.set("native.recordreader.class", "NativeTask.LineRecordReader");
     jobconf.set("native.mapper.class", "NativeTask.WordCountMapper");
+  } else {
+    jobconf.set("native.recordreader.class", "NativeTask.KeyValueLineRecordReader");
+  }
+  MMapTaskHandlerTest * mapRunner = new MMapTaskHandlerTest();
+  mapRunner->setOutputFile(outputfile);
+  mapRunner->configure(jobconf);
+  mapRunner->command("run");
+  LOG("%s", timer.getInterval("Map Task").c_str());
+}
+
+
+
+TEST(Perf, MMapTaskWordCount) {
+  string inputfile = TestConfig.get("maptask.inputfile", "word.input");
+  string outputfile = TestConfig.get("maptask.outputfile", "map.output");
+  string inputcodec = Compressions::getCodecByFile(inputfile);
+  string sorttype = TestConfig.get("native.sort.type", "DUALPIVOTSORT");
+  bool sortFirst = TestConfig.getBool("native.spill.sort.first", true);
+  bool usecombiner = TestConfig.getBool("maptask.enable.combiner",true);
+  string inputtype = TestConfig.get("maptask.inputtype", "word");
+  int64_t inputLength = TestConfig.getInt("maptask.inputlength", 250000000);
+  int64_t iosortmb = TestConfig.getInt("io.sort.mb", 300);
+  bool isTeraInput = inputtype == "tera";
+  uint64_t inputFileLength = 0;
+  Timer timer;
+  if (!FileSystem::getRaw().exists(inputfile)) {
+    LOG("start generating input");
+    vector<pair<string, string> > inputdata;
+    GenerateLength(inputdata, inputLength, inputtype);
+    OutputStream * fout = FileSystem::getRaw().create(inputfile, true);
+    AppendBuffer appendBuffer = AppendBuffer();
+    appendBuffer.init(128 * 1024, fout, inputcodec);
+    for (size_t i=0;i<inputdata.size();i++) {
+      string & key = inputdata[i].first;
+      string & value = inputdata[i].second;
+      appendBuffer.write(key.data(), key.length());
+      if (!isTeraInput)
+        appendBuffer.write('\t');
+      appendBuffer.write(value.data(), value.length());
+      appendBuffer.write('\n');
+    }
+    appendBuffer.flush();
+    inputFileLength = fout->tell();
+    delete fout;
+    LOG("%s", timer.getInterval("Generate input").c_str());
+  } else {
+    inputFileLength = FileSystem::getRaw().getLength(inputfile);
+  }
+
+  timer.reset();
+  Config jobconf;
+  jobconf.setInt("mapred.reduce.tasks", 100);
+  jobconf.setInt("io.sort.mb", iosortmb);
+  jobconf.set("mapred.mapoutput.key.class", "org.apache.hadoop.io.Text");
+  jobconf.set("mapred.mapoutput.value.class", "org.apache.hadoop.io.Text");
+  jobconf.setBool("native.spill.sort.first", sortFirst);
+  jobconf.set("native.sort.type", sorttype);
+  jobconf.set("mapred.compress.map.output", "true");
+  jobconf.set("mapred.map.output.compression.codec", Compressions::Lz4Codec.name);
+  FileSplit split = FileSplit(inputfile, 0, inputFileLength);
+  string splitData;
+  split.writeFields(splitData);
+  jobconf.set("native.input.split", splitData);
+  if (isTeraInput) {
+    jobconf.set("native.recordreader.class", "NativeTask.TeraRecordReader");
+  } else if (inputtype == "word") {
+    jobconf.set("native.recordreader.class", "NativeTask.LineRecordReader");
+    jobconf.set("native.mapper.class", "NativeTask.WordCountMapper");
+    jobconf.set("native.combiner.class", "NativeTask.WordCountReducer");
   } else {
     jobconf.set("native.recordreader.class", "NativeTask.KeyValueLineRecordReader");
   }

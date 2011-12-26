@@ -58,6 +58,9 @@ public:
 
   static string Join(const vector<string> & strs,
                           const string & sep);
+
+  static bool StartsWith(const string & str, const string & prefix);
+  static bool EndsWith(const string & str, const string & suffix);
 };
 
 } // namespace Hadoop

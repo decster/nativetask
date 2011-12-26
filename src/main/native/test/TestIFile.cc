@@ -208,4 +208,60 @@ TEST(Perf, IFile) {
   delete [] buff;
 }
 
+void groupKeys(int * data, size_t n) {
+  size_t gstart = 0;
+  size_t gend = (size_t)-1;
+  for (size_t i=1;i<n;i++) {
+    fprintf(stderr, "%d ", data[i-1]);
+    if (data[i] != data[gstart]) {
+      fprintf(stderr, "\n");
+      gstart = i;
+    }
+  }
+  fprintf(stderr, "%d ", data[n-1]);
+  fprintf(stderr, "\n");
+}
 
+class KeyGroupTestIter : public KeyGroup {
+public:
+  int currentKey;
+  size_t index;
+  int * data;
+  size_t n;
+  bool hasNext;
+  KeyGroupTestIter(int * data, size_t n) {
+    index = 0;
+    this->data = data;
+    this->n = n;
+    if (n>0) {
+      currentKey = data[0];
+    } else {
+      currentKey = -1;
+    }
+    hasNext = false;
+  }
+
+  const char * nextKey(uint32_t & len) {
+    uint32_t temp;
+    while (hasNext) {
+      nextValue(temp);
+    }
+  }
+
+  virtual const char * getKey(uint32_t & len);
+
+  virtual const char * nextValue(uint32_t & len) {
+    if (hasNext) {
+      // more forward
+    } else {
+      // return current
+      hasNext = true;
+    }
+  }
+};
+
+int t1[] = {1,2,2,3,3,3,4,4,4,4,5,5,5,5,5,4,4,4,4,3,3,3,2,2,1};
+
+TEST(Perf, KeyGroup) {
+  groupKeys(t1, sizeof(t1)/4);
+}

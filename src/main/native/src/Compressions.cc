@@ -93,7 +93,8 @@ const string Compressions::getCodecByFile(const string & file) {
   initCodecs();
   for (size_t i = 0; i < SupportedCodecs.size(); i++) {
     const string & extension = SupportedCodecs[i].extension;
-    if (file.substr(file.length() - extension.length()) == extension) {
+    if ((file.length()>extension.length()) &&
+        (file.substr(file.length() - extension.length()) == extension)) {
       return SupportedCodecs[i].name;
     }
   }

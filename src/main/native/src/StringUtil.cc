@@ -200,6 +200,23 @@ string StringUtil::Join(const vector<string> & strs, const string & sep) {
   return ret;
 }
 
+bool StringUtil::StartsWith(const string & str, const string & prefix) {
+  if ((prefix.length() > str.length()) ||
+      (memcmp(str.data(), prefix.data(), prefix.length()) != 0)) {
+    return false;
+  }
+  return true;
+}
+
+bool StringUtil::EndsWith(const string & str, const string & suffix) {
+  if ((suffix.length() > str.length()) ||
+      (memcmp(str.data() + str.length() - suffix.length(),
+              suffix.data(),
+              suffix.length()) != 0)) {
+    return false;
+  }
+  return true;
+}
 
 } // namespace Hadoop
 

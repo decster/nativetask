@@ -67,61 +67,55 @@ bool PartitionBucket::Iterator::next(Buffer & key, Buffer & value) {
   return false;
 }
 
-bool PartitionBucket::KeyGroupIterator::nextKey() {
-  if (currentKeyFinished==false) {
-    uint32_t temp;
-    while (true) {
-      const char * ret = nextValue(temp);
-      if (ret==NULL) {
-        return false;
-      }
-      if (currentKeyFinished) {
-        key = currentKey->content;
-        keyLen = currentKey->length;
-        return true;
-      }
-    }
-  } else if (key==NULL) {
-    if (pb._kv_offsets.size()==0) {
-      return false;
-    }
-    KVBuffer * pkvbuffer = (KVBuffer*)MemoryBlockPool::get_position(pb._kv_offsets[index]);
-    InplaceBuffer & currentKey = pkvbuffer->get_key();
-    key = currentKey.content;
-    keyLen = currentKey.length;
-    currentKeyFinished = false;
-    return true;
+PartitionBucket::KeyGroupIterator::KeyGroupIterator(PartitionBucket & pb) :
+    pb(pb), currentKey(NULL), index(0), size(pb._kv_offsets.size()), hasNext(false) {
+  if (size>0) {
+    KVBuffer * kvBuffer = (KVBuffer*)MemoryBlockPool::get_position(pb._kv_offsets[0]);
+    currentKey = &(kvBuffer->get_key());
   }
-  key = currentKey->content;
-  keyLen = currentKey->length;
-  return true;
+}
+
+bool PartitionBucket::KeyGroupIterator::nextKey() {
+  uint32_t temp;
+  while (hasNext) {
+    nextValue(temp);
+  }
+  return index < size;
 }
 
 const char * PartitionBucket::KeyGroupIterator::getKey(uint32_t & len) {
-  len = keyLen;
-  return key;
+  len = currentKey->length;
+  return currentKey->content;
 }
 
 const char * PartitionBucket::KeyGroupIterator::nextValue(uint32_t & len) {
-  if (unlikely(index>=(ssize_t)pb._kv_offsets.size())) {
-    return NULL;
+  if (hasNext) {
+    if (++index >= size) {
+      hasNext = false;
+      return NULL;
+    }
+    KVBuffer * pkvbuffer = (KVBuffer*)MemoryBlockPool::get_position(pb._kv_offsets[index]);
+    InplaceBuffer & bkey = pkvbuffer->get_key();
+    if ((bkey.length != currentKey->length) ||
+        (!fmemeq(bkey.content, currentKey->content, currentKey->length))) {
+      KVBuffer * groupkeybuffer = (KVBuffer*)MemoryBlockPool::get_position(pb._kv_offsets[index]);
+      currentKey = &(groupkeybuffer->get_key());
+      hasNext = false;
+      return NULL;
+    }
+    InplaceBuffer & bvalue = pkvbuffer->get_value();
+    len = bvalue.length;
+    return bvalue.content;
+  } else {
+    hasNext = true;
+    KVBuffer * pkvbuffer = (KVBuffer*)MemoryBlockPool::get_position(pb._kv_offsets[index]);
+    InplaceBuffer & bvalue = pkvbuffer->get_value();
+    len = bvalue.length;
+    return bvalue.content;
   }
-  KVBuffer * pkvbuffer = (KVBuffer*)MemoryBlockPool::get_position(pb._kv_offsets[index]);
-  InplaceBuffer & bkey = pkvbuffer->get_key();
-  InplaceBuffer & bvalue = pkvbuffer->get_value();
-  if ((bkey.length != currentKey->length) ||
-      (fmemeq(currentKey->content, bkey.content, bkey.length) != 0)) {
-    currentKey = &bkey;
-    currentKeyFinished = true;
-    index++;
-    return NULL;
-  }
-  index++;
-  len = bvalue.length;
-  return bvalue.content;
 }
 
-void PartitionBucket::spill(IFileWriter & writer, ObjectCreatorFunc combinerCreator, Config & config)
+void PartitionBucket::spill(IFileWriter & writer, uint64_t & keyGroupCount, ObjectCreatorFunc combinerCreator, Config & config)
     throw (IOException, UnsupportException) {
   if (combinerCreator == NULL) {
     for (size_t i = 0; i<_kv_offsets.size() ; i++) {
@@ -158,6 +152,7 @@ void PartitionBucket::spill(IFileWriter & writer, ObjectCreatorFunc combinerCrea
         reducer->configure(config);
         KeyGroupIterator kg = KeyGroupIterator(*this);
         while (kg.nextKey()) {
+          keyGroupCount++;
           reducer->reduce(kg);
         }
         reducer->close();
@@ -238,6 +233,7 @@ void MapOutputCollector::init_memory(uint32_t memory_capacity) {
     uint32_t s = memory_capacity / _num_partition / 4;
     s = GetCeil(s, DEFAULT_MIN_BLOCK_SIZE);
     s = std::max(s, DEFAULT_MIN_BLOCK_SIZE);
+    s = std::min(s, DEFAULT_MAX_BLOCK_SIZE);
     MemoryBlockPool::init(memory_capacity, s);
   }
 }
@@ -253,9 +249,10 @@ void MapOutputCollector::reset() {
 
 void MapOutputCollector::configure(Config & config) {
   _config = &config;
-  _sortFirst = config.getBool("native.spill.sort.first", false);
+  _sortFirst = config.getBool("native.spill.sort.first", true);
   MapOutputSpec::getSpecFromConfig(config, _mapOutputSpec);
   init_memory(config.getInt("io.sort.mb", 300) * 1024 * 1024);
+  _collectTimer.reset();
 }
 
 /**
@@ -282,6 +279,8 @@ void MapOutputCollector::spill_range(uint32_t start_partition,
                                      IFileWriter & writer,
                                      uint64_t & blockCount,
                                      uint64_t & recordCount,
+                                     uint64_t & sortTime,
+                                     uint64_t & keyGroupCount,
                                      ObjectCreatorFunc combinerCreator) {
   if (orderType == GROUPBY) {
     THROW_EXCEPTION(UnsupportException, "GROUPBY not supported");
@@ -296,7 +295,7 @@ void MapOutputCollector::spill_range(uint32_t start_partition,
         pb->sort(sortType);
       }
     }
-    LOG("%s", timer.getInterval("Sort all buckets").c_str());
+    sortTime += (timer.now() - timer.last());
   }
   for (uint32_t i = 0; i < num_partition; i++) {
     writer.startPartition();
@@ -305,7 +304,7 @@ void MapOutputCollector::spill_range(uint32_t start_partition,
       if (orderType == FULLSORT) {
         pb->sort(sortType);
       }
-      pb->spill(writer, combinerCreator, *_config);
+      pb->spill(writer, keyGroupCount, combinerCreator, *_config);
       recordCount += pb->recored_count();
       blockCount += pb->blk_count();
     }
@@ -318,24 +317,49 @@ void MapOutputCollector::mid_spill(std::vector<std::string> & filepaths,
                                    const std::string & idx_file_path,
                                    MapOutputSpec & spec,
                                    ObjectCreatorFunc combinerCreator) {
+  uint64_t collecttime = _collectTimer.now() - _collectTimer.last();
   if (filepaths.size() == 1) {
     uint64_t blockCount = 0;
     uint64_t recordCount = 0;
+    uint64_t sortTime = 0;
+    uint64_t keyGroupCount = 0;
     OutputStream * fout = FileSystem::getRaw().create(filepaths[0], true);
     IFileWriter * writer = new IFileWriter(fout, spec.checksumType,
                                              spec.keyType, spec.valueType,
                                              spec.codec);
     Timer timer;
     spill_range(0, _num_partition, spec.orderType, spec.sortType, *writer,
-                blockCount, recordCount, combinerCreator);
+                blockCount, recordCount, sortTime, keyGroupCount, combinerCreator);
     IndexRange * info = writer->getIndex(0);
     info->filepath = filepaths[0];
     double interval = (timer.now() - timer.last()) / 1000000000.0;
-    LOG("Spill %lu range [%u,%u) record: %llu, avg: %.3lf, block: %llu, size %llu, real: %llu, time: %.3lf",
-        _spills.size(), 0, _num_partition,
-        recordCount, (double)info->getEndPosition()/recordCount,
-        blockCount, info->getEndPosition(), info->getRealEndPosition(),
-        interval);
+    if (keyGroupCount == 0) {
+      LOG("Spill %lu [%u,%u) collect: %.3lfs sort: %.3lfs spill: %.3lfs record: %llu, avg: %.3lf, block: %llu, size %llu, real: %llu",
+          _spills.size(),
+          0,
+          _num_partition,
+          collecttime/1000000000.0,
+          sortTime/1000000000.0,
+          interval,
+          recordCount,
+          info->getEndPosition()/(double)recordCount,
+          blockCount,
+          info->getEndPosition(),
+          info->getRealEndPosition());
+    } else {
+      LOG("Spill %lu [%u,%u) collect: %.3lfs sort: %.3lfs spill: %.3lfs, record: %llu, combine: %llu, block: %llu, size %llu, real: %llu",
+          _spills.size(),
+          0,
+          _num_partition,
+          collecttime/1000000000.0,
+          sortTime/1000000000.0,
+          interval,
+          recordCount,
+          keyGroupCount,
+          blockCount,
+          info->getEndPosition(),
+          info->getRealEndPosition());
+    }
     PartitionIndex * si = new PartitionIndex(_num_partition);
     si->add(info);
     if (idx_file_path.length()>0) {
@@ -347,6 +371,7 @@ void MapOutputCollector::mid_spill(std::vector<std::string> & filepaths,
     delete writer;
     delete fout;
     reset();
+    _collectTimer.reset();
   } else if (filepaths.size() == 0) {
     THROW_EXCEPTION(IOException, "Spill file path empty");
   } else {
@@ -360,9 +385,10 @@ void MapOutputCollector::mid_spill(std::vector<std::string> & filepaths,
  */
 void MapOutputCollector::final_merge_and_spill(std::vector<std::string> & filepaths,
                                                const std::string & idx_file_path,
-                                               MapOutputSpec & spec) {
+                                               MapOutputSpec & spec,
+                                               ObjectCreatorFunc combinerCreator) {
   if (_spills.size()==0) {
-    mid_spill(filepaths, idx_file_path, spec);
+    mid_spill(filepaths, idx_file_path, spec, combinerCreator);
     return;
   }
   OutputStream * fout = FileSystem::getRaw().create(filepaths[0], true);
@@ -386,7 +412,7 @@ void MapOutputCollector::final_merge_and_spill(std::vector<std::string> & filepa
   } else if (spec.orderType==FULLSORT) {
     Timer timer;
     sort_all(spec.sortType);
-    LOG("Sort in-memory partition [%u,%u) time: %.3lf", 0, _num_partition, (timer.now()-timer.last())/1000000000.0);
+    LOG("Sort %lu [%u,%u) time: %.3lf", _spills.size(), 0, _num_partition, (timer.now()-timer.last())/1000000000.0);
   }
   merger->addMergeEntry(new MemoryMergeEntry(this));
   merger->merge();

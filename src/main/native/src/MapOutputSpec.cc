@@ -23,7 +23,7 @@ namespace Hadoop {
 
 void MapOutputSpec::getSpecFromConfig(Config & config, MapOutputSpec & spec) {
   spec.checksumType = CHECKSUM_CRC32;
-  string sortType = config.get("native.sort.type", "CPPSORT");
+  string sortType = config.get("native.sort.type", "DUALPIVOTSORT");
   if (sortType == "DUALPIVOTSORT") {
     spec.sortType = DUALPIVOTSORT;
   } else {

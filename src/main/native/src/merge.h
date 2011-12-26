@@ -200,8 +200,8 @@ public:
 /**
  * heap used by merge
  */
-template<typename T>
-void adjust_heap(T* first, int rt, int heap_len, bool (*Comp)(T, T)) {
+template<typename T, typename Compare>
+void adjust_heap(T* first, int rt, int heap_len, Compare Comp) {
   while (rt * 2 <= heap_len) // not leaf
   {
     int left = (rt << 1); // left child
@@ -223,8 +223,8 @@ void adjust_heap(T* first, int rt, int heap_len, bool (*Comp)(T, T)) {
   }
 }
 
-template<typename T>
-void make_heap(T* begin, T* end, bool (*Comp)(T, T)) {
+template<typename T, typename Compare>
+void make_heap(T* begin, T* end, Compare Comp) {
   int heap_len = end - begin;
   if (heap_len >= 0) {
     for (int i = heap_len / 2; i >= 1; i--) {
@@ -236,8 +236,8 @@ void make_heap(T* begin, T* end, bool (*Comp)(T, T)) {
 /**
  * just for test
  */
-template<typename T>
-void check_heap(T* begin, T* end, bool (*Comp)(T, T)) {
+template<typename T, typename Compare>
+void check_heap(T* begin, T* end, Compare Comp) {
   int heap_len = end - begin;
   if (heap_len >= 0) {
     for (int i = heap_len / 2; i >= 1; i--) {
@@ -255,8 +255,8 @@ void check_heap(T* begin, T* end, bool (*Comp)(T, T)) {
   }
 }
 
-template<typename T>
-void push_heap(T* begin, T* end, bool (*Comp)(T, T)) {
+template<typename T, typename Compare>
+void push_heap(T* begin, T* end, Compare Comp) {
   int now = end - begin;
   while (now > 1) {
     int parent = (now >> 1);
@@ -270,8 +270,8 @@ void push_heap(T* begin, T* end, bool (*Comp)(T, T)) {
   }
 }
 
-template<typename T>
-void pop_heap(T* begin, T* end, bool (*Comp)(T, T)) {
+template<typename T, typename Compare>
+void pop_heap(T* begin, T* end, Compare Comp) {
   *begin = *(end - 1);
   // adjust [begin, end - 1) to heap
   adjust_heap(begin, 1, end - begin - 1, Comp);
@@ -283,9 +283,16 @@ void pop_heap(T* begin, T* end, bool (*Comp)(T, T)) {
  */
 typedef MergeEntry * MergeEntryPtr;
 
-inline bool MergeEntryCompare(const MergeEntryPtr lhs, const MergeEntryPtr rhs) {
-  return *lhs < *rhs;
-}
+//inline bool MergeEntryCompare(const MergeEntryPtr lhs, const MergeEntryPtr rhs) {
+//  return *lhs < *rhs;
+//}
+
+class MergeEntryPtrLassThan {
+public:
+  bool operator()(const MergeEntryPtr lhs, const MergeEntryPtr rhs) {
+    return *lhs < *rhs;
+  }
+};
 
 class Merger {
 private:

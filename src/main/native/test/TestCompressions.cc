@@ -17,6 +17,7 @@
  */
 
 #include "BufferStream.h"
+#include "FileSystem.h"
 #include "Compressions.h"
 #include "test_commons.h"
 
@@ -88,4 +89,64 @@ TEST(Perf, Compressions) {
 
   delete [] buff;
   delete [] buff2;
+}
+
+TEST(Perf, CompressionUtil) {
+  string inputfile = TestConfig.get("input","");
+  string outputfile = TestConfig.get("output","");
+  uint32_t buffhint = TestConfig.getInt("compression.buffer.hint", 128*1024);
+  string inputcodec = Compressions::getCodecByFile(inputfile);
+  string outputcodec = Compressions::getCodecByFile(outputfile);
+  size_t bufferSize = buffhint;
+  if (inputcodec.length()>0 && outputcodec.length()==0) {
+    // decompression
+    InputStream * fin = FileSystem::getRaw().open(inputfile);
+    if (fin == NULL) {
+      THROW_EXCEPTION(IOException, "input file not found");
+    }
+    DecompressStream * source = Compressions::getDecompressionStream(inputcodec, fin, bufferSize);
+    OutputStream * fout = FileSystem::getRaw().create(outputfile, true);
+    char * buffer = new char[bufferSize];
+    while (true) {
+      int rd = source->read(buffer, bufferSize);
+      if (rd<=0) {
+        break;
+      }
+      fout->write(buffer, rd);
+    }
+    source->close();
+    delete source;
+    fin->close();
+    delete fin;
+    fout->flush();
+    fout->close();
+    delete fout;
+    delete buffer;
+  } else if (inputcodec.length()==0 && outputcodec.length()>0) {
+    // compression
+    InputStream * fin = FileSystem::getRaw().open(inputfile);
+    if (fin == NULL) {
+      THROW_EXCEPTION(IOException, "input file not found");
+    }
+    OutputStream * fout = FileSystem::getRaw().create(outputfile, true);
+    CompressStream * dest = Compressions::getCompressionStream(outputcodec, fout, bufferSize);
+    char * buffer = new char[bufferSize];
+    while (true) {
+      int rd = fin->read(buffer, bufferSize);
+      if (rd<=0) {
+        break;
+      }
+      dest->write(buffer, rd);
+    }
+    dest->flush();
+    dest->close();
+    delete dest;
+    fout->close();
+    delete fout;
+    fin->close();
+    delete fin;
+    delete buffer;
+  } else {
+    LOG("Not compression or decompression, do nothing");
+  }
 }

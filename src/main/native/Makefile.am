@@ -94,7 +94,6 @@ test/TestHash.cc                      \
 test/TestIFile.cc                     \
 test/TestSort.cc                      \
 test/TestWritableUtils.cc             \
-test/TestMapTask.cc                   \
 test/lib/TestLineRecordReader.cc      \
 test/TestMain.cc               
 

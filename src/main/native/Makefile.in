@@ -126,7 +126,6 @@ am__objects_2 = nttest-test_commons.$(OBJEXT) \
 	nttest-TestStream.$(OBJEXT) nttest-TestFileSystem.$(OBJEXT) \
 	nttest-TestHash.$(OBJEXT) nttest-TestIFile.$(OBJEXT) \
 	nttest-TestSort.$(OBJEXT) nttest-TestWritableUtils.$(OBJEXT) \
-	nttest-TestMapTask.$(OBJEXT) \
 	nttest-TestLineRecordReader.$(OBJEXT) \
 	nttest-TestMain.$(OBJEXT)
 am_nttest_OBJECTS = $(am__objects_2) nttest-gtest-all.$(OBJEXT)
@@ -370,7 +369,6 @@ test/TestHash.cc                      \
 test/TestIFile.cc                     \
 test/TestSort.cc                      \
 test/TestWritableUtils.cc             \
-test/TestMapTask.cc                   \
 test/lib/TestLineRecordReader.cc      \
 test/TestMain.cc               
 
@@ -543,7 +541,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestLineRecordReader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMMapTaskHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMain.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMapTask.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestPrimitives.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestRReducerHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestSort.Po@am__quote@
@@ -1099,20 +1096,6 @@ nttest-TestWritableUtils.obj: test/TestWritableUtils.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestWritableUtils.cc' object='nttest-TestWritableUtils.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestWritableUtils.obj `if test -f 'test/TestWritableUtils.cc'; then $(CYGPATH_W) 'test/TestWritableUtils.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestWritableUtils.cc'; fi`
-
-nttest-TestMapTask.o: test/TestMapTask.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestMapTask.o -MD -MP -MF $(DEPDIR)/nttest-TestMapTask.Tpo -c -o nttest-TestMapTask.o `test -f 'test/TestMapTask.cc' || echo '$(srcdir)/'`test/TestMapTask.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestMapTask.Tpo $(DEPDIR)/nttest-TestMapTask.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestMapTask.cc' object='nttest-TestMapTask.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestMapTask.o `test -f 'test/TestMapTask.cc' || echo '$(srcdir)/'`test/TestMapTask.cc
-
-nttest-TestMapTask.obj: test/TestMapTask.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestMapTask.obj -MD -MP -MF $(DEPDIR)/nttest-TestMapTask.Tpo -c -o nttest-TestMapTask.obj `if test -f 'test/TestMapTask.cc'; then $(CYGPATH_W) 'test/TestMapTask.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestMapTask.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestMapTask.Tpo $(DEPDIR)/nttest-TestMapTask.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestMapTask.cc' object='nttest-TestMapTask.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestMapTask.obj `if test -f 'test/TestMapTask.cc'; then $(CYGPATH_W) 'test/TestMapTask.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestMapTask.cc'; fi`
 
 nttest-TestLineRecordReader.o: test/lib/TestLineRecordReader.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestLineRecordReader.o -MD -MP -MF $(DEPDIR)/nttest-TestLineRecordReader.Tpo -c -o nttest-TestLineRecordReader.o `test -f 'test/lib/TestLineRecordReader.cc' || echo '$(srcdir)/'`test/lib/TestLineRecordReader.cc

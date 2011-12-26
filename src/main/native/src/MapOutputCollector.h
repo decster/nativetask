@@ -21,6 +21,7 @@
 
 #include "commons.h"
 #include "mempool.h"
+#include "Timer.h"
 #include "Buffers.h"
 #include "MapOutputSpec.h"
 #include "IFile.h"
@@ -127,7 +128,7 @@ public:
   uint64_t estimate_spill_size(OutputFileType output_type, KeyValueType ktype,
                                KeyValueType vtype);
 
-  void spill(IFileWriter & writer, ObjectCreatorFunc combinerCreator, Config & config)
+  void spill(IFileWriter & writer, uint64_t & keyGroupCount, ObjectCreatorFunc combinerCreator, Config & config)
       throw (IOException, UnsupportException);
 
   void dump(int fd, uint64_t offset, uint32_t & crc);
@@ -146,17 +147,12 @@ protected:
   class KeyGroupIterator : public KeyGroup {
   protected:
     PartitionBucket & pb;
-    size_t index;
-    KVBuffer * pkvbuffer;
     InplaceBuffer * currentKey;
-    const char * key;
-    uint32_t keyLen;
-    bool currentKeyFinished;
+    size_t index;
+    size_t size;
+    bool hasNext;
   public:
-    KeyGroupIterator(PartitionBucket & pb) :
-        pb(pb), index(0), pkvbuffer(NULL), currentKey(NULL), key(NULL),
-        keyLen(0), currentKeyFinished(true) {
-    }
+    KeyGroupIterator(PartitionBucket & pb);
     virtual ~KeyGroupIterator(){}
     bool nextKey();
     virtual const char * getKey(uint32_t & len);
@@ -175,6 +171,7 @@ private:
   std::vector<PartitionIndex *> _spills;
   MapOutputSpec _mapOutputSpec;
   bool _sortFirst;
+  Timer _collectTimer;
 private:
   void init_memory(uint32_t memory_capacity);
 
@@ -224,6 +221,8 @@ public:
                    IFileWriter & writer,
                    uint64_t & blockCount,
                    uint64_t & recordCount,
+                   uint64_t & sortTime,
+                   uint64_t & keyGroupCount,
                    ObjectCreatorFunc combinerCreator);
 
   /**
@@ -233,14 +232,15 @@ public:
   void mid_spill(std::vector<std::string> & filepaths,
                  const std::string & idx_file_path,
                  MapOutputSpec & spec,
-                 ObjectCreatorFunc combinerCreator=NULL);
+                 ObjectCreatorFunc combinerCreator);
 
   /**
    * final merge and/or spill use options in _config, and
    * previous spilled file & in-memory data
    */
   void final_merge_and_spill(std::vector<std::string> & filepaths,
-      const std::string & indexpath, MapOutputSpec & spec);
+      const std::string & indexpath, MapOutputSpec & spec,
+      ObjectCreatorFunc combinerCreator);
 
   /**
    * collect one k/v pair

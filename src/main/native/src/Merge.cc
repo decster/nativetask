@@ -68,7 +68,7 @@ void Merger::initHeap() {
       _heap.push_back(pme);
     }
   }
-  make_heap(&(_heap[0]), &(_heap[0])+_heap.size(), MergeEntryCompare);
+  make_heap(&(_heap[0]), &(_heap[0])+_heap.size(), MergeEntryPtrLassThan());
 }
 
 void Merger::merge() {
@@ -92,10 +92,10 @@ void Merger::merge() {
             std::swap(base[0], base[1]);
           }
         } else {
-          adjust_heap(base, 1, cur_heap_size, MergeEntryCompare);
+          adjust_heap(base, 1, cur_heap_size, MergeEntryPtrLassThan());
         }
       } else { // no more, pop heap
-        pop_heap(base, base+cur_heap_size, MergeEntryCompare);
+        pop_heap(base, base+cur_heap_size, MergeEntryPtrLassThan());
         cur_heap_size--;
       }
     }

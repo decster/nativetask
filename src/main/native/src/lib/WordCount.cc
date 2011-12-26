@@ -55,6 +55,9 @@ void WordCountMapper::wordCount(const char * buff, uint32_t length) {
     }
     pos++;
   }
+  if (start) {
+    collect(start, len, &count, 4);
+  }
 }
 
 void WordCountMapper::map(const char * key, uint32_t keyLen,

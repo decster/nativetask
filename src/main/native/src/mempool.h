@@ -85,7 +85,7 @@ inline uint32_t GetCeil(uint32_t v, uint32_t unit) {
 }
 
 const uint32_t DEFAULT_MIN_BLOCK_SIZE = 16 * 1024;
-const uint32_t DEFAULT_MAX_BLOCK_SIZE = 2 * 1024 * 1024;
+const uint32_t DEFAULT_MAX_BLOCK_SIZE = 1 * 1024 * 1024;
 const uint32_t NULL_BLOCK_INDEX = 0xffffffffU;
 
 /**
