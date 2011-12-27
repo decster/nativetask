@@ -263,7 +263,7 @@ public:
   inline void write(const void * data, uint32_t len) {
     if (likely(len <= _remain)) { // append directly
       // TODO: change it
-      memcpy(current(), data, len);
+      simple_memcpy(current(), data, len);
       _remain -= len;
       return;
     }

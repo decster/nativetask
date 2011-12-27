@@ -63,37 +63,52 @@
 
 /**
  * This memcpy assumes src & dest are not overlapped,
- * and dest buffer have enough free space (8 bytes) for
- * writing dirty data, by doing this, many branches
- * are eliminated.
+ * and len are normally very small(<64)
  * This function is primarily optimized for x86-64 processors,
  * on which unaligned 64-bit loads and stores are cheap
  *
- *
  * @param dest: dest buffer
  * @param src:  src buffer
- * @param size: src buffer size, must be >0
+ * @param len: src buffer size, must be >0
  */
-inline void simple_memcpy(void * dest, const void * src, size_t size) {
-  register const uint64_t* psrc = (const uint64_t*)src;
-  register uint64_t* pdest = (uint64_t*)dest;
-  for(;;) {
-    *pdest++ = *psrc++;
-    if (size<=sizeof(uint64_t))
-      return;
-    size -= sizeof(uint64_t);
+inline void simple_memcpy(void * dest, const void * src, size_t len) {
+  const uint8_t * src8 = (const uint8_t*)src;
+  uint8_t * dest8 = (uint8_t*)dest;
+  switch (len) {
+  case 0:
+    return;
+  case 1:
+    dest8[0]=src8[0];
+    return;
+  case 2:
+    *(uint16_t*)dest8=*(const uint16_t*)src8;
+    return;
+  case 3:
+    *(uint16_t*)dest8 = *(const uint16_t*)src8;
+    dest8[2]=src8[2];
+    return;
+  case 4:
+    *(uint32_t*)dest8 = *(const uint32_t*)src8;
+    return;
   }
+  if (len<8) {
+    *(uint32_t*)dest8 = *(const uint32_t*)src8;
+    *(uint32_t*)(dest8+len-4) = *(const uint32_t*)(src8+len-4);
+    return;
+  }
+  if (len<128) {
+    int64_t cur = (int64_t)len - 8;
+    while (cur>0) {
+      *(uint64_t*)(dest8+cur) = *(const uint64_t*)(src8+cur);
+      cur -= 8;
+    }
+    *(uint64_t*)(dest8) = *(const uint64_t*)(src8);
+    return;
+  }
+  ::memcpy(dest, src, len);
 }
 
-inline void simple_memcpy2(void * dest, const void * src, size_t size) {
-  if (unlikely(size > 128)) {
-    memcpy(dest, src, size);
-  } else {
-    simple_memcpy(dest, src, size);
-  }
-}
 #endif
-
 
 /**
  * little-endian to big-endian or vice versa
@@ -111,87 +126,160 @@ inline uint64_t bswap64(uint64_t val)
 }
 
 /**
- * fast memcmp
+ * Fast memcmp
  */
-inline int fmemcmp(const char * src, const char * dest, uint32_t len) {
-  const uint64_t * src8 = (const uint64_t*)src;
-  const uint64_t * dest8 = (const uint64_t*)dest;
-  while (len>=8) {
-    uint64_t l = *src8;
-    uint64_t r = *dest8;
+inline int64_t fmemcmp(const char * src, const char * dest, uint32_t len) {
+  const uint8_t * src8 = (const uint8_t*)src;
+  const uint8_t * dest8 = (const uint8_t*)dest;
+  switch (len) {
+  case 0:
+    return 0;
+  case 1:
+    return (int64_t)src8[0] - (int64_t)dest8[0];
+  case 2:
+  {
+    int64_t ret = ((int64_t)src8[0] - (int64_t)dest8[0]);
+    if (ret) return ret;
+    return ((int64_t)src8[1] - (int64_t)dest8[1]);
+  }
+  case 3:
+  {
+    int64_t ret = ((int64_t)src8[0] - (int64_t)dest8[0]);
+    if (ret) return ret;
+    ret = ((int64_t)src8[1] - (int64_t)dest8[1]);
+    if (ret) return ret;
+    return ((int64_t)src8[2] - (int64_t)dest8[2]);
+  }
+  case 4:
+  {
+    return (int64_t)bswap(*(uint32_t*)src) - (int64_t)bswap(*(uint32_t*)dest);
+  }
+  }
+  if (len<8) {
+    int64_t ret = ((int64_t)bswap(*(uint32_t*)src) - (int64_t)bswap(*(uint32_t*)dest));
+    if (ret) {
+      return ret;
+    }
+    return ((int64_t)bswap(*(uint32_t*)(src+len-4)) - (int64_t)bswap(*(uint32_t*)(dest+len-4)));
+  }
+  uint32_t cur = 0;
+  uint32_t end = len & (0xffffffffU << 3);
+  while (cur<end) {
+    uint64_t l = *(uint64_t*)(src8+cur);
+    uint64_t r = *(uint64_t*)(dest8+cur);
     if (l != r) {
       l = bswap64(l);
       r = bswap64(r);
       return l > r ? 1 : -1;
     }
-    ++src8;
-    ++dest8;
-    len -= 8;
+    cur += 8;
   }
-  if (len==0)
-    return 0;
-  if (len == 1) {
-    int l = (int)(*(uint8_t*)src8);
-    int r = (int)(*(uint8_t*)dest8);
-    return l - r;
+  uint64_t l = *(uint64_t*)(src8+len-8);
+  uint64_t r = *(uint64_t*)(dest8+len-8);
+  if (l != r) {
+    l = bswap64(l);
+    r = bswap64(r);
+    return l > r ? 1 : -1;
   }
-  uint64_t mask = (1ULL << (len * 8)) - 1;
-  uint64_t l = (*src8) & mask;
-  uint64_t r = (*dest8) & mask;
-  if (l == r) {
-    return 0;
-  }
-  l = bswap64(l);
-  r = bswap64(r);
-  return l > r ? 1 : -1;
+  return 0;
 }
 
-inline int fmemcmp2(const char * src, uint32_t srcLen, const char * dest,
-    uint32_t destLen) {
+inline int64_t fmemcmp(const char * src, const char * dest,
+                       uint32_t srcLen, uint32_t destLen) {
   uint32_t minlen = srcLen<destLen?srcLen:destLen;
-  int ret = fmemcmp(src, dest, minlen);
+  int64_t ret = fmemcmp(src, dest, minlen);
   if (ret) {
     return ret;
   }
   return srcLen - destLen;
 }
 
+/**
+ * Fast memory equal
+ */
 inline bool fmemeq(const char * src, const char * dest, uint32_t len) {
-  const uint64_t * src8 = (const uint64_t*)src;
-  const uint64_t * dest8 = (const uint64_t*)dest;
-  while (len>=8) {
-    uint64_t l = *src8;
-    uint64_t r = *dest8;
-    if (l != r) {
-      return false;
-    }
-    ++src8;
-    ++dest8;
-    len -= 8;
-  }
+  const uint8_t * src8 = (const uint8_t*)src;
+  const uint8_t * dest8 = (const uint8_t*)dest;
   switch (len) {
   case 0:
     return true;
   case 1:
-    return *(uint8_t*) src8 == *(uint8_t*) dest8;
+    return src8[0] == dest8[0];
   case 2:
-    return *(uint16_t*) src8 == *(uint16_t*) dest8;
+    return *(uint16_t*)src8 == *(uint16_t*)dest8;
   case 3:
-    return (*(uint32_t*) src8 & 0x00ffffff) ==
-           (*(uint32_t*) dest8 & 0x00ffffff);
+    return (*(uint16_t*)src8 == *(uint16_t*)dest8) &&
+           (src8[2]==dest8[2]);
   case 4:
-    return ((*(uint32_t*) src8) == (*(uint32_t*) dest8));
-  case 5:
-    return (*src8  & 0xffffffffffUL) ==
-           (*dest8 & 0xffffffffffUL);
-  case 6:
-    return (*src8  & 0xffffffffffffUL) ==
-           (*dest8 & 0xffffffffffffUL);
-  case 7:
-    return (*src8  & 0xffffffffffffUL) ==
-           (*dest8 & 0xffffffffffffUL);
+    return *(uint32_t*)src8 == *(uint32_t*)dest8;
+  }
+  if (len<8) {
+    return (*(uint32_t*)src8 == *(uint32_t*)dest8) &&
+           (*(uint32_t*)(src8+len-4) == *(uint32_t*)(dest8+len-4));
+  }
+  uint32_t cur = 0;
+  uint32_t end = len & (0xffffffff << 3);
+  while (cur<end) {
+    uint64_t l = *(uint64_t*)(src8+cur);
+    uint64_t r = *(uint64_t*)(dest8+cur);
+    if (l != r) {
+      return false;
+    }
+    cur += 8;
+  }
+  uint64_t l = *(uint64_t*)(src8+len-8);
+  uint64_t r = *(uint64_t*)(dest8+len-8);
+  if (l != r) {
+    return false;
   }
   return true;
+}
+
+inline bool fmemeq(const char * src, const char * dest, uint32_t srcLen, uint32_t destLen) {
+  if (srcLen!=destLen) {
+    return false;
+  }
+  fmemeq(src, dest, std::min(srcLen, destLen));
+}
+
+/**
+ * Fast memory equal, reverse order
+ */
+inline bool frmemeq(const char * src, const char * dest, uint32_t len) {
+  const uint8_t * src8 = (const uint8_t*)src;
+  const uint8_t * dest8 = (const uint8_t*)dest;
+  switch (len) {
+  case 0:
+    return true;
+  case 1:
+    return src8[0] == dest8[0];
+  case 2:
+    return *(uint16_t*)src8 == *(uint16_t*)dest8;
+  case 3:
+    return (src8[2]==dest8[2]) &&
+           (*(uint16_t*)src8 == *(uint16_t*)dest8);
+  case 4:
+    return *(uint32_t*)src8 == *(uint32_t*)dest8;
+  }
+  if (len<8) {
+    return (*(uint32_t*)(src8+len-4) == *(uint32_t*)(dest8+len-4)) &&
+           (*(uint32_t*)src8 == *(uint32_t*)dest8);
+  }
+  int32_t cur = (int32_t)len - 8;
+  while (cur>0) {
+    if (*(uint64_t*)(src8+cur) != *(uint64_t*)(dest8+cur)) {
+      return false;
+    }
+    cur -= 8;
+  }
+  return *(uint64_t*)(src8) == *(uint64_t*)(dest8);
+}
+
+inline bool frmemeq(const char * src, const char * dest, uint32_t srcLen, uint32_t destLen) {
+  if (srcLen!=destLen) {
+    return false;
+  }
+  frmemeq(src, dest, std::min(srcLen, destLen));
 }
 
 #endif /* PRIMITIVES_H_ */

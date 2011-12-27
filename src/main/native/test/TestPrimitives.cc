@@ -113,19 +113,11 @@ static void test_simple_memcpy_perf_len(char * src, char * dest, size_t len,
   }
 }
 
-static void test_simple_memcpy2_perf_len(char * src, char * dest, size_t len,
-                                         size_t time) {
-  for (size_t i = 0; i < time; i++) {
-    simple_memcpy2(src, dest, len);
-    simple_memcpy2(dest, src, len);
-  }
-}
-
 TEST(Perf, simple_memcpy) {
   char * src = new char[10240];
   char * dest = new char[10240];
   char buff[32];
-  for (size_t len = 1; len < 256; len=len+31) {
+  for (size_t len = 1; len < 256; len=len+2) {
     LOG("------------------------------");
     snprintf(buff, 32, "       memcpy %luB\t", len);
     Timer t;
@@ -134,10 +126,6 @@ TEST(Perf, simple_memcpy) {
     snprintf(buff, 32, "simple_memcpy %luB\t", len);
     t.reset();
     test_simple_memcpy_perf_len(src,dest,len,1000000);
-    LOG("%s", t.getInterval(buff).c_str());
-    snprintf(buff, 32, "simple_memcpy2 %luB\t", len);
-    t.reset();
-    test_simple_memcpy2_perf_len(src,dest,len,1000000);
     LOG("%s", t.getInterval(buff).c_str());
   }
   delete [] src;
@@ -182,7 +170,7 @@ inline char * memchrbrf2(char * p, char ch, size_t len) {
   return NULL;
 }
 
-// not safe in MACOSX, segment fault, should be safe on Linux
+// not safe in MACOSX, segment fault, should be safe on Linux with out mmap
 inline int memchr_sse(const char *s, int c, int len) {
   //len : edx; c: esi; s:rdi
   int index;
@@ -307,7 +295,7 @@ TEST(Perf, memcpy) {
   LOG("%s", t.getSpeedM("memcmp", mb).c_str());
   t.reset();
   for (size_t i=0;i<mb;i+=size) {
-    simple_memcpy2(dest, src, size);
+    simple_memcpy(dest, src, size);
   }
   LOG("%s", t.getSpeedM("simple_memcmp", mb).c_str());
   delete [] src;

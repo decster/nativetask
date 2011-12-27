@@ -110,4 +110,4 @@ libnativetask_la_LDFLAGS = -version-info 0:1:0 $(AM_LDFLAGS)
 nttest_SOURCES = $(TESTSOURCES) gtest/gtest-all.cc
 nttest_LDADD = libnativetask.la
 nttest_LDFLAGS = $(TESTLDFLAGS) $(AM_LDFLAGS)
-nttest_CPPFLAGS = -g -O2 $(JNI_INCLUDE) $(AM_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/test
+nttest_CPPFLAGS = -g -O2 $(JNI_INCLUDE) $(AM_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/test 
