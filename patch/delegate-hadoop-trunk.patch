@@ -1,7 +1,7 @@
-diff --git a/src/core/org/apache/hadoop/io/Text.java b/src/core/org/apache/hadoop/io/Text.java
-index 19faa87..a058d22 100644
---- a/src/core/org/apache/hadoop/io/Text.java
-+++ b/src/core/org/apache/hadoop/io/Text.java
+diff --git a/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/Text.java b/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/Text.java
+index e38dd3c..ee00387 100644
+--- a/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/Text.java
++++ b/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/io/Text.java
 @@ -21,6 +21,7 @@ package org.apache.hadoop.io;
  import java.io.IOException;
  import java.io.DataInput;
@@ -10,7 +10,7 @@ index 19faa87..a058d22 100644
  import java.nio.ByteBuffer;
  import java.nio.CharBuffer;
  import java.nio.charset.CharacterCodingException;
-@@ -219,6 +220,30 @@ public class Text extends BinaryComparable
+@@ -235,6 +236,30 @@ public class Text extends BinaryComparable
    }
  
    /**
@@ -41,19 +41,11 @@ index 19faa87..a058d22 100644
     * Clear the string to empty.
     */
    public void clear() {
-diff --git a/src/mapred/org/apache/hadoop/mapred/MapTask.java b/src/mapred/org/apache/hadoop/mapred/MapTask.java
-index 8a469ac..727f84c 100644
---- a/src/mapred/org/apache/hadoop/mapred/MapTask.java
-+++ b/src/mapred/org/apache/hadoop/mapred/MapTask.java
-@@ -41,6 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
- import org.apache.commons.logging.Log;
- import org.apache.commons.logging.LogFactory;
- import org.apache.hadoop.conf.Configuration;
-+import org.apache.hadoop.filecache.TaskDistributedCacheManager;
- import org.apache.hadoop.fs.FSDataInputStream;
- import org.apache.hadoop.fs.FSDataOutputStream;
- import org.apache.hadoop.fs.FileSystem;
-@@ -366,6 +367,18 @@ class MapTask extends Task {
+diff --git a/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/MapTask.java b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/MapTask.java
+index 7c47aa9..5af9dee 100644
+--- a/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/MapTask.java
++++ b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/MapTask.java
+@@ -324,6 +324,18 @@ class MapTask extends Task {
        return;
      }
  
@@ -72,7 +64,7 @@ index 8a469ac..727f84c 100644
      if (useNewApi) {
        runNewMapper(job, splitMetaInfo, umbilical, reporter);
      } else {
-@@ -425,7 +438,9 @@ class MapTask extends Task {
+@@ -384,7 +396,9 @@ class MapTask extends Task {
      LOG.info("numReduceTasks: " + numReduceTasks);
      MapOutputCollector collector = null;
      if (numReduceTasks > 0) {
@@ -83,7 +75,7 @@ index 8a469ac..727f84c 100644
      } else { 
        collector = new DirectMapOutputCollector(umbilical, job, reporter);
      }
-@@ -671,7 +686,8 @@ class MapTask extends Task {
+@@ -621,7 +635,8 @@ class MapTask extends Task {
                         TaskUmbilicalProtocol umbilical,
                         TaskReporter reporter
                         ) throws IOException, ClassNotFoundException {
@@ -91,13 +83,13 @@ index 8a469ac..727f84c 100644
 +      MapOutputCollector<K,V> tc = TaskDelegation.tryGetDelegateMapOutputCollector(job, getTaskID(), mapOutputFile);
 +      collector = tc != null ? tc : new MapOutputBuffer<K,V>(umbilical, job, reporter);
        partitions = jobContext.getNumReduceTasks();
-       if (partitions > 0) {
+       if (partitions > 1) {
          partitioner = (org.apache.hadoop.mapreduce.Partitioner<K,V>)
-diff --git a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-index 980b988..e6182bc 100644
---- a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-+++ b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-@@ -413,6 +413,11 @@ class ReduceTask extends Task {
+diff --git a/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/ReduceTask.java b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/ReduceTask.java
+index 969ddf1..231726d 100644
+--- a/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/ReduceTask.java
++++ b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/ReduceTask.java
+@@ -392,6 +392,11 @@ public class ReduceTask extends Task {
      Class valueClass = job.getMapOutputValueClass();
      RawComparator comparator = job.getOutputValueGroupingComparator();
  
@@ -109,11 +101,11 @@ index 980b988..e6182bc 100644
      if (useNewApi) {
        runNewReducer(job, umbilical, reporter, rIter, comparator, 
                      keyClass, valueClass);
-diff --git a/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
+diff --git a/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/TaskDelegation.java b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/TaskDelegation.java
 new file mode 100644
 index 0000000..16cafbd
 --- /dev/null
-+++ b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
++++ b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/TaskDelegation.java
 @@ -0,0 +1,98 @@
 +/**
 + * Licensed to the Apache Software Foundation (ASF) under one

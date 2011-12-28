@@ -41,8 +41,6 @@ public class NativeRuntime {
   private static Log LOG = LogFactory.getLog(NativeRuntime.class);
   private static boolean nativeLibraryLoaded = false;
   private static JobConf conf = new JobConf();
-  // TODO: use this to do bookkeeping
-  // private static HashSet<Long> NativeObjects = new HashSet<Long>();
   // All configs native side needed
   private static String[] usefulExternalConfigsKeys = {
       "mapred.map.tasks",
@@ -76,10 +74,11 @@ public class NativeRuntime {
       // Ignore failures
       LOG.info("Failed to load nativetask JNI library with error: " + t);
       LOG.info("java.library.path=" + System.getProperty("java.library.path"));
+      LOG.info("LD_LIBRARY_PATH=" + System.getenv("LD_LIBRARY_PATH"));
     }
   }
 
-  private static void asserNativeLibraryLoaded() {
+  private static void assertNativeLibraryLoaded() {
     if (!nativeLibraryLoaded) {
       throw new RuntimeException("Native runtime library not loaded");
     }
@@ -149,7 +148,7 @@ public class NativeRuntime {
   }
 
   public static void configure(JobConf jobConf) {
-    asserNativeLibraryLoaded();
+    assertNativeLibraryLoaded();
     conf = jobConf;
     List<byte[]> nativeConfigs = new ArrayList<byte[]>();
     // add needed external configs
@@ -176,7 +175,7 @@ public class NativeRuntime {
   }
 
   public static void set(String key, byte [] value) {
-    asserNativeLibraryLoaded();
+    assertNativeLibraryLoaded();
     byte [][] jniConfig = new byte [2][];
     jniConfig[0] = NativeUtils.toBytes(key);
     jniConfig[1] = value;
@@ -192,7 +191,7 @@ public class NativeRuntime {
   }
 
   public synchronized static long createNativeObject(String clazz) {
-    asserNativeLibraryLoaded();
+    assertNativeLibraryLoaded();
     long ret = JNICreateNativeObject(NativeUtils.toBytes(clazz));
     if (ret == 0) {
       LOG.warn("Can't create NativeObject for class " + clazz
@@ -214,16 +213,16 @@ public class NativeRuntime {
   }
 
   public synchronized static long createDefaultObject(NativeObjectType type) {
-    asserNativeLibraryLoaded();
+    assertNativeLibraryLoaded();
     return JNICreateDefaultNativeObject(NativeUtils.toBytes(type.toString()));
   }
 
   public synchronized static void releaseNativeObject(long addr) {
-    asserNativeLibraryLoaded();
+    assertNativeLibraryLoaded();
     JNIReleaseNativeObject(addr);
   }
 
-  public synchronized static void updateCounters(Counters counts) {
+  public synchronized static void updateCounters(Counters counters) {
 
   }
 

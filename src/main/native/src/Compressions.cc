@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "SyncUtils.h"
 #include "Compressions.h"
 #include "codec/GzipCodec.h"
 #include "codec/SnappyCodec.h"
@@ -51,7 +52,10 @@ const Compressions::Codec Compressions::Lz4Codec =
 
 vector<Compressions::Codec> Compressions::SupportedCodecs = vector<Compressions::Codec>();
 
+
 void Compressions::initCodecs() {
+  static Lock lock;
+  ScopeLock<Lock> autolock(lock);
   if (SupportedCodecs.size() == 0) {
     SupportedCodecs.push_back(GzipCodec);
     SupportedCodecs.push_back(SnappyCodec);

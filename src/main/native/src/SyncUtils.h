@@ -79,9 +79,10 @@ private:
   Lock* _lock;
 };
 
+template <typename LockT>
 class ScopeLock {
 public:
-  ScopeLock(Lock & lock) :
+  ScopeLock(LockT & lock) :
     _lock(&lock) {
     _lock->lock();
   }
@@ -89,7 +90,7 @@ public:
     _lock->unlock();
   }
 private:
-  Lock * _lock;
+  LockT * _lock;
 
   // No copying
   ScopeLock(const ScopeLock&);
@@ -172,7 +173,7 @@ private:
   size_t _index;
   size_t _end;
   // TODO: use spinlock
-  Lock _lock;
+  SpinLock _lock;
 public:
   ConcurrentIndex(size_t count) :
     _index(0),
@@ -189,7 +190,7 @@ public:
   }
 
   ssize_t next() {
-    ScopeLock autoLock(_lock);
+    ScopeLock<SpinLock> autoLock(_lock);
     if (_index==_end) {
       return -1;
     } else {

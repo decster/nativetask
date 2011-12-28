@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "NativeObjectFactory.h"
 #include "FileSplit.h"
 #include "BufferStream.h"
 #include "WritableUtils.h"
@@ -25,14 +26,24 @@ namespace Hadoop {
 
 void FileSplit::readFields(const string & data) {
   InputBuffer input = InputBuffer(data);
-  _file = WritableUtils::ReadUTF8(&input);
+  if (NativeObjectFactory::GetConfig().getInt("native.hadoop.version", 1) == 1) {
+    _file = WritableUtils::ReadUTF8(&input);
+  }
+  else {
+    _file = WritableUtils::ReadString(&input);
+  }
   _start = WritableUtils::ReadLong(&input);
   _length = WritableUtils::ReadLong(&input);
 }
 
 void FileSplit::writeFields(string & dest) {
   OutputStringStream out = OutputStringStream(dest);
-  WritableUtils::WriteUTF8(&out, _file);
+  if (NativeObjectFactory::GetConfig().getInt("native.hadoop.version", 1) == 1) {
+    WritableUtils::WriteUTF8(&out, _file);
+  }
+  else {
+    WritableUtils::WriteString(&out, _file);
+  }
   WritableUtils::WriteLong(&out, _start);
   WritableUtils::WriteLong(&out, _length);
 }

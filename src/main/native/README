@@ -78,3 +78,24 @@ ifile serializaton & compress 0.6s
 local writer io 56M -> 0.61s
 Total 1.75 1.35s
 
+bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar -Dfs.default.name=file:/// -Dmapred.job.tracker=local -Dnative.recordreader.class=NativeTask.LineRecordReader -Dnative.recordwriter.class=NativeTask.WordCountRecordWriter -Dnative.mapper.class=NativeTask.WordCountMapper -Dnative.reducer.class=NativeTask.WordCountReducer -Dnative.combiner.class=NativeTask.WordCountReducer -input ../native/output.word -output wcoutpu2 
+
+11/12/28 19:59:51 INFO mapred.Task: Task 'attempt_local_0001_r_000000_0' done.
+11/12/28 19:59:51 INFO mapred.JobClient:  map 100% reduce 100%
+11/12/28 19:59:51 INFO mapred.JobClient: Job complete: job_local_0001
+11/12/28 19:59:51 INFO mapred.JobClient: Counters: 13
+11/12/28 19:59:51 INFO mapred.JobClient:   FileSystemCounters
+11/12/28 19:59:51 INFO mapred.JobClient:     FILE_BYTES_READ=247842138
+11/12/28 19:59:51 INFO mapred.JobClient:     FILE_BYTES_WRITTEN=61071041
+11/12/28 19:59:51 INFO mapred.JobClient:   Map-Reduce Framework
+11/12/28 19:59:51 INFO mapred.JobClient:     Reduce input groups=0
+11/12/28 19:59:51 INFO mapred.JobClient:     Combine output records=0
+11/12/28 19:59:51 INFO mapred.JobClient:     Reduce shuffle bytes=0
+11/12/28 19:59:51 INFO mapred.JobClient:     Physical memory (bytes) snapshot=0
+11/12/28 19:59:51 INFO mapred.JobClient:     Reduce output records=0
+11/12/28 19:59:51 INFO mapred.JobClient:     Spilled Records=23449583
+11/12/28 19:59:51 INFO mapred.JobClient:     CPU time spent (ms)=0
+11/12/28 19:59:51 INFO mapred.JobClient:     Total committed heap usage (bytes)=1012400128
+11/12/28 19:59:51 INFO mapred.JobClient:     Virtual memory (bytes) snapshot=0
+11/12/28 19:59:51 INFO mapred.JobClient:     SPLIT_RAW_BYTES=88
+11/12/28 19:59:51 INFO mapred.JobClient:     Reduce input records=0
