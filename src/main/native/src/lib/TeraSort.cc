@@ -42,7 +42,6 @@ static uint64_t seeds[] = { 0L, 4160749568L, 4026531840L, 3892314112L,
                             1073741824L, 939524096L, 805306368L, 671088640L,
                             536870912L, 402653184L, 268435456L, 134217728L, };
 
-
 TeraGen::TeraGen(uint64_t row, uint64_t splits, uint64_t index) {
   reset(row, splits, index);
 }
@@ -52,13 +51,13 @@ TeraGen::~TeraGen() {
 }
 
 void TeraGen::reset(uint64_t row, uint64_t splits, uint64_t index) {
-  _currentRow = row/splits * index;
-  _endRow = std::min(row/splits * (index+1), row);
+  _currentRow = row / splits * index;
+  _endRow = std::min(row / splits * (index + 1), row);
 
   uint64_t init = _currentRow * 3;
   int baseIndex = (int) ((init & mask32) / seedSkip);
   _seed = seeds[baseIndex];
-  for(int i=0; i < init % seedSkip; ++i) {
+  for (int i = 0; i < init % seedSkip; ++i) {
     nextSeed();
   }
 }
@@ -72,31 +71,31 @@ bool TeraGen::next(string & key, string & value) {
   if (_currentRow >= _endRow) {
     return false;
   }
-  for(int i=0; i<3; i++) {
+  for (int i = 0; i < 3; i++) {
     int64_t temp = nextSeed() / 52;
-    _keyBytes[3 + 4*i] = (' ' + (temp % 95));
+    _keyBytes[3 + 4 * i] = (' ' + (temp % 95));
     temp /= 95;
-    _keyBytes[2 + 4*i] = (' ' + (temp % 95));
+    _keyBytes[2 + 4 * i] = (' ' + (temp % 95));
     temp /= 95;
-    _keyBytes[1 + 4*i] = (' ' + (temp % 95));
+    _keyBytes[1 + 4 * i] = (' ' + (temp % 95));
     temp /= 95;
-    _keyBytes[4*i] = (' ' + (temp % 95));
+    _keyBytes[4 * i] = (' ' + (temp % 95));
   }
   key.assign(_keyBytes, 10);
   snprintf(_valueBytes, 100, "%10llu", _currentRow);
   value.assign(_valueBytes, 10);
   int base = (int) ((_currentRow * 8) % 26);
-  for(int i=0; i<7; ++i) {
-    value.append(10, (char)((base+i) % 26)+'A');
+  for (int i = 0; i < 7; ++i) {
+    value.append(10, (char) ((base + i) % 26) + 'A');
   }
-  value.append(8, (char)((base+7) % 26)+'A');
+  value.append(8, (char) ((base + 7) % 26) + 'A');
   _currentRow++;
   return true;
 }
 
 bool TeraGen::nextLine(string & line) {
-  string key,value;
-  if (next(key,value)) {
+  string key, value;
+  if (next(key, value)) {
     line.reserve(100);
     line.assign(key);
     line.append(value);
@@ -106,10 +105,9 @@ bool TeraGen::nextLine(string & line) {
   return false;
 }
 
-
 bool TeraGen::next(string & kv) {
-  string key,value;
-  if (next(key,value)) {
+  string key, value;
+  if (next(key, value)) {
     kv.reserve(98);
     kv.assign(key);
     kv.append(value);

@@ -68,6 +68,8 @@ public:
   virtual void readFields(const string & data);
 
   virtual void writeFields(string & dest);
+
+  virtual string toString();
 };
 
 } // namespace Hadoop

@@ -152,11 +152,15 @@ public class Submitter extends Configured implements Tool  {
     Parser parser = cli.createParser();
     try {
 
-      GenericOptionsParser genericParser = new GenericOptionsParser(getConf(), args);
+      JobConf job = new JobConf(getConf());
+
+      GenericOptionsParser genericParser = new GenericOptionsParser(job, args);
+
+      setConf(job);
+
       CommandLine results =
         parser.parse(cli.options, genericParser.getRemainingArgs());
 
-      JobConf job = new JobConf(getConf());
 
       if (results.hasOption("input")) {
         FileInputFormat.setInputPaths(job,

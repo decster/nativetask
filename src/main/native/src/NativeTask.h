@@ -215,6 +215,7 @@ public:
   virtual vector<string> & getLocations() = 0;
   virtual void readFields(const string & data) = 0;
   virtual void writeFields(string & dest) = 0;
+  virtual string toString() = 0;
 };
 
 class Configurable : public NativeObject {

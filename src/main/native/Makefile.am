@@ -41,6 +41,7 @@ src/Checksum.cc                        \
 src/Streams.cc                         \
 src/BufferStream.cc                    \
 src/Buffers.cc                         \
+src/Path.cc                            \
 src/FileSystem.cc                      \
 src/Compressions.cc                    \
 src/PartitionIndex.cc                  \

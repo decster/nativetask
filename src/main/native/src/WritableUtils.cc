@@ -181,11 +181,28 @@ int32_t WritableUtils::ReadInt(InputStream * stream) {
   return (int32_t)bswap(ret);
 }
 
+int16_t WritableUtils::ReadShort(InputStream * stream) {
+  uint16_t ret;
+  if (stream->readFully(&ret, 2)!=2) {
+    THROW_EXCEPTION(IOException, "ReadInt reach EOF");
+  }
+  return (int16_t) ((ret >> 8) | (ret << 8));
+}
+
 string WritableUtils::ReadString(InputStream * stream) {
   int32_t len = ReadInt(stream);
   string ret = string(len, '\0');
   if (stream->readFully((void *)ret.data(), len)!=len) {
-    THROW_EXCEPTION(IOException, "ReadString reach EOF");
+    THROW_EXCEPTION_EX(IOException, "ReadString reach EOF, need %d", len);
+  }
+  return ret;
+}
+
+string WritableUtils::ReadUTF8(InputStream * stream) {
+  int16_t len = ReadShort(stream);
+  string ret = string(len, '\0');
+  if (stream->readFully((void *)ret.data(), len)!=len) {
+    THROW_EXCEPTION_EX(IOException, "ReadString reach EOF, need %d", len);
   }
   return ret;
 }
@@ -207,8 +224,22 @@ void WritableUtils::WriteInt(OutputStream * stream, int32_t v) {
   stream->write(&be, 4);
 }
 
+void WritableUtils::WriteShort(OutputStream * stream, int16_t v) {
+  uint16_t be = v;
+  be = ((be>>8) | (be<<8));
+  stream->write(&be, 2);
+}
+
 void WritableUtils::WriteString(OutputStream * stream, const string & v) {
   WriteInt(stream, (int32_t)v.length());
+  stream->write(v.c_str(), (uint32_t)v.length());
+}
+
+void WritableUtils::WriteUTF8(OutputStream * stream, const string & v) {
+  if (v.length()>65535) {
+    THROW_EXCEPTION_EX(IOException, "string too long (%lu) for WriteUTF8", v.length());
+  }
+  WriteShort(stream, (int16_t)v.length());
   stream->write(v.c_str(), (uint32_t)v.length());
 }
 

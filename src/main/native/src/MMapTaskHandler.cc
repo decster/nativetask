@@ -65,7 +65,6 @@ void MMapTaskHandler::configure(Config & config) {
 
   if (_numPartition > 0) {
     // collector
-    LOG("Native Mapper with MapOutputCollector");
     _moc = new MapOutputCollector(_numPartition);
     _moc->configure(config);
 
@@ -92,15 +91,20 @@ void MMapTaskHandler::configure(Config & config) {
       THROW_EXCEPTION(IOException, "Partitioner not found");
     }
     _partitioner->configure(config);
+
+    LOG("Native Mapper with MapOutputCollector, RecordReader: %s Combiner: %s Partitioner: %s",
+        readerClass?readerClass:"Java RecordReader",
+        combinerClass?combinerClass:"NULL",
+        partitionerClass?partitionerClass:"(default)");
   }
   else {
-    LOG("Native Mapper with direct output collector");
     const char * writerClass = config.get("native.recordwriter.class");
     if (NULL == writerClass) {
       THROW_EXCEPTION(IOException, "RecordWriter not found");
     }
     _writer = (RecordWriter*) NativeObjectFactory::CreateObject(writerClass);
     _writer->configure(config);
+    LOG("Native Mapper with RecordReader: %s RecordWriter: %s", readerClass?readerClass:"Java RecordReader", writerClass);
   }
 
   // mapper

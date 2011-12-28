@@ -175,6 +175,7 @@ void LineRecordReader::configure(Config & config) {
   }
   FileSplit split;
   split.readFields(splitData);
+  LOG("Input FileSplit: %s", split.toString().c_str());
   init(split.file(), split.start(), split.length(), config);
 }
 

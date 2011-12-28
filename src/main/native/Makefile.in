@@ -89,7 +89,7 @@ am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-WritableUtils.lo libnativetask_la-Random.lo \
 	libnativetask_la-Checksum.lo libnativetask_la-Streams.lo \
 	libnativetask_la-BufferStream.lo libnativetask_la-Buffers.lo \
-	libnativetask_la-FileSystem.lo \
+	libnativetask_la-Path.lo libnativetask_la-FileSystem.lo \
 	libnativetask_la-Compressions.lo \
 	libnativetask_la-PartitionIndex.lo libnativetask_la-KVFile.lo \
 	libnativetask_la-IFile.lo libnativetask_la-MapOutputSpec.lo \
@@ -318,6 +318,7 @@ src/Checksum.cc                        \
 src/Streams.cc                         \
 src/BufferStream.cc                    \
 src/Buffers.cc                         \
+src/Path.cc                            \
 src/FileSystem.cc                      \
 src/Compressions.cc                    \
 src/PartitionIndex.cc                  \
@@ -517,6 +518,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeRuntimeJniImpl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeTask.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-PartitionIndex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Path.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-RReducerHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Random.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-SnappyCodec.Plo@am__quote@
@@ -704,6 +706,13 @@ libnativetask_la-Buffers.lo: src/Buffers.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/Buffers.cc' object='libnativetask_la-Buffers.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Buffers.lo `test -f 'src/Buffers.cc' || echo '$(srcdir)/'`src/Buffers.cc
+
+libnativetask_la-Path.lo: src/Path.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Path.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Path.Tpo -c -o libnativetask_la-Path.lo `test -f 'src/Path.cc' || echo '$(srcdir)/'`src/Path.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Path.Tpo $(DEPDIR)/libnativetask_la-Path.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/Path.cc' object='libnativetask_la-Path.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Path.lo `test -f 'src/Path.cc' || echo '$(srcdir)/'`src/Path.cc
 
 libnativetask_la-FileSystem.lo: src/FileSystem.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-FileSystem.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-FileSystem.Tpo -c -o libnativetask_la-FileSystem.lo `test -f 'src/FileSystem.cc' || echo '$(srcdir)/'`src/FileSystem.cc

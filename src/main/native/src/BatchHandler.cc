@@ -126,12 +126,13 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setup
       return;
     }
     jobject jinputBuffer  = jenv->GetObjectField(processor, InputBufferFieldID);
-    if (NULL == jinputBuffer) {
-      THROW_EXCEPTION(Hadoop::IOException, "BatchHandler input buffer null");
+    char * inputBufferAddr = NULL;
+    uint32_t inputBufferCapacity = 0;
+    if (NULL != jinputBuffer) {
+      inputBufferAddr = (char*)(jenv->GetDirectBufferAddress(jinputBuffer));
+      inputBufferCapacity = jenv->GetDirectBufferCapacity(jinputBuffer);
     }
     jobject joutputBuffer = jenv->GetObjectField(processor, OutputBufferFieldID);
-    char * inputBufferAddr = (char*)(jenv->GetDirectBufferAddress(jinputBuffer));
-    uint32_t inputBufferCapacity = jenv->GetDirectBufferCapacity(jinputBuffer);
     char * outputBufferAddr = NULL;
     uint32_t outputBufferCapacity = 0;
     if (NULL != joutputBuffer) {

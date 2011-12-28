@@ -87,7 +87,7 @@ public class NativeUtils {
   @SuppressWarnings("unchecked")
   public static <T> byte [] serialize(JobConf conf, Object obj) throws IOException {
     SerializationFactory factory = new SerializationFactory(conf);
-    Serializer<T> serializer = (Serializer<T>) factory.getDeserializer(obj.getClass());
+    Serializer<T> serializer = (Serializer<T>) factory.getSerializer(obj.getClass());
     DataOutputBuffer out = new DataOutputBuffer(1024);
     serializer.open(out);
     serializer.serialize((T)obj);

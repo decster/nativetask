@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "commons.h"
 #include "FileSplit.h"
 #include "BufferStream.h"
 #include "WritableUtils.h"
@@ -24,16 +25,20 @@ namespace Hadoop {
 
 void FileSplit::readFields(const string & data) {
   InputBuffer input = InputBuffer(data);
-  _file = WritableUtils::ReadString(&input);
+  _file = WritableUtils::ReadUTF8(&input);
   _start = WritableUtils::ReadLong(&input);
   _length = WritableUtils::ReadLong(&input);
 }
 
 void FileSplit::writeFields(string & dest) {
   OutputStringStream out = OutputStringStream(dest);
-  WritableUtils::WriteString(&out, _file);
+  WritableUtils::WriteUTF8(&out, _file);
   WritableUtils::WriteLong(&out, _start);
   WritableUtils::WriteLong(&out, _length);
+}
+
+string FileSplit::toString() {
+  return StringUtil::Format("%s:%llu+%llu", _file.c_str(), _start, _length);
 }
 
 } // namespace Hadoop

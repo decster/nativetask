@@ -17,10 +17,12 @@
  */
 
 #include <errno.h>
+#include <sys/stat.h>
 #include <jni.h>
 #include "commons.h"
 #include "jniutils.h"
 #include "NativeTask.h"
+#include "Path.h"
 #include "FileSystem.h"
 
 namespace Hadoop {
@@ -50,6 +52,7 @@ FileInputStream::FileInputStream(const string & path) {
     _path = path;
   } else {
     _fd = -1;
+    THROW_EXCEPTION_EX(IOException, "Can't open raw file: [%s]", path.c_str());
   }
 }
 
@@ -86,6 +89,7 @@ FileOutputStream::FileOutputStream(const string & path, bool overwite) {
     _path = path;
   } else {
     _fd = -1;
+    THROW_EXCEPTION_EX(IOException, "Open raw file failed: [%s]", path.c_str());
   }
 }
 
@@ -117,19 +121,37 @@ void FileOutputStream::close() {
 
 /////////////////////////////////////////////////////////////
 
+static int mkdirs(const string & path, int nmode) {
+
+}
+
 class RawFileSystem : public FileSystem {
+protected:
+  string getRealPath(const string & path) {
+    if (StringUtil::StartsWith(path, "file:")) {
+      return path.substr(5);
+    }
+    return path;
+  }
 public:
   InputStream * open(const string & path) {
-    return new FileInputStream(path);
+    return new FileInputStream(getRealPath(path));
   }
 
   OutputStream * create(const string & path, bool overwrite) {
-    return new FileOutputStream(path, overwrite);
+    string np = getRealPath(path);
+    string parent = Path::GetParent(np);
+    if (parent.length()>0) {
+      if (!exists(parent)) {
+        mkdirs(parent);
+      }
+    }
+    return new FileOutputStream(np, overwrite);
   }
 
   uint64_t getLength(const string & path) {
     struct stat st;
-    if (::stat(path.c_str(), &st) != 0) {
+    if (::stat(getRealPath(path).c_str(), &st) != 0) {
       char buff[256];
       strerror_r(errno, buff, 256);
       THROW_EXCEPTION(IOException, StringUtil::Format(
@@ -143,7 +165,7 @@ public:
       LOG("remove file %s not exists, ignore", path.c_str());
       return;
     }
-    if (::remove(path.c_str()) != 0) {
+    if (::remove(getRealPath(path).c_str()) != 0) {
       int err = errno;
       if (::system(StringUtil::Format("rm -rf %s", path.c_str()).c_str()) == 0) {
         return;
@@ -157,21 +179,57 @@ public:
 
   bool exists(const string & path) {
     struct stat st;
-    if (::stat(path.c_str(), &st) != 0) {
+    if (::stat(getRealPath(path).c_str(), &st) != 0) {
       return false;
     }
     return true;
   }
 
-  void mkdirs(const string & path) {
-    int ret = ::mkdir(path.c_str(), 0755);
-    if (ret != 0) {
-      if (errno != EEXIST) {
-        char buff[256];
-        strerror_r(errno, buff, 256);
-        THROW_EXCEPTION(IOException, StringUtil::Format(
-            "mkdirs path %s failed, %s", path.c_str(), buff));
+  int mkdirs(const string & path, mode_t nmode) {
+    string np = getRealPath(path);
+    struct stat sb;
+
+    if (stat(np.c_str(), &sb) == 0) {
+      if (S_ISDIR (sb.st_mode) == 0) {
+        return 1;
       }
+      return 0;
+    }
+
+    string npathstr = np;
+    char * npath = const_cast<char*>(npathstr.c_str());
+
+    /* Skip leading slashes. */
+    char * p = npath;
+    while (*p == '/')
+      p++;
+
+    while (p = strchr(p, '/')) {
+      *p = '\0';
+      if (stat(npath, &sb) != 0) {
+        if (mkdir(npath, nmode)) {
+          return 1;
+        }
+      }
+      else if (S_ISDIR (sb.st_mode) == 0) {
+        return 1;
+      }
+      *p++ = '/'; /* restore slash */
+      while (*p == '/')
+        p++;
+    }
+
+    /* Create the final directory component. */
+    if (stat(npath, &sb) && mkdir(npath, nmode)) {
+      return 1;
+    }
+    return 0;
+  }
+
+  void mkdirs(const string & path) {
+    int ret = mkdirs(path, 0755);
+    if (ret != 0) {
+      THROW_EXCEPTION_EX(IOException, "mkdirs [%s] failed", path.c_str());
     }
   }
 };
