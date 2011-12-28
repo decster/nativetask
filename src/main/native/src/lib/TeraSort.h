@@ -49,6 +49,12 @@ public:
   bool nextLine(string & line);
 };
 
+class TeraPartitioner : public Partitioner {
+public:
+  virtual uint32_t getPartition(const char * key, uint32_t & keyLen,
+                                uint32_t numPartition);
+};
+
 class TeraRecordReader : public LineRecordReader {
 public:
   virtual bool next(Buffer & key, Buffer & value);

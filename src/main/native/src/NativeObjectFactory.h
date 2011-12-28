@@ -58,6 +58,7 @@ public:
   static Config * GetConfigPtr();
   static Counter * GetCounter(const string & group, const string & name);
   static const vector<Counter *> GetAllCounters();
+  static void RegisterClass(const string & clz, ObjectCreatorFunc func);
   static NativeObject * CreateObject(const string & clz);
   static ObjectCreatorFunc GetObjectCreator(const string & clz);
   static void ReleaseObject(NativeObject * obj);

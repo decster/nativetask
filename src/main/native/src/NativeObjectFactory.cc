@@ -63,6 +63,7 @@ DEFINE_NATIVE_LIBRARY(NativeTask) {
   REGISTER_CLASS(LineRecordReader, NativeTask);
   REGISTER_CLASS(KeyValueLineRecordReader, NativeTask);
   REGISTER_CLASS(LineRecordWriter, NativeTask);
+  REGISTER_CLASS(TeraPartitioner, NativeTask);
   REGISTER_CLASS(TeraRecordReader, NativeTask);
   REGISTER_CLASS(TeraRecordWriter, NativeTask);
   REGISTER_CLASS(WordCountMapper, NativeTask);
@@ -162,6 +163,10 @@ Counter * NativeObjectFactory::GetCounter(const string & group, const string & n
 
 const vector<Counter *> NativeObjectFactory::GetAllCounters() {
   return Counters;
+}
+
+void NativeObjectFactory::RegisterClass(const string & clz, ObjectCreatorFunc func) {
+  NativeTaskClassMap__[clz] = func;
 }
 
 NativeObject * NativeObjectFactory::CreateObject(const string & clz) {

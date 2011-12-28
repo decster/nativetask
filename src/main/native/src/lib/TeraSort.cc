@@ -118,6 +118,19 @@ bool TeraGen::next(string & kv) {
 
 ///////////////////////////////////////////////////////////
 
+uint32_t TeraPartitioner::getPartition(const char * key, uint32_t & keyLen,
+                                       uint32_t numPartition) {
+  uint64_t ret = ((key[0] - ' ') * 95 + (key[1] - ' '))
+                 * (uint64_t) numPartition / (95 * 95);
+  if (ret<numPartition) {
+    return ret;
+  } else {
+    return numPartition-1;
+  }
+}
+
+///////////////////////////////////////////////////////////
+
 bool TeraRecordReader::next(Buffer & key, Buffer & value) {
   Buffer buff;
   uint32_t len = readLine(buff);
