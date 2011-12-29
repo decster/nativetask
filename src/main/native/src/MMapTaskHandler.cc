@@ -94,8 +94,8 @@ void MMapTaskHandler::configure(Config & config) {
 
     LOG("Native Mapper with MapOutputCollector, RecordReader: %s Combiner: %s Partitioner: %s",
         readerClass?readerClass:"Java RecordReader",
-        combinerClass?combinerClass:"NULL",
-        partitionerClass?partitionerClass:"(default)");
+        combinerClass?combinerClass:"null",
+        partitionerClass?partitionerClass:"default");
   }
   else {
     const char * writerClass = config.get("native.recordwriter.class");
