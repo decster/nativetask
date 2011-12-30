@@ -49,7 +49,7 @@ extern "C" void handler(int sig) {
 }
 
 DEFINE_NATIVE_LIBRARY(NativeTask) {
-  signal(SIGSEGV, handler);
+  //signal(SIGSEGV, handler);
   REGISTER_CLASS(BatchHandler, NativeTask);
   REGISTER_CLASS(EchoBatchHandler, NativeTask);
   REGISTER_CLASS(MCollectorOutputHandler, NativeTask);

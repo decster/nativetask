@@ -507,8 +507,7 @@ FSDataOutputStream::FSDataOutputStream(void * jobject) :
 }
 
 FSDataOutputStream::~FSDataOutputStream() {
-  JNIEnv * env = JNU_GetJNIEnv();
-  env->DeleteGlobalRef((jobject)_jobject);
+  close();
 }
 
 uint64_t FSDataOutputStream::tell() {
@@ -547,6 +546,7 @@ void FSDataOutputStream::close() {
     if (env->ExceptionCheck()) {
       THROW_EXCEPTION(HadoopException, "close failed");
     }
+    env->DeleteGlobalRef((jobject)_jobject);
     _jobject = NULL;
   }
 }

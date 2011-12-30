@@ -1,16 +1,18 @@
 TODOs:
 
+SequenceFile reader
+Terasort TotalOrderPartitioner
 input progress
 Counters
-add synchronize to important methods
-reimpl simple_memcpy & fmemcmp & fmemequ
 job submitter
-support parallel sort & compression
 add example 
 add google sparse hash
-mvn package
 add test for partition bucket combiner
+support parallel sort & compression
 
+reimpl simple_memcpy & fmemcmp & fmemequ
+mvn package
+add synchronize to important methods
 use inline functor rather than function in merge
 Java input/output stream
 iobuffer refactor to use input/output stream

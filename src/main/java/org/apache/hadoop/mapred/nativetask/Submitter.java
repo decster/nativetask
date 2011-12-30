@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.hadoop.mapred.nativetask;
 
 import java.io.IOException;
@@ -77,6 +95,9 @@ public class Submitter extends Configured implements Tool  {
       conf.set(NativeTaskConfig.MAPRED_REDUCETASK_DELEGATOR_CLASS,
           NativeReduceTaskDelegator.class.getCanonicalName());
     }
+    if (conf.getJobName()==null || conf.getJobName().length()==0) {
+      conf.setJobName("NativeJob");
+    }
   }
 
   /**
@@ -128,6 +149,7 @@ public class Submitter extends Configured implements Tool  {
       System.out.println("                          // default NativeTask.Mapper (IndentityMapper)");
       System.out.println("  [-reducer <class|JAVA>] // native Reducer class, JAVA if you want java IdentityReducer");
       System.out.println("                          // default NativeTask.Mapper (IndentityReducer)");
+      System.out.println("  [-partitioner <class>]  // native Partitioner class");
       System.out.println("  [-combiner <class>]     // native Combiner class");
       System.out.println("  [-reader <class>]       // native RecordReader class");
       System.out.println("                          // default NativeTask.LineRecordReader");
@@ -159,6 +181,7 @@ public class Submitter extends Configured implements Tool  {
       cli.printUsage();
       return 1;
     }
+
     cli.addOption("input", true, "input path to the maps", "path");
     cli.addOption("output", true, "output path from the reduces", "path");
 
@@ -168,6 +191,7 @@ public class Submitter extends Configured implements Tool  {
     cli.addOption("outputformat", false, "java classname of OutputFormat", "class");
     cli.addOption("mapper", false, "native Mapper class", "class");
     cli.addOption("reducer", false, "native Reducer class", "class");
+    cli.addOption("partitioner", false, "native Partitioner class", "class");
     cli.addOption("combiner", false, "native Combiner class", "class");
     cli.addOption("reader", false, "native RecordReader class", "class");
     cli.addOption("writer", false, "native RecordWriter class", "class");
@@ -203,6 +227,9 @@ public class Submitter extends Configured implements Tool  {
       }
       if (results.hasOption("reducer")) {
         job.set("native.reducer.class", results.getOptionValue("reducer"));
+      }
+      if (results.hasOption("partitioner")) {
+        job.set("native.partitioner.class", results.getOptionValue("partitioner"));
       }
       if (results.hasOption("combiner")) {
         job.set("native.combiner.class", results.getOptionValue("combiner"));

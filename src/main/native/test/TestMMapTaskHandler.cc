@@ -89,7 +89,7 @@ TEST(Perf, MMapTaskTeraSort) {
 
   timer.reset();
   Config jobconf;
-  jobconf.setInt("mapred.reduce.tasks", 100);
+  jobconf.setInt("mapred.reduce.tasks", 200);
   jobconf.setInt("io.sort.mb", iosortmb);
   jobconf.set("mapred.mapoutput.key.class", "org.apache.hadoop.io.Text");
   jobconf.set("mapred.mapoutput.value.class", "org.apache.hadoop.io.Text");
