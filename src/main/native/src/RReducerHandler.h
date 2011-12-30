@@ -29,9 +29,8 @@ class RReducerHandler :
     public Collector,
     public KeyGroup {
   enum KeyGroupIterState {
-    INIT,
-    NEW_KEY,
     SAME_KEY,
+    NEW_KEY,
     NO_MORE,
   };
 protected:
@@ -53,7 +52,8 @@ protected:
 
   KeyGroupIterState _keyGroupIterState;
   std::string _currentGroupKey;
-  char * _inplaceKVBuffer;
+  char * _nextKeyValuePair;
+  // for big key/value pairs
   char * _KVBuffer;
   uint32_t _KVBufferCapacity;
 public:
@@ -76,7 +76,7 @@ public:
 private:
   void run();
   virtual int32_t refill();
-  char * readKVPair(); // return key position
+  char * nextKeyValuePair(); // return key position
   void reset();
 };
 

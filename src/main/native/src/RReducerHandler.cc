@@ -32,8 +32,8 @@ RReducerHandler::RReducerHandler() :
   _kvlength(0),
   _klength(0),
   _vlength(0),
-  _keyGroupIterState(INIT),
-  _inplaceKVBuffer(NULL),
+  _keyGroupIterState(NEW_KEY),
+  _nextKeyValuePair(NULL),
   _KVBuffer(NULL),
   _KVBufferCapacity(0) {
 }
@@ -148,7 +148,7 @@ void RReducerHandler::run() {
   case MapperType:
     {
       char * kvpair;
-      while(NULL != (kvpair = readKVPair())) {
+      while(NULL != (kvpair = nextKeyValuePair())) {
         _mapper->map(kvpair, _klength, kvpair + _klength, _vlength);
       }
       _mapper->close();
@@ -193,8 +193,8 @@ int32_t RReducerHandler::refill() {
   return retvalue;
 }
 
-char * RReducerHandler::readKVPair() {
-  if (_remain==0) {
+char * RReducerHandler::nextKeyValuePair() {
+  if (unlikely(_remain==0)) {
     if (refill() <= 0) {
       return NULL;
     }
@@ -208,12 +208,11 @@ char * RReducerHandler::readKVPair() {
   _current += 8;
   _remain -= 8;
   char * keyPos;
-  _inplaceKVBuffer = NULL;
   if (_kvlength <= _remain) {
-    _inplaceKVBuffer = _current;
+    _nextKeyValuePair = _current;
     _current += _kvlength;
     _remain -= _kvlength;
-    return _inplaceKVBuffer;
+    return _nextKeyValuePair;
   } else {
     if (_KVBufferCapacity<_kvlength) {
       delete _KVBuffer;
@@ -235,43 +234,27 @@ char * RReducerHandler::readKVPair() {
         }
       }
     }
-    return _KVBuffer;
+    _nextKeyValuePair = _KVBuffer;
+    return _nextKeyValuePair;
   }
 }
 
 bool RReducerHandler::nextKey() {
-  while (true) {
-    char * pos;
-    switch (_keyGroupIterState) {
-    case INIT:
-      pos = readKVPair();
-      if (pos == NULL){
-        _keyGroupIterState = NO_MORE;
-        return false;
-      }
-      _keyGroupIterState = NEW_KEY;
-      _currentGroupKey.assign(pos, _klength);
-      return true;
-    case NEW_KEY:
-      return true;
-    case SAME_KEY:
-      pos = readKVPair();
-      if (pos == NULL) {
-        _keyGroupIterState = NO_MORE;
-        return false;
-      }
-      if (_klength == _currentGroupKey.length()) {
-        if (fmemeq(pos, _currentGroupKey.c_str(), _klength)) {
-          continue;
-        }
-      }
-      _currentGroupKey.assign(pos, _klength);
-      _keyGroupIterState = NEW_KEY;
-      return true;
-    case NO_MORE:
-      return false;
-    }
+  uint32_t temp;
+  while (_keyGroupIterState==SAME_KEY) {
+    nextValue(temp);
   }
+  if (_keyGroupIterState ==  NEW_KEY) {
+    if (unlikely(_nextKeyValuePair == NULL)) {
+      if (NULL == nextKeyValuePair()) {
+        _keyGroupIterState = NO_MORE;
+        return false;
+      }
+    }
+    _currentGroupKey.assign(_nextKeyValuePair, _klength);
+    return true;
+  }
+  return false;
 }
 
 const char * RReducerHandler::getKey(uint32_t & len) {
@@ -282,12 +265,8 @@ const char * RReducerHandler::getKey(uint32_t & len) {
 const char * RReducerHandler::nextValue(uint32_t & len) {
   char * pos;
   switch (_keyGroupIterState) {
-  case NEW_KEY:
-    len = _vlength;
-    _keyGroupIterState = SAME_KEY;
-    return (_inplaceKVBuffer != NULL ? _inplaceKVBuffer : _KVBuffer) + _klength;
-  case SAME_KEY:
-    pos = readKVPair();
+  case SAME_KEY: {
+    pos = nextKeyValuePair();
     if (pos != NULL) {
       if (_klength == _currentGroupKey.length()) {
         if (fmemeq(pos, _currentGroupKey.c_str(), _klength)) {
@@ -295,12 +274,17 @@ const char * RReducerHandler::nextValue(uint32_t & len) {
           return pos + _klength;
         }
       }
-      _currentGroupKey.assign(pos, _klength);
       _keyGroupIterState = NEW_KEY;
       return NULL;
     }
     _keyGroupIterState = NO_MORE;
     return NULL;
+  }
+  case NEW_KEY: {
+    len = _vlength;
+    _keyGroupIterState = SAME_KEY;
+    return _nextKeyValuePair + _klength;
+  }
   case NO_MORE:
     return false;
   }

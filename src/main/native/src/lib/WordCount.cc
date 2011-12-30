@@ -86,7 +86,7 @@ void WordCountReducer::reduce(KeyGroup & input) {
 void WordCountRMapper::map(const char * key, uint32_t keyLen,
                            const char * value, uint32_t valueLen) {
   if (_count>0) {
-    if (frmemeq(_key.data(), key, _key.length(), keyLen)) {
+    if (!frmemeq(_key.data(), key, _key.length(), keyLen)) {
       collect(_key.data(), _key.length(), &_count, 4);
       _key.assign(key, keyLen);
       _count = 1;
