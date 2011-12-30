@@ -105,10 +105,11 @@ void WordCountRMapper::close() {
   }
 }
 
-void WordCountRecordWriter::write(const Buffer & key, const Buffer & value) {
-  _appendBuffer.write(key.data(), key.length());
+void WordCountRecordWriter::collect(const void * key, uint32_t keyLen,
+                                    const void * value, uint32_t valueLen) {
+  _appendBuffer.write(key, keyLen);
   _appendBuffer.write(_keyValueSeparator.data(), _keyValueSeparator.length());
-  string s = StringUtil::ToString(*(uint32_t*)value.data());
+  string s = StringUtil::ToString(*(uint32_t*)value);
   _appendBuffer.write(s.data(), s.length());
   _appendBuffer.write('\n');
 }
