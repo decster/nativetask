@@ -21,7 +21,7 @@
 #include "commons.h"
 #include "GzipCodec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 GzipCompressStream::GzipCompressStream(
     OutputStream * stream,
@@ -191,5 +191,5 @@ int32_t GzipDecompressStream::readDirect(void * buff, uint32_t length) {
   return ret;
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

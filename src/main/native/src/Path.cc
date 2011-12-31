@@ -18,7 +18,7 @@
 
 #include "Path.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 bool Path::IsAbsolute(const string & path) {
   if (path.length()>0 && path[0]=='/') {
@@ -49,5 +49,5 @@ string Path::GetName(const string & path) {
   return path.substr(lastSlash+1);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

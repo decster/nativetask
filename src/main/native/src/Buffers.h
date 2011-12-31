@@ -23,7 +23,7 @@
 #include "Streams.h"
 #include "Compressions.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 
 /**
@@ -334,6 +334,6 @@ public:
   }
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* BUFFERS_H_ */

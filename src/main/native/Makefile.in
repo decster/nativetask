@@ -109,6 +109,7 @@ am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-FileSplit.lo \
 	libnativetask_la-LineRecordWriter.lo \
 	libnativetask_la-LineRecordReader.lo \
+	libnativetask_la-TotalOrderPartitioner.lo \
 	libnativetask_la-TeraSort.lo libnativetask_la-WordCount.lo
 am_libnativetask_la_OBJECTS = $(am__objects_1)
 libnativetask_la_OBJECTS = $(am_libnativetask_la_OBJECTS)
@@ -343,6 +344,7 @@ src/codec/Lz4Codec.cc                  \
 src/lib/FileSplit.cc                   \
 src/lib/LineRecordWriter.cc            \
 src/lib/LineRecordReader.cc            \
+src/lib/TotalOrderPartitioner.cc       \
 src/lib/TeraSort.cc                    \
 src/lib/WordCount.cc                   
 
@@ -527,6 +529,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-SyncUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-TeraSort.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Timer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-TotalOrderPartitioner.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-WordCount.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-WritableUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-city.Plo@am__quote@
@@ -881,6 +884,13 @@ libnativetask_la-LineRecordReader.lo: src/lib/LineRecordReader.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/lib/LineRecordReader.cc' object='libnativetask_la-LineRecordReader.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-LineRecordReader.lo `test -f 'src/lib/LineRecordReader.cc' || echo '$(srcdir)/'`src/lib/LineRecordReader.cc
+
+libnativetask_la-TotalOrderPartitioner.lo: src/lib/TotalOrderPartitioner.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-TotalOrderPartitioner.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-TotalOrderPartitioner.Tpo -c -o libnativetask_la-TotalOrderPartitioner.lo `test -f 'src/lib/TotalOrderPartitioner.cc' || echo '$(srcdir)/'`src/lib/TotalOrderPartitioner.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-TotalOrderPartitioner.Tpo $(DEPDIR)/libnativetask_la-TotalOrderPartitioner.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/lib/TotalOrderPartitioner.cc' object='libnativetask_la-TotalOrderPartitioner.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-TotalOrderPartitioner.lo `test -f 'src/lib/TotalOrderPartitioner.cc' || echo '$(srcdir)/'`src/lib/TotalOrderPartitioner.cc
 
 libnativetask_la-TeraSort.lo: src/lib/TeraSort.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-TeraSort.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-TeraSort.Tpo -c -o libnativetask_la-TeraSort.lo `test -f 'src/lib/TeraSort.cc' || echo '$(srcdir)/'`src/lib/TeraSort.cc

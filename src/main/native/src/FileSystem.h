@@ -23,7 +23,7 @@
 #include "NativeTask.h"
 #include "Streams.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class FileSystem;
 
@@ -134,7 +134,7 @@ public:
   static FileSystem & get(Config & config);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* FILESYSTEM_H_ */

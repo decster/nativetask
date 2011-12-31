@@ -20,7 +20,7 @@
 #include "commons.h"
 #include "BufferStream.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 BufferedInputStream::BufferedInputStream(InputStream * stream,
                                          uint32_t bufferSize) :
@@ -161,4 +161,4 @@ void OutputBuffer::write(const void * buff, uint32_t length) {
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask

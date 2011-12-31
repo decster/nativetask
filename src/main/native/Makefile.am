@@ -66,6 +66,7 @@ src/codec/Lz4Codec.cc                  \
 src/lib/FileSplit.cc                   \
 src/lib/LineRecordWriter.cc            \            
 src/lib/LineRecordReader.cc            \
+src/lib/TotalOrderPartitioner.cc       \
 src/lib/TeraSort.cc                    \
 src/lib/WordCount.cc                   
 

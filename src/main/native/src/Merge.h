@@ -19,11 +19,12 @@
 #ifndef MERGE_H_
 #define MERGE_H_
 
+#include "NativeTask.h"
 #include "Buffers.h"
 #include "MapOutputCollector.h"
 #include "IFile.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /**
  * merger
@@ -133,7 +134,6 @@ public:
 
   /**
    * read value
-   * NOTICE: no big value problem, cause value is already in memory
    */
   virtual const char * getValue() {
     return _value;
@@ -283,10 +283,6 @@ void pop_heap(T* begin, T* end, Compare Comp) {
  */
 typedef MergeEntry * MergeEntryPtr;
 
-//inline bool MergeEntryCompare(const MergeEntryPtr lhs, const MergeEntryPtr rhs) {
-//  return *lhs < *rhs;
-//}
-
 class MergeEntryPtrLassThan {
 public:
   bool operator()(const MergeEntryPtr lhs, const MergeEntryPtr rhs) {
@@ -294,35 +290,50 @@ public:
   }
 };
 
-class Merger {
+class Merger : public KeyGroup {
+  enum KeyGroupIterState {
+    SAME_KEY,
+    NEW_KEY,
+    NO_MORE,
+  };
 private:
-  std::vector<MergeEntryPtr> _entries;
-  std::vector<MergeEntryPtr> _heap;
+  vector<MergeEntryPtr> _entries;
+  vector<MergeEntryPtr> _heap;
   IFileWriter * _writer;
+  Config & _config;
+  ObjectCreatorFunc _combinerCreator;
+  bool _first;
+
+  // for KeyGroupIterator
+  KeyGroupIterState _keyGroupIterState;
+  string _currentGroupKey;
 public:
-  Merger(IFileWriter * writer) :
-      _writer(writer) {
+  Merger(IFileWriter * writer, Config & config, ObjectCreatorFunc combinerCreator=NULL) :
+      _writer(writer),
+      _config(config),
+      _combinerCreator(combinerCreator),
+      _first(true),
+      _keyGroupIterState(NEW_KEY) {
   }
   ~Merger();
 
   void addMergeEntry(MergeEntryPtr pme);
 
-  /**
-   * @return 0 if success, have next partition
-   *         1 if failed, no more
-   */
-  int startPartition();
-
-  /**
-   * finish one partition
-   */
-  void endPartition();
-
-  void initHeap();
-
   void merge();
+
+  bool next();
+
+  virtual bool nextKey();
+
+  virtual const char * getKey(uint32_t & len);
+
+  virtual const char * nextValue(uint32_t & len);
+protected:
+  int startPartition();
+  void endPartition();
+  void initHeap();
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* MERGE_H_ */

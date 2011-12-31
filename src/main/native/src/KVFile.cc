@@ -20,7 +20,7 @@
 #include "KVFile.h"
 
 
-namespace Hadoop {
+namespace NativeTask {
 
 ///////////////////////////////////////////////////////////
 
@@ -148,4 +148,4 @@ void KVFileWriter::getStatistics(uint64_t & offset, uint64_t & realoffset) {
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask

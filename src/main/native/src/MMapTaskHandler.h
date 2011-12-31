@@ -23,7 +23,7 @@
 #include "NativeTask.h"
 #include "BatchHandler.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class MapOutputCollector;
 
@@ -61,6 +61,6 @@ private:
   void reset();
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* MMAPTASKHANDLER_H_ */

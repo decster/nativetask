@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 
@@ -136,7 +136,7 @@ public:
 };
 
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* RANDOM_H_ */

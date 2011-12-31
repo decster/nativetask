@@ -23,7 +23,7 @@
 #include <vector>
 #include "Streams.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::vector;
 using std::string;
@@ -97,7 +97,7 @@ public:
                                                    uint32_t bufferSizeHint);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* COMPRESSIONS_H_ */

@@ -32,7 +32,7 @@ using std::set;
 using std::map;
 using std::string;
 
-using namespace Hadoop;
+using namespace NativeTask;
 
 extern Config TestConfig;
 

@@ -23,7 +23,7 @@
 #include "codec/SnappyCodec.h"
 #include "codec/Lz4Codec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 CompressStream::~CompressStream() {
 }
@@ -137,5 +137,5 @@ DecompressStream * Compressions::getDecompressionStream(
   return NULL;
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

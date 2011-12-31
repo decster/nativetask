@@ -22,7 +22,7 @@
 #include "Buffers.h"
 #include "PartitionIndex.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 void IndexRange::delete_file() {
   if (filepath.length()>0) {

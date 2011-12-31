@@ -26,7 +26,7 @@
 
 #include "NativeTask.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 using std::vector;

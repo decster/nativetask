@@ -20,7 +20,7 @@
 #include "StringUtil.h"
 #include "jniutils.h"
 
-using namespace Hadoop;
+using namespace NativeTask;
 
 void JNU_ThrowByName(JNIEnv *jenv, const char *name, const char *msg) {
   jclass cls = jenv->FindClass(name);
@@ -57,14 +57,14 @@ JNIEnv* JNU_GetJNIEnv(void) {
 
   rv = JNI_GetCreatedJavaVMs(&(vmBuf[0]), vmBufLength, &noVMs);
   if (rv != 0) {
-    THROW_EXCEPTION(Hadoop::HadoopException, "JNI_GetCreatedJavaVMs failed");
+    THROW_EXCEPTION(NativeTask::HadoopException, "JNI_GetCreatedJavaVMs failed");
   }
 
   if (noVMs == 0) {
 //    THROW_EXCEPTION(Hadoop::HadoopException, "Not in a JNI environment");
     char *hadoopClassPath = getenv("CLASSPATH");
     if (hadoopClassPath == NULL) {
-      THROW_EXCEPTION(Hadoop::HadoopException, "Environment variable CLASSPATH not set!");
+      THROW_EXCEPTION(NativeTask::HadoopException, "Environment variable CLASSPATH not set!");
       return NULL;
     }
     const char *hadoopClassPathVMArg = "-Djava.class.path=";
@@ -88,7 +88,7 @@ JNIEnv* JNU_GetJNIEnv(void) {
 
     rv = JNI_CreateJavaVM(&vm, (void**) &env, &vm_args);
     if (rv != 0) {
-      THROW_EXCEPTION(Hadoop::HadoopException, "JNI_CreateJavaVM failed");
+      THROW_EXCEPTION(NativeTask::HadoopException, "JNI_CreateJavaVM failed");
       return NULL;
     }
     free(optHadoopClassPath);
@@ -98,7 +98,7 @@ JNIEnv* JNU_GetJNIEnv(void) {
     JavaVM* vm = vmBuf[0];
     rv = vm->AttachCurrentThread((void **)&env, NULL);
     if (rv != 0) {
-      THROW_EXCEPTION(Hadoop::HadoopException, "Call to AttachCurrentThread failed");
+      THROW_EXCEPTION(NativeTask::HadoopException, "Call to AttachCurrentThread failed");
     }
   }
 
@@ -111,7 +111,7 @@ jmethodID methodIdFromClass(const char *className, const char *methName,
                             JNIEnv *env) {
   jclass cls = env->FindClass(className);
   if (cls == NULL) {
-    THROW_EXCEPTION_EX(Hadoop::HadoopException, "class not found: %s", className);
+    THROW_EXCEPTION_EX(NativeTask::HadoopException, "class not found: %s", className);
     return NULL;
   }
 
@@ -124,7 +124,7 @@ jmethodID methodIdFromClass(const char *className, const char *methName,
       mid = env->GetMethodID(cls, methName, methSignature);
   }
   if (mid == NULL) {
-    THROW_EXCEPTION_EX(Hadoop::HadoopException, "method not found: %s", methName);
+    THROW_EXCEPTION_EX(NativeTask::HadoopException, "method not found: %s", methName);
   }
   env->DeleteLocalRef(cls);
   return mid;

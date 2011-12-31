@@ -36,7 +36,7 @@ static jmethodID SendCommandToJavaMethodID   = NULL;
 // BatchHandler methods
 ///////////////////////////////////////////////////////////////
 
-namespace Hadoop {
+namespace NativeTask {
 
 BatchHandler::BatchHandler() :
   _tempJNIEnv(NULL),
@@ -103,13 +103,13 @@ std::string BatchHandler::sendCommand(const std::string & data) {
   return JNU_ByteArrayToString(((JNIEnv*) _tempJNIEnv), ret);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 ///////////////////////////////////////////////////////////////
 // NativeBatchProcessor jni methods
 ///////////////////////////////////////////////////////////////
-using namespace Hadoop;
+using namespace NativeTask;
 
 /*
  * Class:     org_apache_hadoop_mapred_nativetask_NativeBatchProcessor
@@ -120,7 +120,7 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setup
   (JNIEnv * jenv, jobject processor, jlong handler) {
   try {
     //LOG("native setup handler %llu", handler);
-    Hadoop::BatchHandler * batchHandler = (Hadoop::BatchHandler *)((void*)handler);
+    NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "BatchHandler is null");
       return;
@@ -141,16 +141,16 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setup
     }
     batchHandler->onSetup(inputBufferAddr, inputBufferCapacity, outputBufferAddr, outputBufferCapacity);
   }
-  catch (Hadoop::UnsupportException e) {
+  catch (NativeTask::UnsupportException e) {
     JNU_ThrowByName(jenv, "java/lang/UnsupportedOperationException", e.what());
   }
-  catch (Hadoop::OutOfMemoryException e) {
+  catch (NativeTask::OutOfMemoryException e) {
     JNU_ThrowByName(jenv, "java/lang/OutOfMemoryException", e.what());
   }
-  catch (Hadoop::IOException e) {
+  catch (NativeTask::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
-  catch (Hadoop::JavaException e) {
+  catch (NativeTask::JavaException e) {
     LOG("JavaException: %s", e.what());
     // Do nothing, let java side handle
   }
@@ -171,7 +171,7 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
   (JNIEnv * jenv, jobject processor, jlong handler, jint length) {
   try {
     //LOG("native process input %llu", handler);
-    Hadoop::BatchHandler * batchHandler = (Hadoop::BatchHandler *)((void*)handler);
+    NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "handler not instance of BatchHandler");
       return;
@@ -179,16 +179,16 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
     batchHandler->setTemps(jenv, processor);
     batchHandler->onInputData(length);
   }
-  catch (Hadoop::UnsupportException e) {
+  catch (NativeTask::UnsupportException e) {
     JNU_ThrowByName(jenv, "java/lang/UnsupportedOperationException", e.what());
   }
-  catch (Hadoop::OutOfMemoryException e) {
+  catch (NativeTask::OutOfMemoryException e) {
     JNU_ThrowByName(jenv, "java/lang/OutOfMemoryException", e.what());
   }
-  catch (Hadoop::IOException e) {
+  catch (NativeTask::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
-  catch (Hadoop::JavaException e) {
+  catch (NativeTask::JavaException e) {
     LOG("JavaException: %s", e.what());
     // Do nothing, let java side handle
   }
@@ -209,7 +209,7 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
   (JNIEnv * jenv, jobject processor, jlong handler) {
   try {
     //LOG("native finish %llu", handler);
-    Hadoop::BatchHandler * batchHandler = (Hadoop::BatchHandler *)((void*)handler);
+    NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "handler not instance of BatchHandler");
       return;
@@ -217,16 +217,16 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
     batchHandler->setTemps(jenv, processor);
     batchHandler->onFinish();
   }
-  catch (Hadoop::UnsupportException e) {
+  catch (NativeTask::UnsupportException e) {
     JNU_ThrowByName(jenv, "java/lang/UnsupportedOperationException", e.what());
   }
-  catch (Hadoop::OutOfMemoryException e) {
+  catch (NativeTask::OutOfMemoryException e) {
     JNU_ThrowByName(jenv, "java/lang/OutOfMemoryException", e.what());
   }
-  catch (Hadoop::IOException e) {
+  catch (NativeTask::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
-  catch (Hadoop::JavaException e) {
+  catch (NativeTask::JavaException e) {
     LOG("JavaException: %s", e.what());
     // Do nothing, let java side handle
   }
@@ -246,7 +246,7 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
 jbyteArray JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativeCommand
   (JNIEnv * jenv, jobject processor, jlong handler, jbyteArray cmdData) {
   try {
-    Hadoop::BatchHandler * batchHandler = (Hadoop::BatchHandler *)((void*)handler);
+    NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "handler not instance of BatchHandler");
       return NULL;
@@ -261,16 +261,16 @@ jbyteArray JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor
     jenv->SetByteArrayRegion(ret, 0, retString.length(), (jbyte*)retString.c_str());
     return ret;
   }
-  catch (Hadoop::UnsupportException e) {
+  catch (NativeTask::UnsupportException e) {
     JNU_ThrowByName(jenv, "java/lang/UnsupportedOperationException", e.what());
   }
-  catch (Hadoop::OutOfMemoryException e) {
+  catch (NativeTask::OutOfMemoryException e) {
     JNU_ThrowByName(jenv, "java/lang/OutOfMemoryException", e.what());
   }
-  catch (Hadoop::IOException e) {
+  catch (NativeTask::IOException e) {
     JNU_ThrowByName(jenv, "java/io/IOException", e.what());
   }
-  catch (Hadoop::JavaException e) {
+  catch (NativeTask::JavaException e) {
     LOG("JavaException: %s", e.what());
     // Do nothing, let java side handle
   }

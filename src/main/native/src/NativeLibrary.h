@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 class NativeObject;

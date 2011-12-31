@@ -24,7 +24,7 @@
 #include <vector>
 #include <map>
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 using std::vector;
@@ -394,8 +394,6 @@ class KeyGroupIterator : public KeyGroup {
 protected:
   KVIterator & _kvIterator;
   string _currentKey;
-  Buffer _key;
-  Buffer _value;
 public:
   KeyGroupIterator(KVIterator & kvIterator);
   /**
@@ -487,7 +485,7 @@ public:
   virtual void final(const char * key, uint32_t keyLen, void * dest) {}
 };
 
-} // namespace Hadoop;
+} // namespace NativeTask;
 
 /**
  * Use these two predefined macro to define a class library:
@@ -507,10 +505,10 @@ public:
  * in JobConf.
  */
 #define DEFINE_NATIVE_LIBRARY(Library) \
-  static std::map<std::string, Hadoop::ObjectCreatorFunc> Library##ClassMap__; \
-  extern "C" Hadoop::ObjectCreatorFunc Library##GetObjectCreator(const std::string & name) { \
+  static std::map<std::string, NativeTask::ObjectCreatorFunc> Library##ClassMap__; \
+  extern "C" NativeTask::ObjectCreatorFunc Library##GetObjectCreator(const std::string & name) { \
     NativeObject * ret = NULL; \
-    std::map<std::string, Hadoop::ObjectCreatorFunc>::iterator itr = Library##ClassMap__.find(name); \
+    std::map<std::string, NativeTask::ObjectCreatorFunc>::iterator itr = Library##ClassMap__.find(name); \
     if (itr != Library##ClassMap__.end()) { \
       return itr->second; \
     } \
@@ -518,6 +516,6 @@ public:
   } \
   extern "C" int Library##Init()
 
-#define REGISTER_CLASS(Type, Library) Library##ClassMap__[#Library"."#Type] = Hadoop::ObjectCreator<Type>
+#define REGISTER_CLASS(Type, Library) Library##ClassMap__[#Library"."#Type] = NativeTask::ObjectCreator<Type>
 
 #endif /* NATIVETASK_H_ */

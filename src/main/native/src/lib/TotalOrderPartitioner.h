@@ -21,7 +21,7 @@
 
 #include "NativeTask.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class TotalOrderPartitioner : public Partitioner {
 protected:
@@ -39,7 +39,7 @@ public:
   static void MakeTrie(const vector<string> & partitions, string & trie, uint32_t maxLevel);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* TOTALORDERPARTITIONER_H_ */

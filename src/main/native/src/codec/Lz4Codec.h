@@ -22,7 +22,7 @@
 #include "Compressions.h"
 #include "BlockCodec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class Lz4CompressStream : public BlockCompressStream {
 public:
@@ -41,6 +41,6 @@ protected:
                                       uint32_t length);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* LZ4CODEC_H_ */

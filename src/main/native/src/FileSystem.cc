@@ -25,7 +25,7 @@
 #include "Path.h"
 #include "FileSystem.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /////////////////////////////////////////////////////////////
 

@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <algorithm>
 
-namespace Hadoop {
+namespace NativeTask {
 
 // TODO: definitely needs refactoring..
 template <typename _Compare>
@@ -126,6 +126,6 @@ void DualPivotQuicksort(std::vector<uint32_t> & elements, _Compare compare) {
   DualPivotQuicksort(elements, 0, elements.size()-1, 3, compare);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* DUALPIVOTQUICKSORT_H_ */

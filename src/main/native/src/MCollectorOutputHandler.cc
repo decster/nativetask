@@ -21,7 +21,7 @@
 #include "NativeObjectFactory.h"
 #include "MapOutputCollector.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 using std::vector;

@@ -23,7 +23,7 @@
 #include "Streams.h"
 #include "Buffers.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class LineRecordWriter : public RecordWriter {
 protected:
@@ -49,7 +49,7 @@ public:
   virtual void close();
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* LINERECORDWRITER_H_ */

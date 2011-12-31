@@ -20,7 +20,7 @@
 #include "NativeTask.h"
 #include "BlockCodec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 BlockCompressStream::BlockCompressStream(
     OutputStream * stream,
@@ -175,5 +175,5 @@ uint64_t BlockDecompressStream::compressedBytesRead() {
   return _compressedBytesRead;
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

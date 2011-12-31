@@ -44,7 +44,7 @@ void handler(int sig) {
 }
 }
 
-using namespace Hadoop;
+using namespace NativeTask;
 
 typedef char * CString;
 

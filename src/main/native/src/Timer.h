@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string>
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 
@@ -51,7 +51,7 @@ public:
   string getSpeedM2(const char * msg, uint64_t size1, uint64_t size2);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* TIMER_H_ */

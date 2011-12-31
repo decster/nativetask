@@ -26,7 +26,7 @@
 #endif
 #include <pthread.h>
 
-namespace Hadoop {
+namespace NativeTask {
 
 class Condition;
 
@@ -271,6 +271,6 @@ void ParallelFor(Subject & subject, Method method, RangeType begin, RangeType en
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* SYNCUTILS_H_ */

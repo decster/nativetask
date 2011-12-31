@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-namespace Hadoop {
+namespace NativeTask {
 
 extern uint32_t crc32_sb8(uint32_t, const uint8_t *, size_t);
 extern uint32_t crc32c_sb8(uint32_t, const uint8_t *, size_t);
@@ -70,7 +70,7 @@ public:
   }
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* CHECKSUM_H_ */

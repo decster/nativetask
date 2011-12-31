@@ -19,7 +19,7 @@
 #include <stdarg.h>
 #include "StringUtil.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 string StringUtil::ToString(int32_t v) {
   char tmp[32];
@@ -218,6 +218,6 @@ bool StringUtil::EndsWith(const string & str, const string & suffix) {
   return true;
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 

@@ -22,7 +22,7 @@
 #include "MapOutputCollector.h"
 #include "Merge.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /////////////////////////////////////////////////////////////////
 // PartitionBucket
@@ -41,7 +41,6 @@ uint64_t PartitionBucket::estimate_spill_size(OutputFileType output_type,
   int64_t average_kv_size =
       (ret - (_kv_offsets.size() * sizeof(uint32_t) * 2)) / (_kv_offsets.size()*2);
   int64_t vhead_len = WritableUtils::GetVLongSize(average_kv_size);
-  // TODO: fix it
   if (ktype == TextType) {
     ret += _kv_offsets.size() * 2 * (2*vhead_len - sizeof(uint32_t));
   }
@@ -117,6 +116,9 @@ const char * PartitionBucket::KeyGroupIterator::nextValue(uint32_t & len) {
 
 void PartitionBucket::spill(IFileWriter & writer, uint64_t & keyGroupCount, ObjectCreatorFunc combinerCreator, Config & config)
     throw (IOException, UnsupportException) {
+  if (_kv_offsets.size() == 0) {
+    return;
+  }
   if (combinerCreator == NULL) {
     for (size_t i = 0; i<_kv_offsets.size() ; i++) {
       KVBuffer * pkvbuffer = (KVBuffer*)MemoryBlockPool::get_position(_kv_offsets[i]);
@@ -159,11 +161,6 @@ void PartitionBucket::spill(IFileWriter & writer, uint64_t & keyGroupCount, Obje
         delete reducer;
       }
       break;
-    case FolderType:
-      {
-        delete combiner;
-        THROW_EXCEPTION(UnsupportException, "Folder not support in combiner");
-      }
     default:
       delete combiner;
       THROW_EXCEPTION(UnsupportException, "Combiner type not support");
@@ -347,7 +344,7 @@ void MapOutputCollector::mid_spill(std::vector<std::string> & filepaths,
           info->getEndPosition(),
           info->getRealEndPosition());
     } else {
-      LOG("Spill %lu [%u,%u) collect: %.3lfs sort: %.3lfs spill: %.3lfs, record: %llu, combine: %llu, block: %llu, size %llu, real: %llu",
+      LOG("Spill %lu [%u,%u) collect: %.3lfs sort: %.3lfs spill: %.3lfs, record: %llu, key: %llu, block: %llu, size %llu, real: %llu",
           _spills.size(),
           0,
           _num_partition,
@@ -395,7 +392,7 @@ void MapOutputCollector::final_merge_and_spill(std::vector<std::string> & filepa
   IFileWriter * writer = new IFileWriter(fout, spec.checksumType,
                                            spec.keyType, spec.valueType,
                                            spec.codec);
-  Merger * merger = new Merger(writer);
+  Merger * merger = new Merger(writer, *_config, combinerCreator);
   InputStream ** inputStreams = new InputStream*[_spills.size()];
   IFileReader ** readers = new IFileReader*[_spills.size()];
   for (size_t i = 0 ; i < _spills.size() ; i++) {
@@ -446,7 +443,7 @@ uint64_t MapOutputCollector::estimate_spill_size(OutputFileType output_type,
 }
 
 
-}; // namespace Hadoop
+}; // namespace NativeTask
 
 
 

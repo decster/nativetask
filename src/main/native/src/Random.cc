@@ -20,7 +20,7 @@
 #include "commons.h"
 #include "Random.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 static long RandomInitializeID = 8682522807148012L;
 
@@ -381,4 +381,4 @@ void Random::nextWord(string & dest, int64_t limit) {
   dest = nextWord(limit);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask

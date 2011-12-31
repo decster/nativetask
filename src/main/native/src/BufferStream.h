@@ -22,7 +22,7 @@
 #include <string>
 #include "Streams.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 
@@ -195,7 +195,7 @@ public:
   }
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* BUFFERSTREAM_H_ */

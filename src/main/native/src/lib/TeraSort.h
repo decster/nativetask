@@ -24,7 +24,7 @@
 #include "LineRecordReader.h"
 #include "LineRecordWriter.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class TeraGen {
 protected:
@@ -49,12 +49,6 @@ public:
   bool nextLine(string & line);
 };
 
-class TeraPartitioner : public Partitioner {
-public:
-  virtual uint32_t getPartition(const char * key, uint32_t & keyLen,
-                                uint32_t numPartition);
-};
-
 class TeraRecordReader : public LineRecordReader {
 public:
   virtual bool next(Buffer & key, Buffer & value);
@@ -66,7 +60,7 @@ public:
                      const void * value, uint32_t valueLen);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* TERASORT_H_ */

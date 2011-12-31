@@ -22,7 +22,7 @@
 #include "commons.h"
 #include "WordCount.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 WordCountMapper::WordCountMapper() {
   memset(_spaces, 0, 256);
@@ -62,15 +62,12 @@ void WordCountMapper::wordCount(const char * buff, uint32_t length) {
 
 void WordCountMapper::map(const char * key, uint32_t keyLen,
                           const char * value, uint32_t valueLen) {
-  if (keyLen>0) {
-    wordCount(key, keyLen);
-  }
   if (valueLen>0) {
     wordCount(value, valueLen);
   }
 }
 
-void WordCountReducer::reduce(KeyGroup & input) {
+void IntSumReducer::reduce(KeyGroup & input) {
   const char * key;
   const char * value;
   uint32_t keyLen;
@@ -83,7 +80,7 @@ void WordCountReducer::reduce(KeyGroup & input) {
   collect(key, keyLen, &count, 4);
 }
 
-void WordCountRMapper::map(const char * key, uint32_t keyLen,
+void IntSumMapper::map(const char * key, uint32_t keyLen,
                            const char * value, uint32_t valueLen) {
   if (_count>0) {
     if (!frmemeq(_key.data(), key, _key.length(), keyLen)) {
@@ -99,13 +96,13 @@ void WordCountRMapper::map(const char * key, uint32_t keyLen,
   }
 }
 
-void WordCountRMapper::close() {
+void IntSumMapper::close() {
   if (_count>0) {
     collect(_key.data(), _key.length(), &_count, 4);
   }
 }
 
-void WordCountRecordWriter::collect(const void * key, uint32_t keyLen,
+void TextIntRecordWriter::collect(const void * key, uint32_t keyLen,
                                     const void * value, uint32_t valueLen) {
   _appendBuffer.write(key, keyLen);
   _appendBuffer.write(_keyValueSeparator.data(), _keyValueSeparator.length());
@@ -114,6 +111,6 @@ void WordCountRecordWriter::collect(const void * key, uint32_t keyLen,
   _appendBuffer.write('\n');
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* WORDCOUNT_CC_ */

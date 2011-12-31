@@ -22,7 +22,7 @@
 #include "NativeObjectFactory.h"
 #include "NativeLibrary.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 //////////////////////////////////////////////////////////////////
 // NativeLibrary methods

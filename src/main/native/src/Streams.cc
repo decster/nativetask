@@ -20,7 +20,7 @@
 #include "Checksum.h"
 #include "Streams.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 int32_t InputStream::readFully(void * buff, uint32_t length) {
   int32_t ret = 0;
@@ -95,4 +95,4 @@ void ChecksumOutputStream::write(const void * buff, uint32_t length) {
 }
 
 
-} // namespace Hadoop
+} // namespace NativeTask

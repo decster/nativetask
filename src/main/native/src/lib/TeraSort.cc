@@ -20,7 +20,7 @@
 #include "commons.h"
 #include "TeraSort.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 
 static uint64_t mask32 = (1l << 32) - 1;
@@ -118,19 +118,6 @@ bool TeraGen::next(string & kv) {
 
 ///////////////////////////////////////////////////////////
 
-uint32_t TeraPartitioner::getPartition(const char * key, uint32_t & keyLen,
-                                       uint32_t numPartition) {
-  uint64_t ret = ((key[0] - ' ') * 95 + (key[1] - ' '))
-                 * (uint64_t) numPartition / (95 * 95);
-  if (ret<numPartition) {
-    return ret;
-  } else {
-    return numPartition-1;
-  }
-}
-
-///////////////////////////////////////////////////////////
-
 bool TeraRecordReader::next(Buffer & key, Buffer & value) {
   Buffer buff;
   uint32_t len = readLine(buff);
@@ -153,4 +140,4 @@ void TeraRecordWriter::collect(const void * key, uint32_t keyLen,
   _appendBuffer.write("\r\n", 2);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask

@@ -18,8 +18,8 @@
 
 #include "Hash.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 

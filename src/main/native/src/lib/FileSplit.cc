@@ -22,7 +22,7 @@
 #include "BufferStream.h"
 #include "WritableUtils.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 void FileSplit::readFields(const string & data) {
   InputBuffer input = InputBuffer(data);
@@ -52,5 +52,5 @@ string FileSplit::toString() {
   return StringUtil::Format("%s:%llu+%llu", _file.c_str(), _start, _length);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

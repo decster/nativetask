@@ -19,7 +19,7 @@
 #include "commons.h"
 #include "MapOutputSpec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 void MapOutputSpec::getSpecFromConfig(Config & config, MapOutputSpec & spec) {
   spec.checksumType = CHECKSUM_CRC32;
@@ -58,4 +58,4 @@ void MapOutputSpec::getSpecFromConfig(Config & config, MapOutputSpec & spec) {
 }
 
 
-} // namespace Hadoop
+} // namespace NativeTask

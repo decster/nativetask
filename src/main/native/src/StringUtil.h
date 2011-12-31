@@ -22,7 +22,7 @@
 #include <vector>
 #include <string>
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::vector;
 using std::string;
@@ -63,7 +63,7 @@ public:
   static bool EndsWith(const string & str, const string & suffix);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* STRINGUTIL_H_ */

@@ -19,7 +19,7 @@
 #include "test_commons.h"
 #include "RReducerHandler.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class RReducerHandlerTester : public RReducerHandler {
   static const uint32_t BUFFSIZE = 16*1024;

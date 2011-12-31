@@ -29,7 +29,7 @@ extern uint64_t CityHash64(const char *buf, size_t len);
 // hashed into the result.
 extern uint64_t CityHash64WithSeed(const char *buf, size_t len, uint64_t seed);
 
-namespace Hadoop {
+namespace NativeTask {
 
 
 class Hash {
@@ -69,6 +69,6 @@ public:
   }
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* HASH_H_ */

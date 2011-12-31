@@ -22,7 +22,7 @@
 
 #include "Compressions.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class BlockCompressStream : public CompressStream {
 protected:
@@ -89,7 +89,7 @@ protected:
                                       uint32_t length) {}
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* BLOCKCODEC_H_ */

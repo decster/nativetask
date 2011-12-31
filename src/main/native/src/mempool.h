@@ -23,7 +23,7 @@
 #include "Buffers.h"
 #include "MapOutputSpec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /**
  * A block of memory used to store small(relatively) Buffers,
@@ -220,7 +220,7 @@ public:
 
 };
 
-}
+} // namespace NativeTask
 
 
 #endif /* MEMORYPOOL_H_ */

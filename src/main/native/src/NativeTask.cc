@@ -23,7 +23,7 @@
 #include "MCollectorOutputHandler.h"
 #include "NativeObjectFactory.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 
 //////////////////////////////////////////////////////////////////

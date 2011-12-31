@@ -20,7 +20,7 @@
 #include "WritableUtils.h"
 #include "Buffers.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 
 DynamicBuffer::DynamicBuffer() :
@@ -297,5 +297,5 @@ void AppendBuffer::write_vuint2_inner(uint32_t v1, uint32_t v2) {
 }
 
 
-} // namespace Hadoop
+} // namespace NativeTask
 

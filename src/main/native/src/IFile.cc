@@ -19,7 +19,7 @@
 #include "commons.h"
 #include "IFile.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 ///////////////////////////////////////////////////////////
 
@@ -190,5 +190,5 @@ void IFileWriter::getStatistics(uint64_t & offset, uint64_t & realOffset) {
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

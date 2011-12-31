@@ -21,7 +21,7 @@
 
 #include "BatchHandler.h"
 
-namespace Hadoop {
+namespace NativeTask {
 class MapOutputCollector;
 
 /**
@@ -29,7 +29,7 @@ class MapOutputCollector;
  * to output.
  */
 class EchoBatchHandler:
-    public Hadoop::BatchHandler {
+    public NativeTask::BatchHandler {
 public:
   EchoBatchHandler();
   virtual ~EchoBatchHandler();

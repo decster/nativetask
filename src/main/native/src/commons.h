@@ -42,7 +42,7 @@
 #include "StringUtil.h"
 #include "NativeTask.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 #define PRINT_LOG
 
@@ -63,7 +63,7 @@ extern FILE * LOG_DEVICE;
 
 #endif
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 

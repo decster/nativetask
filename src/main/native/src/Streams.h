@@ -21,7 +21,7 @@
 
 #include "Checksum.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class InputStream {
 public:
@@ -195,6 +195,6 @@ public:
 
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* STREAMS_H_ */

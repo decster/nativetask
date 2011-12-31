@@ -23,7 +23,7 @@
 #include "Compressions.h"
 #include "test_commons.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class MMapTaskHandlerTest : public MMapTaskHandler {
 protected:

@@ -27,7 +27,7 @@
 #include "IFile.h"
 #include "PartitionIndex.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /**
  * Memory Key-Value buffer pair with direct address content, so can be
@@ -284,7 +284,7 @@ public:
 };
 
 
-}; //namespace Hadoop
+}; //namespace NativeTask
 
 #endif /* MAPOUTPUTBUFFER_H_ */
 

@@ -21,7 +21,7 @@
 #include "StringUtil.h"
 #include "Timer.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 #ifdef __MACH__
 #include <mach/clock.h>
@@ -123,4 +123,4 @@ string Timer::getSpeedM2(const char * msg, uint64_t size1, uint64_t size2) {
 
 
 
-} // namespace Hadoop
+} // namespace NativeTask

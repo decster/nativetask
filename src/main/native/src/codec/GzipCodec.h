@@ -21,7 +21,7 @@
 
 #include "Compressions.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class GzipCompressStream : public CompressStream {
 protected:
@@ -73,6 +73,6 @@ public:
   }
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* GZIPCODEC_H_ */

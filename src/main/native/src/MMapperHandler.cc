@@ -21,7 +21,7 @@
 #include "NativeObjectFactory.h"
 #include "MapOutputCollector.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 MMapperHandler::MMapperHandler() :
     _config(NULL),
@@ -210,4 +210,4 @@ void MMapperHandler::close() {
   _moc->final_merge_and_spill(pathes, indexpath, _moc->getMapOutputSpec(), _combinerCreator);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask

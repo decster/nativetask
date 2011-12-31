@@ -23,7 +23,7 @@
 #include "LineRecordReader.h"
 #include "FileSplit.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 inline char * memchr(char * p, char ch, size_t len) {
   size_t i = 0;
@@ -244,4 +244,4 @@ bool KeyValueLineRecordReader::next(Buffer & key, Buffer & value) {
 }
 
 
-} // namespace Hadoop
+} // namespace NativeTask

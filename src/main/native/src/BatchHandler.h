@@ -21,7 +21,7 @@
 
 #include "NativeTask.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /**
  * Native side abstraction of java ByteBuffer
@@ -200,6 +200,6 @@ protected:
 
 };
 
-}
+} // namespace NativeTask
 
 #endif /* BATCHHANDLER_H_ */

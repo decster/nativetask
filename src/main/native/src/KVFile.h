@@ -23,7 +23,7 @@
 #include "Buffers.h"
 #include "PartitionIndex.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class KVFileReader {
 private:
@@ -104,6 +104,6 @@ public:
   void getStatistics(uint64_t & offset, uint64_t & realoffset);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* KVFILE_H_ */

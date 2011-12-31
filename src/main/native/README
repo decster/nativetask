@@ -209,5 +209,47 @@ map.tasks=200 mapred.output.compression.codec=Snappy
 11/12/29 21:36:36 INFO Sort 3 [0,100) time: 0.977
 11/12/29 21:36:37 INFO Merge 4 segments: record 8560191, avg 17.655, size 151127390, real 7217885, time 0.812
 
+200M io.sort.mb
+2011-12-30 19:22:44,309 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 200
+2011-12-30 19:22:44,480 INFO org.apache.hadoop.mapred.MapTask: data buffer = 125829120/125829120
+2011-12-30 19:22:44,480 INFO org.apache.hadoop.mapred.MapTask: record buffer = 5242880/5242880
+2011-12-30 19:22:44,488 WARN org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library is available
+2011-12-30 19:22:44,488 INFO org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library loaded
+2011-12-30 19:22:49,024 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:22:49,024 INFO org.apache.hadoop.mapred.MapTask: bufstart = 0; bufend = 76839356; bufvoid = 125829120
+2011-12-30 19:22:49,024 INFO org.apache.hadoop.mapred.MapTask: kvstart = 0; kvend = 5242879; length = 5242880
+2011-12-30 19:22:54,352 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
+2011-12-30 19:22:57,148 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
+2011-12-30 19:23:01,610 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:23:01,610 INFO org.apache.hadoop.mapred.MapTask: bufstart = 76839356; bufend = 27833735; bufvoid = 125829115
+2011-12-30 19:23:01,610 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242879; kvend = 5242878; length = 5242880
+2011-12-30 19:23:09,455 INFO org.apache.hadoop.mapred.MapTask: Finished spill 1
+2011-12-30 19:23:13,617 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:23:13,617 INFO org.apache.hadoop.mapred.MapTask: bufstart = 27833735; bufend = 104661900; bufvoid = 125829115
+2011-12-30 19:23:13,617 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242878; kvend = 5242877; length = 5242880
+2011-12-30 19:23:21,346 INFO org.apache.hadoop.mapred.MapTask: Finished spill 2
+2011-12-30 19:23:25,474 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:23:25,474 INFO org.apache.hadoop.mapred.MapTask: bufstart = 104661900; bufend = 55667143; bufvoid = 125829112
+2011-12-30 19:23:25,474 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242877; kvend = 5242876; length = 5242880
+2011-12-30 19:23:33,349 INFO org.apache.hadoop.mapred.MapTask: Finished spill 3
+2011-12-30 19:23:37,484 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:23:37,484 INFO org.apache.hadoop.mapred.MapTask: bufstart = 55667143; bufend = 6677504; bufvoid = 125829112
+2011-12-30 19:23:37,484 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242876; kvend = 5242875; length = 5242880
+2011-12-30 19:23:45,192 INFO org.apache.hadoop.mapred.MapTask: Finished spill 4
+2011-12-30 19:23:49,401 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:23:49,401 INFO org.apache.hadoop.mapred.MapTask: bufstart = 6677504; bufend = 83510014; bufvoid = 125829112
+2011-12-30 19:23:49,401 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242875; kvend = 5242874; length = 5242880
+2011-12-30 19:23:57,278 INFO org.apache.hadoop.mapred.MapTask: Finished spill 5
+2011-12-30 19:24:01,367 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:24:01,368 INFO org.apache.hadoop.mapred.MapTask: bufstart = 83510014; bufend = 34507026; bufvoid = 125829112
+2011-12-30 19:24:01,368 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242874; kvend = 5242873; length = 5242880
+2011-12-30 19:24:09,274 INFO org.apache.hadoop.mapred.MapTask: Finished spill 6
+2011-12-30 19:24:13,444 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2011-12-30 19:24:13,444 INFO org.apache.hadoop.mapred.MapTask: bufstart = 34507026; bufend = 111336280; bufvoid = 125829112
+2011-12-30 19:24:13,444 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242873; kvend = 5242872; length = 5242880
+2011-12-30 19:24:21,243 INFO org.apache.hadoop.mapred.MapTask: Finished spill 7
+2011-12-30 19:24:25,133 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
+2011-12-30 19:24:32,462 INFO org.apache.hadoop.mapred.MapTask: Finished spill 8
+2011-12-30 19:24:32,469 INFO org.apache.hadoop.mapred.Merger: Merging 9 sorted segments
 
-
+szwg-public-hadoop-b3016.szwg01.baidu.com 

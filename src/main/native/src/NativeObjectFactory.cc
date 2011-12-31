@@ -29,10 +29,11 @@
 #include "RReducerHandler.h"
 #include "lib/LineRecordReader.h"
 #include "lib/LineRecordWriter.h"
+#include "lib/TotalOrderPartitioner.h"
 #include "lib/TeraSort.h"
 #include "lib/WordCount.h"
 
-using namespace Hadoop;
+using namespace NativeTask;
 
 // TODO: just for debug, should be removed
 extern "C" void handler(int sig) {
@@ -48,8 +49,9 @@ extern "C" void handler(int sig) {
   exit(1);
 }
 
+
 DEFINE_NATIVE_LIBRARY(NativeTask) {
-  //signal(SIGSEGV, handler);
+  signal(SIGSEGV, handler);
   REGISTER_CLASS(BatchHandler, NativeTask);
   REGISTER_CLASS(EchoBatchHandler, NativeTask);
   REGISTER_CLASS(MCollectorOutputHandler, NativeTask);
@@ -63,13 +65,13 @@ DEFINE_NATIVE_LIBRARY(NativeTask) {
   REGISTER_CLASS(LineRecordReader, NativeTask);
   REGISTER_CLASS(KeyValueLineRecordReader, NativeTask);
   REGISTER_CLASS(LineRecordWriter, NativeTask);
-  REGISTER_CLASS(TeraPartitioner, NativeTask);
+  REGISTER_CLASS(TotalOrderPartitioner, NativeTask);
   REGISTER_CLASS(TeraRecordReader, NativeTask);
   REGISTER_CLASS(TeraRecordWriter, NativeTask);
   REGISTER_CLASS(WordCountMapper, NativeTask);
-  REGISTER_CLASS(WordCountReducer, NativeTask);
-  REGISTER_CLASS(WordCountRMapper, NativeTask);
-  REGISTER_CLASS(WordCountRecordWriter, NativeTask);
+  REGISTER_CLASS(IntSumReducer, NativeTask);
+  REGISTER_CLASS(IntSumMapper, NativeTask);
+  REGISTER_CLASS(TextIntRecordWriter, NativeTask);
   NativeObjectFactory::SetDefaultClass(BatchHandlerType, "NativeTask.BatchHandler");
   NativeObjectFactory::SetDefaultClass(MapperType, "NativeTask.Mapper");
   NativeObjectFactory::SetDefaultClass(ReducerType, "NativeTask.Reducer");
@@ -78,7 +80,7 @@ DEFINE_NATIVE_LIBRARY(NativeTask) {
   return 0;
 }
 
-namespace Hadoop {
+namespace NativeTask {
 
 static Config G_CONFIG;
 

@@ -19,7 +19,7 @@
 #include "commons.h"
 #include "WritableUtils.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 KeyValueType JavaClassToKeyValueType(const std::string & clazz) {
   if (clazz == "org.apache.hadoop.io.Text") {
@@ -278,5 +278,5 @@ void WritableUtils::toString(string & dest, KeyValueType type, const void * data
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

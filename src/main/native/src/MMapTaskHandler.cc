@@ -21,7 +21,7 @@
 #include "NativeObjectFactory.h"
 #include "MapOutputCollector.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 MMapTaskHandler::MMapTaskHandler() :
     _numPartition(1),
@@ -199,6 +199,6 @@ void MMapTaskHandler::close() {
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 

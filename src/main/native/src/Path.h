@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <string>
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 
@@ -33,6 +33,6 @@ public:
   static string GetName(const string & path);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* PATH_H_ */

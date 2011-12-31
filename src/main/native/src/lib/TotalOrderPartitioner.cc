@@ -19,7 +19,7 @@
 #include "commons.h"
 #include "TotalOrderPartitioner.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 const char * TotalOrderPartitioner::PARTITION_FILE_NAME = "_nativepartition.lst";
 
@@ -63,5 +63,5 @@ void TotalOrderPartitioner::MakeTrie(const vector<string> & partitions, string &
 
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

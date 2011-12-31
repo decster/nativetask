@@ -20,7 +20,7 @@
 #include "EchoBatchHandler.h"
 #include "NativeObjectFactory.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 EchoBatchHandler::EchoBatchHandler() {
 }

@@ -22,7 +22,7 @@
 #include "NativeTask.h"
 #include "BatchHandler.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class RReducerHandler :
     public BatchHandler,
@@ -80,7 +80,7 @@ private:
   void reset();
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* RREDUCERHANDLER_H_ */

@@ -26,7 +26,7 @@
 #include "PartitionIndex.h"
 #include "MapOutputSpec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 /**
  * IFileReader
@@ -163,7 +163,7 @@ public:
 
 
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 

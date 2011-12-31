@@ -22,7 +22,7 @@
 #include "NativeTask.h"
 #include "LineRecordWriter.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class WordCountMapper : public Mapper {
 protected:
@@ -36,29 +36,29 @@ public:
                    const char * value, uint32_t valueLen);
 };
 
-class WordCountReducer : public Reducer {
+class IntSumReducer : public Reducer {
 public:
   virtual void reduce(KeyGroup & input);
 };
 
-class WordCountRMapper : public Mapper {
+class IntSumMapper : public Mapper {
 public:
   string _key;
   uint32_t _count;
 public:
-  WordCountRMapper() : _count(0) {}
+  IntSumMapper() : _count(0) {}
   virtual void map(const char * key, uint32_t keyLen,
                    const char * value, uint32_t valueLen);
   virtual void close();
 };
 
-class WordCountRecordWriter : public LineRecordWriter {
+class TextIntRecordWriter : public LineRecordWriter {
 public:
   virtual void collect(const void * key, uint32_t keyLen,
                        const void * value, uint32_t valueLen);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* WORDCOUNT_H_ */

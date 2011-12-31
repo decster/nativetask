@@ -19,7 +19,7 @@
 #include "commons.h"
 #include "SyncUtils.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 static void PthreadCall(const char* label, int result) {
   if (result != 0) {
@@ -139,4 +139,4 @@ void Thread::run() {
   }
 }
 
-} // namespace Hadoop
+} // namespace NativeTask

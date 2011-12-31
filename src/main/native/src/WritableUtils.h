@@ -23,7 +23,7 @@
 #include <string>
 #include "Streams.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 enum KeyValueType {
   TextType = 0,
@@ -123,6 +123,6 @@ public:
   static void toString(string & dest, KeyValueType type, const void * data, uint32_t length);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* WRITABLEUTILS_H_ */

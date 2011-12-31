@@ -20,7 +20,7 @@
 #include "NativeObjectFactory.h"
 #include "RReducerHandler.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 RReducerHandler::RReducerHandler() :
   _mapper(NULL),
@@ -291,5 +291,5 @@ const char * RReducerHandler::nextValue(uint32_t & len) {
 }
 
 
-} // namespace Hadoop
+} // namespace NativeTask
 

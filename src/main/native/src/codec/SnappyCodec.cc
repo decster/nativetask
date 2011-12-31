@@ -21,7 +21,7 @@
 #include "NativeTask.h"
 #include "SnappyCodec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 SnappyCompressStream::SnappyCompressStream(
     OutputStream * stream,
@@ -93,5 +93,5 @@ uint64_t SnappyDecompressStream::maxCompressedLength(uint64_t origLength) {
   return snappy_max_compressed_length(origLength);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

@@ -21,7 +21,7 @@
 #include "FileSystem.h"
 #include "LineRecordWriter.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 LineRecordWriter::LineRecordWriter() :
   _stream(NULL),
@@ -98,5 +98,5 @@ void LineRecordWriter::close() {
   _stream = NULL;
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

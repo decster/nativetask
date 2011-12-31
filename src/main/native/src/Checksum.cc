@@ -19,7 +19,7 @@
 #include <assert.h>
 #include "Checksum.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 const uint32_t CRC32_T8_0[] = {
   0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
@@ -1286,5 +1286,5 @@ uint32_t crc32c_sb8(uint32_t crc, const uint8_t *buf, size_t length) {
 #endif
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

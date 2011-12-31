@@ -23,7 +23,7 @@
 #include "Buffers.h"
 #include "Streams.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class LineRecordReader : public RecordReader {
 protected:
@@ -78,6 +78,6 @@ public:
   virtual bool next(Buffer & key, Buffer & value);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* LINERECORDREADER_H_ */

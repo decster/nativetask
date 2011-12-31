@@ -23,7 +23,7 @@
 #include "BufferStream.h"
 #include "WritableUtils.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class FileSplit : public InputSplit {
 protected:
@@ -72,6 +72,6 @@ public:
   virtual string toString();
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* FILESPLIT_H_ */

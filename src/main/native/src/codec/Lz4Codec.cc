@@ -41,7 +41,7 @@ LZ4_uncompress() :
 */
 }
 
-namespace Hadoop {
+namespace NativeTask {
 
 static int32_t LZ4_MaxCompressedSize(int32_t orig) {
   return std::max((int32_t)(orig*1.005), orig+8);
@@ -107,5 +107,5 @@ uint64_t Lz4DecompressStream::maxCompressedLength(uint64_t origLength) {
   return LZ4_MaxCompressedSize(origLength);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

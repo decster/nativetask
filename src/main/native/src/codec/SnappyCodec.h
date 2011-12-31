@@ -22,7 +22,7 @@
 #include "Compressions.h"
 #include "BlockCodec.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 class SnappyCompressStream : public BlockCompressStream {
 public:
@@ -44,6 +44,6 @@ protected:
                                       uint32_t length);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 #endif /* SNAPPYCODEC_H_ */

@@ -18,7 +18,7 @@
 
 #include "commons.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 #ifdef PRINT_LOG
 
@@ -27,4 +27,4 @@ FILE * LOG_DEVICE = stderr;
 #endif
 
 
-} //namespace Hadoop
+} //namespace NativeTask

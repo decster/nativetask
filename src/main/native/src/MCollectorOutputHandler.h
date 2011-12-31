@@ -21,11 +21,11 @@
 
 #include "BatchHandler.h"
 
-namespace Hadoop {
+namespace NativeTask {
 class MapOutputCollector;
 
 class MCollectorOutputHandler:
-    public Hadoop::BatchHandler {
+    public NativeTask::BatchHandler {
 private:
   MapOutputCollector * _collector;
   // state info for large KV pairs

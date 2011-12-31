@@ -19,7 +19,7 @@
 #include "mempool.h"
 #include "DualPivotQuickSort.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 bool MemoryBlockPool::_inited = false;
 
@@ -99,5 +99,5 @@ void MemoryBlockPool::dump(FILE *out)
       totalused / (double) _used);
 }
 
-} // namespace Hadoop
+} // namespace NativeTask
 

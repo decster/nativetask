@@ -24,7 +24,7 @@
 #include "WritableUtils.h"
 #include "NativeTask.h"
 
-namespace Hadoop {
+namespace NativeTask {
 
 using std::string;
 
@@ -77,7 +77,7 @@ public:
   static void getSpecFromConfig(Config & config, MapOutputSpec & spec);
 };
 
-} // namespace Hadoop
+} // namespace NativeTask
 
 
 #endif /* MAPOUTPUTSPEC_H_ */
