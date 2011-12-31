@@ -30,7 +30,7 @@ void FileSplit::readFields(const string & data) {
     _file = WritableUtils::ReadUTF8(&input);
   }
   else {
-    _file = WritableUtils::ReadString(&input);
+    _file = WritableUtils::ReadText(&input);
   }
   _start = WritableUtils::ReadLong(&input);
   _length = WritableUtils::ReadLong(&input);
@@ -42,7 +42,7 @@ void FileSplit::writeFields(string & dest) {
     WritableUtils::WriteUTF8(&out, _file);
   }
   else {
-    WritableUtils::WriteString(&out, _file);
+    WritableUtils::WriteText(&out, _file);
   }
   WritableUtils::WriteLong(&out, _start);
   WritableUtils::WriteLong(&out, _length);

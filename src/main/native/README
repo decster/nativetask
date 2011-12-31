@@ -198,17 +198,6 @@ InputData 100G compressed(52G)
 bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar randomtextwriter -Dtest.randomtextwrite.total_bytes=100000000000 -Dtest.randomtextwrite.bytes_per_map=500000000 -outFormat org.apache.hadoop.mapred.TextOutputFormat /text100G-snappy
 map.tasks=200 mapred.output.compression.codec=Snappy
 
-400M io.sort.mb
-11/12/29 21:36:20 INFO NativeTask library initialized
-11/12/29 21:36:20 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/text100G-snappy/part-00190.snappy:0+260873483
-11/12/29 21:36:20 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
-11/12/29 21:36:20 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.WordCountReducer Partitioner: default
-11/12/29 21:36:25 INFO Spill 0 [0,100) collect: 2.553s sort: 1.582s spill: 1.998s, record: 12794164, combine: 1000, block: 400, size 17855, real: 18916
-11/12/29 21:36:29 INFO Spill 1 [0,100) collect: 2.129s sort: 1.591s spill: 1.929s, record: 12795864, combine: 1000, block: 400, size 17855, real: 18904
-11/12/29 21:36:33 INFO Spill 2 [0,100) collect: 2.178s sort: 1.664s spill: 2.031s, record: 12781070, combine: 1000, block: 400, size 17855, real: 18909
-11/12/29 21:36:36 INFO Sort 3 [0,100) time: 0.977
-11/12/29 21:36:37 INFO Merge 4 segments: record 8560191, avg 17.655, size 151127390, real 7217885, time 0.812
-
 200M io.sort.mb
 2011-12-30 19:22:44,309 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 200
 2011-12-30 19:22:44,480 INFO org.apache.hadoop.mapred.MapTask: data buffer = 125829120/125829120
@@ -251,5 +240,20 @@ map.tasks=200 mapred.output.compression.codec=Snappy
 2011-12-30 19:24:25,133 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
 2011-12-30 19:24:32,462 INFO org.apache.hadoop.mapred.MapTask: Finished spill 8
 2011-12-30 19:24:32,469 INFO org.apache.hadoop.mapred.Merger: Merging 9 sorted segments
+
+200mb io.sort.mb
+11/12/31 13:12:46 INFO NativeTask library initialized
+11/12/31 13:12:46 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/text100G-snappy/part-00135.snappy:0+260872679
+11/12/31 13:12:46 INFO Native MemoryBlockPool: min_block_size 512K, capacity 200M
+11/12/31 13:12:46 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
+11/12/31 13:12:49 INFO Spill 0 [0,100) collect: 1.837s sort: 0.993s spill: 1.213s, record: 8534193, key: 1000, block: 400, size 17855, real: 18879
+11/12/31 13:12:51 INFO Spill 1 [0,100) collect: 1.429s sort: 0.988s spill: 1.204s, record: 8543378, key: 1000, block: 400, size 17855, real: 18865
+11/12/31 13:12:54 INFO Spill 2 [0,100) collect: 1.376s sort: 0.963s spill: 1.155s, record: 8515038, key: 1000, block: 400, size 17855, real: 18868
+11/12/31 13:12:56 INFO Spill 3 [0,100) collect: 1.358s sort: 0.955s spill: 1.147s, record: 8527904, key: 1000, block: 400, size 17855, real: 18874
+11/12/31 13:12:59 INFO Spill 4 [0,100) collect: 1.364s sort: 0.967s spill: 1.162s, record: 8526535, key: 1000, block: 400, size 17855, real: 18866
+11/12/31 13:13:00 INFO Sort 5 [0,100) time: 0.465
+11/12/31 13:13:00 INFO Merge 6 segments: record 0, key: 1000, size 17855, real 18968, time: 0.232
+
+
 
 szwg-public-hadoop-b3016.szwg01.baidu.com 

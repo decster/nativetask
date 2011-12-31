@@ -103,7 +103,9 @@ public:
 
   static int16_t ReadShort(InputStream * stream);
 
-  static string ReadString(InputStream * stream);
+  static string ReadText(InputStream * stream);
+
+  static string ReadBytes(InputStream * stream);
 
   static string ReadUTF8(InputStream * stream);
 
@@ -115,7 +117,9 @@ public:
 
   static void WriteShort(OutputStream * stream, int16_t v);
 
-  static void WriteString(OutputStream * stream, const string & v);
+  static void WriteText(OutputStream * stream, const string & v);
+
+  static void WriteBytes(OutputStream * stream, const string & v);
 
   static void WriteUTF8(OutputStream * stream, const string & v);
 

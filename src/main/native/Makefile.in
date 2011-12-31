@@ -128,6 +128,7 @@ am__objects_2 = nttest-test_commons.$(OBJEXT) \
 	nttest-TestHash.$(OBJEXT) nttest-TestIFile.$(OBJEXT) \
 	nttest-TestSort.$(OBJEXT) nttest-TestWritableUtils.$(OBJEXT) \
 	nttest-TestLineRecordReader.$(OBJEXT) \
+	nttest-TestTotalOrderPartitioner.$(OBJEXT) \
 	nttest-TestMain.$(OBJEXT)
 am_nttest_OBJECTS = $(am__objects_2) nttest-gtest-all.$(OBJEXT)
 nttest_OBJECTS = $(am_nttest_OBJECTS)
@@ -373,6 +374,7 @@ test/TestIFile.cc                     \
 test/TestSort.cc                      \
 test/TestWritableUtils.cc             \
 test/lib/TestLineRecordReader.cc      \
+test/lib/TestTotalOrderPartitioner.cc \
 test/TestMain.cc               
 
 include_HEADERS = $(COMMONHEADERS)
@@ -552,6 +554,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStream.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStringUtil.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestSyncUtils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestTotalOrderPartitioner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestWritableUtils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-gtest-all.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-test_commons.Po@am__quote@
@@ -1129,6 +1132,20 @@ nttest-TestLineRecordReader.obj: test/lib/TestLineRecordReader.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/lib/TestLineRecordReader.cc' object='nttest-TestLineRecordReader.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestLineRecordReader.obj `if test -f 'test/lib/TestLineRecordReader.cc'; then $(CYGPATH_W) 'test/lib/TestLineRecordReader.cc'; else $(CYGPATH_W) '$(srcdir)/test/lib/TestLineRecordReader.cc'; fi`
+
+nttest-TestTotalOrderPartitioner.o: test/lib/TestTotalOrderPartitioner.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestTotalOrderPartitioner.o -MD -MP -MF $(DEPDIR)/nttest-TestTotalOrderPartitioner.Tpo -c -o nttest-TestTotalOrderPartitioner.o `test -f 'test/lib/TestTotalOrderPartitioner.cc' || echo '$(srcdir)/'`test/lib/TestTotalOrderPartitioner.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestTotalOrderPartitioner.Tpo $(DEPDIR)/nttest-TestTotalOrderPartitioner.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/lib/TestTotalOrderPartitioner.cc' object='nttest-TestTotalOrderPartitioner.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestTotalOrderPartitioner.o `test -f 'test/lib/TestTotalOrderPartitioner.cc' || echo '$(srcdir)/'`test/lib/TestTotalOrderPartitioner.cc
+
+nttest-TestTotalOrderPartitioner.obj: test/lib/TestTotalOrderPartitioner.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestTotalOrderPartitioner.obj -MD -MP -MF $(DEPDIR)/nttest-TestTotalOrderPartitioner.Tpo -c -o nttest-TestTotalOrderPartitioner.obj `if test -f 'test/lib/TestTotalOrderPartitioner.cc'; then $(CYGPATH_W) 'test/lib/TestTotalOrderPartitioner.cc'; else $(CYGPATH_W) '$(srcdir)/test/lib/TestTotalOrderPartitioner.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestTotalOrderPartitioner.Tpo $(DEPDIR)/nttest-TestTotalOrderPartitioner.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/lib/TestTotalOrderPartitioner.cc' object='nttest-TestTotalOrderPartitioner.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestTotalOrderPartitioner.obj `if test -f 'test/lib/TestTotalOrderPartitioner.cc'; then $(CYGPATH_W) 'test/lib/TestTotalOrderPartitioner.cc'; else $(CYGPATH_W) '$(srcdir)/test/lib/TestTotalOrderPartitioner.cc'; fi`
 
 nttest-TestMain.o: test/TestMain.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestMain.o -MD -MP -MF $(DEPDIR)/nttest-TestMain.Tpo -c -o nttest-TestMain.o `test -f 'test/TestMain.cc' || echo '$(srcdir)/'`test/TestMain.cc

@@ -136,7 +136,8 @@ public class NativeTeraSort implements Tool {
     FSDataOutputStream fout = outFs.create(partFile);
     new IntWritable(partitions).write(fout);
     for(int i=1; i < partitions; ++i) {
-      Text w = sampleArray.get(Math.round(stepSize * i));
+      int current = Math.round(stepSize * i);
+      Text w = sampleArray.get(current);
       w.write(fout);
     }
     fout.close();

@@ -191,7 +191,7 @@ inline int64_t fmemcmp(const char * src, const char * dest,
   if (ret) {
     return ret;
   }
-  return srcLen - destLen;
+  return (int64_t)srcLen - (int64_t)destLen;
 }
 
 /**

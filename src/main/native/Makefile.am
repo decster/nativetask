@@ -97,6 +97,7 @@ test/TestIFile.cc                     \
 test/TestSort.cc                      \
 test/TestWritableUtils.cc             \
 test/lib/TestLineRecordReader.cc      \
+test/lib/TestTotalOrderPartitioner.cc \
 test/TestMain.cc               
 
 include_HEADERS = $(COMMONHEADERS)

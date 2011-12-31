@@ -189,7 +189,16 @@ int16_t WritableUtils::ReadShort(InputStream * stream) {
   return (int16_t) ((ret >> 8) | (ret << 8));
 }
 
-string WritableUtils::ReadString(InputStream * stream) {
+string WritableUtils::ReadText(InputStream * stream) {
+  int64_t len = ReadVLong(stream);
+  string ret = string(len, '\0');
+  if (stream->readFully((void *)ret.data(), len)!=len) {
+    THROW_EXCEPTION_EX(IOException, "ReadString reach EOF, need %d", len);
+  }
+  return ret;
+}
+
+string WritableUtils::ReadBytes(InputStream * stream) {
   int32_t len = ReadInt(stream);
   string ret = string(len, '\0');
   if (stream->readFully((void *)ret.data(), len)!=len) {
@@ -230,7 +239,12 @@ void WritableUtils::WriteShort(OutputStream * stream, int16_t v) {
   stream->write(&be, 2);
 }
 
-void WritableUtils::WriteString(OutputStream * stream, const string & v) {
+void WritableUtils::WriteText(OutputStream * stream, const string & v) {
+  WriteVLong(stream, v.length());
+  stream->write(v.c_str(), (uint32_t)v.length());
+}
+
+void WritableUtils::WriteBytes(OutputStream * stream, const string & v) {
   WriteInt(stream, (int32_t)v.length());
   stream->write(v.c_str(), (uint32_t)v.length());
 }
