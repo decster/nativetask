@@ -19,7 +19,7 @@
 #ifndef STREAMS_H_
 #define STREAMS_H_
 
-#include "Checksum.h"
+#include "util/Checksum.h"
 
 namespace NativeTask {
 

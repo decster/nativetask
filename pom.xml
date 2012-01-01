@@ -210,7 +210,7 @@
                 <id>compile</id>
                 <phase>compile</phase>
                 <goals>
-              <!--    <goal>configure</goal> -->
+                  <goal>configure</goal> 
                   <goal>make-install</goal>
                 </goals>
               </execution>

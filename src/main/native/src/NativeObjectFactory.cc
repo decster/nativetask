@@ -18,15 +18,16 @@
 
 #include <signal.h>
 #include "commons.h"
+#include "SyncUtils.h"
 #include "NativeTask.h"
 #include "NativeObjectFactory.h"
 #include "NativeLibrary.h"
-#include "BatchHandler.h"
-#include "EchoBatchHandler.h"
-#include "MCollectorOutputHandler.h"
-#include "MMapperHandler.h"
-#include "MMapTaskHandler.h"
-#include "RReducerHandler.h"
+#include "handler/BatchHandler.h"
+#include "handler/EchoBatchHandler.h"
+#include "handler/MCollectorOutputHandler.h"
+#include "handler/MMapperHandler.h"
+#include "handler/MMapTaskHandler.h"
+#include "handler/RReducerHandler.h"
 #include "lib/LineRecordReader.h"
 #include "lib/LineRecordWriter.h"
 #include "lib/TotalOrderPartitioner.h"
@@ -92,30 +93,58 @@ vector<Counter *> NativeObjectFactory::Counters;
 vector<uint64_t> NativeObjectFactory::CounterLastUpdateValues;
 bool NativeObjectFactory::Inited = false;
 
+static Lock FactoryLock;
+
 bool NativeObjectFactory::Init() {
-  Inited = true;
-  // setup log device
-  string device = GetConfig().get("native.log.device", "stderr");
-  if (device == "stdout") {
-    LOG_DEVICE = stdout;
-  } else if (device == "stderr") {
-    LOG_DEVICE = stderr;
-  } else {
-    LOG_DEVICE = fopen(device.c_str(), "w");
+  ScopeLock<Lock> autolocak(FactoryLock);
+  if (Inited == false) {
+    // setup log device
+    string device = GetConfig().get("native.log.device", "stderr");
+    if (device == "stdout") {
+      LOG_DEVICE = stdout;
+    } else if (device == "stderr") {
+      LOG_DEVICE = stderr;
+    } else {
+      LOG_DEVICE = fopen(device.c_str(), "w");
+    }
+    if (0 != NativeTaskInit()) {
+      LOG("NativeTaskInit() failed");
+      return false;
+    }
+    NativeLibrary * library = new NativeLibrary("libnativetask.so", "NativeTask");
+    library->_getObjectCreatorFunc = NativeTaskGetObjectCreator;
+    Libraries.push_back(library);
+    string libraryConf = GetConfig().get("native.class.library", "");
+    if (libraryConf.length()>0) {
+      vector<string> libraries;
+      vector<string> pair;
+      StringUtil::Split(libraryConf, ",", libraries, true);
+      for (size_t i=0;i<libraries.size();i++) {
+        pair.clear();
+        StringUtil::Split(libraries[i], "=", pair, true);
+        if (pair.size() == 2) {
+          string & name = pair[0];
+          string & path = pair[1];
+          if (false == RegisterLibrary(path, name)) {
+            LOG("RegisterLibrary failed: name=%s path=%s", name.c_str(), path.c_str());
+            return false;
+          } else {
+            LOG("RegisterLibrary success: name=%s path=%s", name.c_str(), path.c_str());
+          }
+        } else {
+          LOG("Illegal native.class.libray: [%s] in [%s]", libraries[i].c_str(), libraryConf.c_str());
+        }
+      }
+    }
+    const char * version = GetConfig().get("native.hadoop.version");
+    LOG("NativeTask library initialized with hadoop %s", version==NULL?"unkown":version);
+    Inited = true;
   }
-  if (0 != NativeTaskInit()) {
-    LOG("NativeTaskInit() failed");
-    Inited = false;
-    return false;
-  }
-  NativeLibrary * library = new NativeLibrary("nativetask.so", "NativeTask");
-  library->_getObjectCreatorFunc = NativeTaskGetObjectCreator;
-  LOG("NativeTask library initialized");
-  Libraries.push_back(library);
   return true;
 }
 
 void NativeObjectFactory::Release() {
+  ScopeLock<Lock> autolocak(FactoryLock);
   for (ssize_t i = Libraries.size() - 1; i >= 0; i--) {
     delete Libraries[i];
     Libraries[i] = NULL;
@@ -178,14 +207,17 @@ NativeObject * NativeObjectFactory::CreateObject(const string & clz) {
 
 ObjectCreatorFunc NativeObjectFactory::GetObjectCreator(const string & clz) {
   CheckInit();
-  for (vector<NativeLibrary*>::reverse_iterator ritr = Libraries.rbegin();
-      ritr != Libraries.rend(); ritr++) {
-    ObjectCreatorFunc ret = (*ritr)->getObjectCreator(clz);
-    if (NULL!=ret) {
-      return ret;
+  {
+    ScopeLock<Lock> autolocak(FactoryLock);
+    for (vector<NativeLibrary*>::reverse_iterator ritr = Libraries.rbegin();
+        ritr != Libraries.rend(); ritr++) {
+      ObjectCreatorFunc ret = (*ritr)->getObjectCreator(clz);
+      if (NULL!=ret) {
+        return ret;
+      }
     }
+    return NULL;
   }
-  return NULL;
 }
 
 void NativeObjectFactory::ReleaseObject(NativeObject * obj) {
@@ -194,30 +226,37 @@ void NativeObjectFactory::ReleaseObject(NativeObject * obj) {
 
 bool NativeObjectFactory::RegisterLibrary(const string & path, const string & name) {
   CheckInit();
-  NativeLibrary * library = new NativeLibrary(path, name);
-  bool ret = library->init();
-  if (!ret) {
-    delete library;
-    return false;
+  {
+    ScopeLock<Lock> autolocak(FactoryLock);
+    NativeLibrary * library = new NativeLibrary(path, name);
+    bool ret = library->init();
+    if (!ret) {
+      delete library;
+      return false;
+    }
+    Libraries.push_back(library);
+    return true;
   }
-  Libraries.push_back(library);
-  return true;
 }
 
 void NativeObjectFactory::SetDefaultClass(NativeObjectType type, const string & clz) {
+  ScopeLock<Lock> autolocak(FactoryLock);
   DefaultClasses[type] = clz;
 }
 
 NativeObject * NativeObjectFactory::CreateDefaultObject(NativeObjectType type) {
   CheckInit();
-  if (DefaultClasses.find(type) != DefaultClasses.end()) {
-    string clz = DefaultClasses[type];
-    return CreateObject(clz);
+  {
+    ScopeLock<Lock> autolocak(FactoryLock);
+    if (DefaultClasses.find(type) != DefaultClasses.end()) {
+      string clz = DefaultClasses[type];
+      return CreateObject(clz);
+    }
+    LOG("Default class for NativeObjectType %s not found",
+        NativeObjectTypeToString(type).c_str());
+    return NULL;
   }
-  LOG("Default class for NativeObjectType %s not found",
-      NativeObjectTypeToString(type).c_str());
-  return NULL;
 }
 
-}
+} // namespace NativeTask
 

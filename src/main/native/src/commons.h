@@ -39,8 +39,8 @@
 #include <algorithm>
 
 #include "primitives.h"
-#include "StringUtil.h"
 #include "NativeTask.h"
+#include "util/StringUtil.h"
 
 namespace NativeTask {
 

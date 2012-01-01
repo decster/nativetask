@@ -80,7 +80,7 @@ public class NativeTeraSort implements Tool {
     job.setOutputValueClass(Text.class);
     job.set("native.recordreader.class", "NativeTask.TeraRecordReader");
     job.set("native.recordwriter.class", "NativeTask.TeraRecordWriter");
-    job.set("native.partitioner.class", "NativeTask.TeraPartitioner");
+    job.set("native.partitioner.class", "NativeTask.TotalOrderPartitioner");
     writePartitionFile(job, partitionFile);
     DistributedCache.addCacheFile(partitionUri, job);
     DistributedCache.createSymlink(job);
@@ -90,10 +90,10 @@ public class NativeTeraSort implements Tool {
     LOG.info("done");
     return 0;
   }
-  
+
   static final String SAMPLE_SIZE = "terasort.partitions.sample";
 
-  private void writePartitionFile(JobConf conf, 
+  private void writePartitionFile(JobConf conf,
       Path partFile) throws IOException {
     TextInputFormat inFormat = new TextInputFormat();
     LongWritable key = new LongWritable();
@@ -108,7 +108,7 @@ public class NativeTeraSort implements Tool {
     ArrayList<Text> sampleArray = new ArrayList<Text>();
     // take N samples from different parts of the input
     for(int i=0; i < samples; ++i) {
-      RecordReader<LongWritable,Text> reader = 
+      RecordReader<LongWritable,Text> reader =
         inFormat.getRecordReader(splits[sampleStep * i], conf, null);
       while (reader.next(key, value)) {
         sampleArray.add(new Text(value.toString().substring(0, 10)));
@@ -124,7 +124,7 @@ public class NativeTeraSort implements Tool {
       outFs.delete(partFile, false);
     }
     int numRecords = sampleArray.size();
-    System.out.println("Making " + partitions + " from " + numRecords + 
+    System.out.println("Making " + partitions + " from " + numRecords +
                        " records");
     if (partitions > numRecords) {
       throw new IllegalArgumentException

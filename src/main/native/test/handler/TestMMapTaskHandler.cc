@@ -17,8 +17,8 @@
  */
 
 #include "commons.h"
-#include "MMapTaskHandler.h"
 #include "FileSystem.h"
+#include "handler/MMapTaskHandler.h"
 #include "lib/FileSplit.h"
 #include "Compressions.h"
 #include "test_commons.h"

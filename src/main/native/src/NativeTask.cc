@@ -17,10 +17,8 @@
  */
 
 #include "commons.h"
+#include "util/Hash.h"
 #include "NativeTask.h"
-#include "Hash.h"
-#include "EchoBatchHandler.h"
-#include "MCollectorOutputHandler.h"
 #include "NativeObjectFactory.h"
 
 namespace NativeTask {

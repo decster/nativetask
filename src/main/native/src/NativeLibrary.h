@@ -49,6 +49,6 @@ public:
 };
 
 
-}
+} // namespace NativeTask
 
 #endif /* NATIVELIBRARY_H_ */

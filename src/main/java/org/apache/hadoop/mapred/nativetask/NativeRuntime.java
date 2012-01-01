@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.nativetask.NativeUtils;
+import org.apache.hadoop.util.VersionInfo;
 
 /**
  * A factory for native object, also manages native runtime library
@@ -167,6 +168,8 @@ public class NativeRuntime {
         nativeConfigs.add(NativeUtils.toBytes(e.getValue()));
       }
     }
+    nativeConfigs.add(NativeUtils.toBytes("native.hadoop.version"));
+    nativeConfigs.add(NativeUtils.toBytes(VersionInfo.getVersion()));
     JNIConfigure(nativeConfigs.toArray(new byte[nativeConfigs.size()][]));
   }
 

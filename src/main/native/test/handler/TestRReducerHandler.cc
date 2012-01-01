@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
+#include "commons.h"
+#include "handler/RReducerHandler.h"
 #include "test_commons.h"
-#include "RReducerHandler.h"
 
 namespace NativeTask {
 

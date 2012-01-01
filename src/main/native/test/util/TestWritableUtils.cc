@@ -16,26 +16,33 @@
  * limitations under the License.
  */
 
-#include "Checksum.h"
+#include "util/WritableUtils.h"
 #include "test_commons.h"
 
-void TestChecksum(ChecksumType type, void * buff, uint32_t len) {
-  uint32_t chm = Checksum::init(type);
-  Checksum::update(type, chm, buff, len);
+void TestVLong(int64_t v) {
+  char buff[1024];
+  char buff2[1024];
+  uint32_t dsize = WritableUtils::GetVLongSize(v);
+  uint32_t wsize = (uint32_t)-1;
+  WritableUtils::WriteVLong(v, buff, wsize);
+  ASSERT_EQ(dsize, wsize);
+  memcpy(buff2, buff, wsize);
+  uint32_t rsize;
+  int64_t rv = WritableUtils::ReadVLong(buff2, rsize);
+  ASSERT_EQ(v, rv);
+  ASSERT_EQ(rsize, dsize);
 }
 
-TEST(Perf, CRC) {
-  uint32_t len = TestConfig.getInt("checksum.perf.size", 1024*1024*50);
-  int testTime = TestConfig.getInt("checksum.perf.time", 2);
-  char * buff = new char[len];
-  memset(buff, 1, len);
-  Timer timer;
-  for (int i=0;i<testTime;i++)
-    TestChecksum(CHECKSUM_CRC32, buff, len);
-  LOG("%s", timer.getSpeedM("CRC", len*testTime).c_str());
-  timer.reset();
-  for (int i=0;i<testTime;i++)
-    TestChecksum(CHECKSUM_CRC32C, buff, len);
-  LOG("%s", timer.getSpeedM("CRC32C", len*testTime).c_str());
-  delete [] buff;
+TEST(WritableUtils, VLong) {
+  int num = TestConfig.getInt("test.size", 3000);
+  int seed = TestConfig.getInt("test.seed", -1);
+  Random r(seed);
+  for (int i = 0; i < num; i++) {
+    uint64_t v = r.nextLog2(((uint64_t)-1)/2-3);
+    TestVLong(v);
+    TestVLong(-v);
+  }
 }
+
+
+

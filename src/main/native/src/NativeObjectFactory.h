@@ -67,6 +67,6 @@ public:
   static NativeObject * CreateDefaultObject(NativeObjectType type);
 };
 
-}
+} // namespace NativeTask
 
 #endif /* NATIVEOBJECTFACTORY_H_ */

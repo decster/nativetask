@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "SyncUtils.h"
+#include "util/SyncUtils.h"
 #include "test_commons.h"
 
 class TestThread : public Thread {

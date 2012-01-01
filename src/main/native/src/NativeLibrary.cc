@@ -80,5 +80,5 @@ ObjectCreatorFunc NativeLibrary::getObjectCreator(const string & clz) {
   return _getObjectCreatorFunc(clz);
 }
 
-}
+} // namespace NativeTask
 

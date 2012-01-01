@@ -21,10 +21,10 @@
 
 #include "gtest/gtest.h"
 #include "commons.h"
-#include "Random.h"
+#include "util/Random.h"
+#include "util/Timer.h"
 #include "Buffers.h"
 #include "BufferStream.h"
-#include "Timer.h"
 
 using std::pair;
 using std::vector;

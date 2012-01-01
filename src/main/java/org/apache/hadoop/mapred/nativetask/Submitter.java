@@ -19,10 +19,6 @@
 package org.apache.hadoop.mapred.nativetask;
 
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.StringTokenizer;
 
 import org.apache.commons.cli.BasicParser;
@@ -36,7 +32,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -142,7 +137,7 @@ public class Submitter extends Configured implements Tool  {
       System.out.println("bin/hadoop -jar nativetask.jar");
       System.out.println("  [-input <path>]         // Input directory");
       System.out.println("  [-output <path>]        // Output directory");
-      System.out.println("  [-jar <jar file>        // jar filename");
+      System.out.println("  [-lib <name=path>,..    // user native libraries");
       System.out.println("  [-inputformat <class>]  // InputFormat class");
       System.out.println("  [-outputformat <class>] // OutputFormat class");
       System.out.println("  [-mapper <class|JAVA>]  // native Mapper class, JAVA if you want java IdentityMapper");
@@ -157,8 +152,6 @@ public class Submitter extends Configured implements Tool  {
       System.out.println("                          // default NativeTask.LineRecordWriter");
       System.out.println("  [-maps <num>]           // number of maps, just a hint");
       System.out.println("  [-reduces <num>]        // number of reduces, default 1");
-      System.out.println("  [-version <1:2>]        // underlying hadoop version used: 1 for (1.0, 0.20) 2 for (trunk, 0.23)");
-      System.out.println("                          // default 1(1.0, 0.20)");
       System.out.println("  [-jobconf <n1=v1>[,n2=v2]...] // Add or override a JobConf property.");
       System.out.println();
       GenericOptionsParser.printGenericCommandUsage(System.out);
@@ -184,9 +177,7 @@ public class Submitter extends Configured implements Tool  {
 
     cli.addOption("input", true, "input path to the maps", "path");
     cli.addOption("output", true, "output path from the reduces", "path");
-
-    cli.addOption("jar", false, "job jar file", "path");
-
+    cli.addOption("lib", false, "extra native library used", "path");
     cli.addOption("inputformat", false, "java classname of InputFormat", "class");
     cli.addOption("outputformat", false, "java classname of OutputFormat", "class");
     cli.addOption("mapper", false, "native Mapper class", "class");
@@ -197,7 +188,6 @@ public class Submitter extends Configured implements Tool  {
     cli.addOption("writer", false, "native RecordWriter class", "class");
     cli.addOption("maps", false, "number of maps(just hint)", "num");
     cli.addOption("reduces", false, "number of reduces", "num");
-    cli.addOption("version", false, "hadoop version used", "1|2");
     cli.addOption("jobconf", false,
         "\"n1=v1,n2=v2,..\" (Deprecated) Optional. Add or override a JobConf property.",
         "key=val");
@@ -212,7 +202,6 @@ public class Submitter extends Configured implements Tool  {
 
       CommandLine results =
         parser.parse(cli.options, genericParser.getRemainingArgs());
-
 
       if (results.hasOption("input")) {
         FileInputFormat.setInputPaths(job,
@@ -248,13 +237,8 @@ public class Submitter extends Configured implements Tool  {
         int numReduceTasks = Integer.parseInt(results.getOptionValue("reduces"));
         job.setNumReduceTasks(numReduceTasks);
       }
-      if (results.hasOption("version")) {
-        String version = results.getOptionValue("version");
-        int versionNum = version.equals("2") ? 2 : 1;
-        job.setInt("native.hadoop.version", versionNum);
-      }
-      if (results.hasOption("jar")) {
-        job.setJar((String) results.getOptionValue("jar"));
+      if (results.hasOption("lib")) {
+        job.set("native.class.library", results.getOptionValue("lib"));
       }
       if (results.hasOption("inputformat")) {
         job.setInputFormat(getClass(results, "inputformat", job,
@@ -274,24 +258,6 @@ public class Submitter extends Configured implements Tool  {
           job.set(keyValSplit[0], keyValSplit[1]);
         }
       }
-      // if they gave us a jar file, include it into the class path
-      String jarFile = job.getJar();
-      if (jarFile != null) {
-        final URL[] urls = new URL[]{ FileSystem.getLocal(job).
-            pathToFile(new Path(jarFile)).toURL()};
-        //FindBugs complains that creating a URLClassLoader should be
-        //in a doPrivileged() block.
-        ClassLoader loader =
-          AccessController.doPrivileged(
-              new PrivilegedAction<ClassLoader>() {
-                public ClassLoader run() {
-                  return new URLClassLoader(urls);
-                }
-              }
-            );
-        job.setClassLoader(loader);
-      }
-
       runJob(job);
       return 0;
     } catch (ParseException pe) {

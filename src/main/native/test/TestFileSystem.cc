@@ -17,7 +17,6 @@
  */
 
 
-#include <zlib.h>
 #include "FileSystem.h"
 #include "test_commons.h"
 

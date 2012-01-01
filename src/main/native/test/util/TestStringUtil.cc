@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "StringUtil.h"
+#include "util/StringUtil.h"
 #include "test_commons.h"
 
 TEST(StringUtil, Convertion) {

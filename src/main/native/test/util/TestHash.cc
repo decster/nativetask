@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "Hash.h"
+#include "util/Hash.h"
 #include "test_commons.h"
 
 static uint64_t test_length(int64_t len, size_t size, size_t loopTime) {
