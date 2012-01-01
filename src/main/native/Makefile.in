@@ -298,9 +298,8 @@ ACLOCAL_AMFLAGS = -I m4
 @PLATFORM_IS_MACOS_TRUE@PLATFORM_LDFLAGS = -framework JavaVM
 
 # primatives configs 
-PRFLAGS = -DSIMPLE_MEMCPY        
-#-DCHECKSUM_CRC32C             
-#-DSPILLRECORD_CHECKSUM_UINT   
+PRFLAGS = -DSIMPLE_MEMCPY 
+#-DSPILLRECORD_CHECKSUM_UINT
 AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl -lz $(PLATFORM_LDFLAGS)
 AM_CFLAGS = $(PRFLAGS) $(JNI_INCLUDE) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src -I$(top_srcdir)/src/util
 COMMONSOURCES = \

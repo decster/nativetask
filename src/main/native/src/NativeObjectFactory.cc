@@ -18,10 +18,10 @@
 
 #include <signal.h>
 #include "commons.h"
-#include "SyncUtils.h"
 #include "NativeTask.h"
 #include "NativeObjectFactory.h"
 #include "NativeLibrary.h"
+#include "util/SyncUtils.h"
 #include "handler/BatchHandler.h"
 #include "handler/EchoBatchHandler.h"
 #include "handler/MCollectorOutputHandler.h"
@@ -208,7 +208,6 @@ NativeObject * NativeObjectFactory::CreateObject(const string & clz) {
 ObjectCreatorFunc NativeObjectFactory::GetObjectCreator(const string & clz) {
   CheckInit();
   {
-    ScopeLock<Lock> autolocak(FactoryLock);
     for (vector<NativeLibrary*>::reverse_iterator ritr = Libraries.rbegin();
         ritr != Libraries.rend(); ritr++) {
       ObjectCreatorFunc ret = (*ritr)->getObjectCreator(clz);
@@ -227,7 +226,6 @@ void NativeObjectFactory::ReleaseObject(NativeObject * obj) {
 bool NativeObjectFactory::RegisterLibrary(const string & path, const string & name) {
   CheckInit();
   {
-    ScopeLock<Lock> autolocak(FactoryLock);
     NativeLibrary * library = new NativeLibrary(path, name);
     bool ret = library->init();
     if (!ret) {
@@ -239,15 +237,16 @@ bool NativeObjectFactory::RegisterLibrary(const string & path, const string & na
   }
 }
 
+static Lock DefaultClassesLock;
+
 void NativeObjectFactory::SetDefaultClass(NativeObjectType type, const string & clz) {
-  ScopeLock<Lock> autolocak(FactoryLock);
+  ScopeLock<Lock> autolocak(DefaultClassesLock);
   DefaultClasses[type] = clz;
 }
 
 NativeObject * NativeObjectFactory::CreateDefaultObject(NativeObjectType type) {
   CheckInit();
   {
-    ScopeLock<Lock> autolocak(FactoryLock);
     if (DefaultClasses.find(type) != DefaultClasses.end()) {
       string clz = DefaultClasses[type];
       return CreateObject(clz);

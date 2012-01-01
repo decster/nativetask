@@ -1,14 +1,14 @@
 TODOs:
 
-SequenceFile reader
-Terasort TotalOrderPartitioner
 input progress
 Counters
 job submitter
 add example 
+Terasort TotalOrderPartitioner
 add google sparse hash
 add test for partition bucket combiner
 support parallel sort & compression
+SequenceFile reader
 
 reimpl simple_memcpy & fmemcmp & fmemequ
 mvn package
