@@ -44,6 +44,12 @@ private:
   ObjectCreatorFunc _combinerCreator;
   MapOutputCollector * _moc;
   RecordWriter * _writer;
+
+  // counters
+  Counter * _mapInputRecords;
+  Counter * _mapInputBytes;
+  Counter * _mapOutputRecords;
+  Counter * _mapOutputBytes;
 public:
   MMapTaskHandler();
   virtual ~MMapTaskHandler();
@@ -57,6 +63,7 @@ public:
   virtual void collect(const void * key, uint32_t keyLen, const void * value,
       uint32_t valueLen);
 private:
+  void initCounters();
   void close();
   void reset();
 };

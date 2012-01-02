@@ -29,8 +29,15 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DataInputBuffer;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Task.Counter;
+import org.apache.hadoop.mapred.TaskDelegation.DelegateReporter;
 import org.apache.hadoop.mapred.nativetask.NativeUtils;
 import org.apache.hadoop.util.VersionInfo;
 
@@ -225,8 +232,110 @@ public class NativeRuntime {
     JNIReleaseNativeObject(addr);
   }
 
-  public synchronized static void updateCounters(Counters counters) {
+  public static class StatusUpdater implements Runnable {
+    private Thread updaterThread;
+    private DelegateReporter reporter;
+    private long interval;
 
+    public StatusUpdater(DelegateReporter reporter) {
+      this(reporter, 1000);
+    }
+
+    public StatusUpdater(DelegateReporter reporter, long interval) {
+      this.reporter = reporter;
+      this.interval = interval;
+    }
+
+    @Override
+    public void run() {
+      while (true) {
+        try {
+          Thread.sleep(interval);
+        } 
+        catch (InterruptedException e) {
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("StatusUpdater thread exiting " +
+              "since it got interrupted");
+          }
+          break;
+        }
+        try {
+          updateStatus(reporter);
+        } catch (IOException e) {
+          LOG.warn("Update native status got exception", e);
+          reporter.setStatus(e.toString());
+          break;
+        }
+      }
+    }
+
+    protected void initUsedCounters() {
+      reporter.getCounter(Counter.MAP_INPUT_RECORDS);
+      reporter.getCounter(Counter.MAP_OUTPUT_RECORDS);
+      reporter.getCounter(Counter.MAP_INPUT_BYTES);
+      reporter.getCounter(Counter.MAP_OUTPUT_BYTES);
+      reporter.getCounter(Counter.MAP_OUTPUT_MATERIALIZED_BYTES);
+      reporter.getCounter(Counter.COMBINE_INPUT_RECORDS);
+      reporter.getCounter(Counter.COMBINE_OUTPUT_RECORDS);
+      reporter.getCounter(Counter.REDUCE_INPUT_RECORDS);
+      reporter.getCounter(Counter.REDUCE_OUTPUT_RECORDS);
+      reporter.getCounter(Counter.REDUCE_INPUT_GROUPS);
+    }
+
+    public synchronized void startUpdater() {
+      if (updaterThread == null) {
+        // init counters used by native side, 
+        // so they will have correct display name
+        initUsedCounters();
+        updaterThread = new Thread(this);
+        updaterThread.setDaemon(true);
+        updaterThread.start();
+      }
+    }
+
+    public synchronized void stopUpdater() throws InterruptedException {
+      if (updaterThread != null) {
+        updaterThread.interrupt();
+        updaterThread.join();
+      }
+    }
+  }
+
+  public static void updateStatus(DelegateReporter reporter)
+      throws IOException {
+    assertNativeLibraryLoaded();
+    synchronized (reporter) {
+      // Encoding: 
+      // progress:float
+      // status:Text
+      // Counter number
+      // Counters[group:Text, name:Text, incrCount:Long]
+      byte [] statusBytes = JNIUpdateStatus();
+      DataInputBuffer ib = new DataInputBuffer();
+      ib.reset(statusBytes, statusBytes.length);
+      FloatWritable progress = new FloatWritable();
+      progress.readFields(ib);
+      reporter.setProgress(progress.get());
+      Text status = new Text();
+      status.readFields(ib);
+      if (status.getLength() > 0) {
+        reporter.setStatus(status.toString());
+      }
+      IntWritable numCounters = new IntWritable();
+      numCounters.readFields(ib);
+      if (numCounters.get()==0) {
+        return;
+      }
+      Text group = new Text();
+      Text name = new Text();
+      LongWritable amount = new LongWritable();
+      for (int i = 0; i < numCounters.get(); i++) {
+        group.readFields(ib);
+        name.readFields(ib);
+        amount.readFields(ib);
+        reporter.incrCounter(group.toString(), name.toString(), amount.get());
+      }
+    }
   }
 
   private native static void JNIRelease();
@@ -235,6 +344,6 @@ public class NativeRuntime {
   private native static long JNICreateDefaultNativeObject(byte [] type);
   private native static void JNIReleaseNativeObject(long addr);
   private native static int  JNIRegisterModule(byte [] path, byte [] name);
-  private native static byte [] JNIGetCounters();
+  private native static byte [] JNIUpdateStatus();
 }
 

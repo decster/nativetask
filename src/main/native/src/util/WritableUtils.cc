@@ -184,9 +184,17 @@ int32_t WritableUtils::ReadInt(InputStream * stream) {
 int16_t WritableUtils::ReadShort(InputStream * stream) {
   uint16_t ret;
   if (stream->readFully(&ret, 2)!=2) {
-    THROW_EXCEPTION(IOException, "ReadInt reach EOF");
+    THROW_EXCEPTION(IOException, "ReadShort reach EOF");
   }
   return (int16_t) ((ret >> 8) | (ret << 8));
+}
+
+float WritableUtils::ReadFloat(InputStream * stream) {
+  float ret;
+  if (stream->readFully(&ret, 4)!=4) {
+    THROW_EXCEPTION(IOException, "ReadFloat reach EOF");
+  }
+  return ret;
 }
 
 string WritableUtils::ReadText(InputStream * stream) {
@@ -237,6 +245,10 @@ void WritableUtils::WriteShort(OutputStream * stream, int16_t v) {
   uint16_t be = v;
   be = ((be>>8) | (be<<8));
   stream->write(&be, 2);
+}
+
+void WritableUtils::WriteFloat(OutputStream * stream, float v) {
+  stream->write(&v, 4);
 }
 
 void WritableUtils::WriteText(OutputStream * stream, const string & v) {

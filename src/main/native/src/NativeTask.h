@@ -227,6 +227,8 @@ public:
 
 class Collector {
 public:
+  virtual ~Collector() {}
+
   virtual void collect(const void * key, uint32_t keyLen,
                        const void * value, uint32_t valueLen) {
   }
@@ -238,9 +240,16 @@ public:
   }
 };
 
+class Progress {
+public:
+  virtual ~Progress() {}
+  virtual float getProgress() = 0;
+};
+
 class Counter {
 private:
   // not thread safe
+  // TODO: use atomic
   volatile uint64_t _count;
 
   string _group;
@@ -285,7 +294,8 @@ public:
   virtual bool next(Buffer & key, Buffer & value) = 0;
 };
 
-class RecordReader : public KVIterator, public Configurable {
+class RecordReader:
+  public KVIterator, public Configurable, public Progress {
 public:
   virtual NativeObjectType type() {
     return RecordReaderType;

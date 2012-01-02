@@ -29,10 +29,11 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskDelegation;
+import org.apache.hadoop.mapred.TaskDelegation.DelegateReporter;
 import org.apache.hadoop.mapred.TaskUmbilicalProtocol;
+import org.apache.hadoop.mapred.nativetask.NativeRuntime.StatusUpdater;
 import org.apache.hadoop.mapred.nativetask.NativeUtils.NativeDeserializer;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -42,12 +43,15 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
 
   public NativeMapTaskDelegator() {
   }
-  
+
   @Override
   @SuppressWarnings("unchecked")
   public void run(TaskAttemptID taskAttemptID, JobConf job,
-      TaskUmbilicalProtocol umbilical, Reporter reporter, Object split)
+      TaskUmbilicalProtocol umbilical, DelegateReporter reporter, Object split)
       throws IOException, InterruptedException {
+    long updateInterval = job.getLong("native.update.interval", 1000);
+    StatusUpdater updater = new StatusUpdater(reporter, updateInterval);
+    updater.startUpdater();
     NativeRuntime.configure(job);
 
     if (job.get("native.recordreader.class") != null) {
@@ -60,58 +64,61 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
       } catch (Exception e) {
         throw new IOException(e);
       }
-      return;
-    }
-
-    RecordReader<INKEY,INVALUE> rawIn =
-      job.getInputFormat().getRecordReader((InputSplit)split, job, reporter);
-
-    INKEY key = rawIn.createKey();
-    INVALUE value = rawIn.createValue();
-    Class<INKEY> ikeyClass = (Class<INKEY>)key.getClass();
-    Class<INVALUE> ivalueClass = (Class<INVALUE>)value.getClass();
-
-    int bufferCapacity = job.getInt(
-        NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB,
-        NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB_DEFAULT) * 1024;
-
-    int numReduceTasks = job.getNumReduceTasks();
-    LOG.info("numReduceTasks: " + numReduceTasks);
-    if (numReduceTasks > 0) {
-      MapperOutputProcessor<INKEY, INVALUE> processor = 
-          new MapperOutputProcessor<INKEY, INVALUE>(
-              bufferCapacity, ikeyClass, ivalueClass, job, taskAttemptID);
-      try {
-        while (rawIn.next(key, value)) {
-          processor.process(key, value);
-        }
-      } finally {
-        processor.close();
-      }
     } else {
-      String finalName = OutputPathUtil.getOutputName(taskAttemptID.getTaskID().getId());
-      FileSystem fs = FileSystem.get(job);
-      RecordWriter<OUTKEY, OUTVALUE> writer = job.getOutputFormat()
-          .getRecordWriter(fs, job, finalName, reporter);
-      Class<OUTKEY> okeyClass = (Class<OUTKEY>) job.getOutputKeyClass();
-      Class<OUTVALUE> ovalueClass = (Class<OUTVALUE>) job.getOutputValueClass();
-      MapperProcessor<INKEY, INVALUE, OUTKEY, OUTVALUE> processor = 
-          new MapperProcessor<INKEY, INVALUE, OUTKEY, OUTVALUE>(
-              bufferCapacity, bufferCapacity, ikeyClass, ivalueClass, okeyClass,
-              ovalueClass, job, writer);
-      try {
-        while (rawIn.next(key, value)) {
-          processor.process(key, value);
+      RecordReader<INKEY,INVALUE> rawIn =
+        job.getInputFormat().getRecordReader((InputSplit)split, job, reporter);
+
+      INKEY key = rawIn.createKey();
+      INVALUE value = rawIn.createValue();
+      Class<INKEY> ikeyClass = (Class<INKEY>)key.getClass();
+      Class<INVALUE> ivalueClass = (Class<INVALUE>)value.getClass();
+
+      int bufferCapacity = job.getInt(
+          NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB,
+          NativeTaskConfig.NATIVE_PROCESSOR_BUFFER_KB_DEFAULT) * 1024;
+
+      int numReduceTasks = job.getNumReduceTasks();
+      LOG.info("numReduceTasks: " + numReduceTasks);
+      if (numReduceTasks > 0) {
+        MapperOutputProcessor<INKEY, INVALUE> processor =
+            new MapperOutputProcessor<INKEY, INVALUE>(
+                bufferCapacity, ikeyClass, ivalueClass, job, taskAttemptID);
+        try {
+          while (rawIn.next(key, value)) {
+            processor.process(key, value);
+          }
+        } finally {
+          processor.close();
         }
-        writer.close(reporter);
-      } finally {
-        processor.close();
+      } else {
+        String finalName = OutputPathUtil.getOutputName(taskAttemptID.getTaskID().getId());
+        FileSystem fs = FileSystem.get(job);
+        RecordWriter<OUTKEY, OUTVALUE> writer = job.getOutputFormat()
+            .getRecordWriter(fs, job, finalName, reporter);
+        Class<OUTKEY> okeyClass = (Class<OUTKEY>) job.getOutputKeyClass();
+        Class<OUTVALUE> ovalueClass = (Class<OUTVALUE>) job.getOutputValueClass();
+        MapperProcessor<INKEY, INVALUE, OUTKEY, OUTVALUE> processor =
+            new MapperProcessor<INKEY, INVALUE, OUTKEY, OUTVALUE>(
+                bufferCapacity, bufferCapacity, ikeyClass, ivalueClass, okeyClass,
+                ovalueClass, job, writer);
+        try {
+          while (rawIn.next(key, value)) {
+            processor.process(key, value);
+          }
+          writer.close(reporter);
+        } finally {
+          processor.close();
+        }
       }
     }
+    
+    updater.stopUpdater();
+    // final update
+    NativeRuntime.updateStatus(reporter);
   }
 
   /**
-   * Mapper processor with partitioner, output collector, and maybe combiner 
+   * Mapper processor with partitioner, output collector, and maybe combiner
    */
   public static class MapTaskProcessor
       extends NativeBatchProcessor {
@@ -149,7 +156,7 @@ public class NativeMapTaskDelegator<INKEY, INVALUE, OUTKEY, OUTVALUE> implements
   }
 
   /**
-   * Mapper processor with partitioner, output collector, and maybe combiner 
+   * Mapper processor with partitioner, output collector, and maybe combiner
    */
   public static class MapperOutputProcessor<IK, IV>
       extends KeyValueBatchProcessor<IK, IV> {

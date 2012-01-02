@@ -17,7 +17,7 @@
  */
 
 #include "mempool.h"
-#include "DualPivotQuickSort.h"
+#include "util/DualPivotQuickSort.h"
 
 namespace NativeTask {
 
@@ -85,7 +85,7 @@ void MemoryBlockPool::sort(std::vector<uint32_t> & kvpairs_offsets, SortType typ
 void MemoryBlockPool::dump(FILE *out)
 {
   uint32_t totalused=0;
-  for (size_t i=0;i<_blocks.size();i++) {
+  for (size_t i = 0; i < _blocks.size(); i++) {
     //fprintf(out, "%s\n", _blocks[i].str().c_str());
     totalused += _blocks[i].used();
   }

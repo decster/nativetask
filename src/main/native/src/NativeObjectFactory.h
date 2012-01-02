@@ -46,6 +46,9 @@ private:
   static vector<NativeLibrary *> Libraries;
   static map<NativeObjectType, string> DefaultClasses;
   static Config * GlobalConfig;
+  static float LastProgress;
+  static Progress * TaskProgress;
+  static string LastStatus;
   static set<Counter *> CounterSet;
   static vector<Counter *> Counters;
   static vector<uint64_t> CounterLastUpdateValues;
@@ -56,8 +59,11 @@ public:
   static void CheckInit();
   static Config & GetConfig();
   static Config * GetConfigPtr();
+  static void SetTaskProgressSource(Progress * progress);
+  static float GetTaskProgress();
+  static void SetTaskStatus(const string & status);
+  static void GetTaskStatusUpdate(string & statusData);
   static Counter * GetCounter(const string & group, const string & name);
-  static const vector<Counter *> GetAllCounters();
   static void RegisterClass(const string & clz, ObjectCreatorFunc func);
   static NativeObject * CreateObject(const string & clz);
   static ObjectCreatorFunc GetObjectCreator(const string & clz);

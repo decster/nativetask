@@ -103,10 +103,10 @@ index 969ddf1..231726d 100644
                      keyClass, valueClass);
 diff --git a/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/TaskDelegation.java b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/TaskDelegation.java
 new file mode 100644
-index 0000000..16cafbd
+index 0000000..e3c8e87
 --- /dev/null
 +++ b/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/TaskDelegation.java
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,145 @@
 +/**
 + * Licensed to the Apache Software Foundation (ASF) under one
 + * or more contributor license agreements.  See the NOTICE file
@@ -131,13 +131,56 @@ index 0000000..16cafbd
 +import java.lang.reflect.Constructor;
 +import java.lang.reflect.Method;
 +
++import org.apache.hadoop.mapred.Counters.Counter;
 +import org.apache.hadoop.mapred.Task.TaskReporter;
 +import org.apache.hadoop.util.ReflectionUtils;
 +
 +public class TaskDelegation {
++  /**
++   * Add setProgress interface, cause Reporter don't have this,
++   * and TaskReporter is protected
++   */
++  public static class DelegateReporter implements Reporter {
++    private TaskReporter reporter;
++    public DelegateReporter(TaskReporter reporter) {
++      this.reporter = reporter;
++    }
++    @Override
++    public void setStatus(String status) {
++      reporter.setStatus(status);
++    }
++    @Override
++    public void progress() {
++      reporter.progress();
++    }
++    @Override
++    public InputSplit getInputSplit() throws UnsupportedOperationException {
++      return reporter.getInputSplit();
++    }
++    @Override
++    public Counter getCounter(Enum<?> name) {
++      return reporter.getCounter(name);
++    }
++    @Override
++    public Counter getCounter(String group, String name) {
++      return reporter.getCounter(group, name);
++    }
++    @Override
++    public void incrCounter(Enum<?> key, long amount) {
++      reporter.incrCounter(key, amount);
++    }
++    @Override
++    public void incrCounter(String group, String counter, long amount) {
++      reporter.incrCounter(group, counter, amount);
++    }
++    public void setProgress(float progress) {
++      reporter.setProgress(progress);
++    }
++  }
++  
 +  public static interface MapTaskDelegator {
 +    public void run(TaskAttemptID taskID, JobConf job,
-+        TaskUmbilicalProtocol umbilical, Reporter reporter, Object split)
++        TaskUmbilicalProtocol umbilical, DelegateReporter reporter, Object split)
 +        throws IOException, InterruptedException;
 +  }
 +
@@ -153,12 +196,13 @@ index 0000000..16cafbd
 +    Class<? extends MapTaskDelegator> delegatorClass = (Class<? extends MapTaskDelegator>) 
 +        job.getClass("mapreduce.map.task.delegator.class", null);
 +    MapTaskDelegator delegator = ReflectionUtils.newInstance(delegatorClass, job);
-+    delegator.run(mapTask.getTaskID(), job, umbilical, reporter, split);
++    delegator.run(mapTask.getTaskID(), job, umbilical, new DelegateReporter(
++        reporter), split);
 +  }
 +
 +  public static interface ReduceTaskDelegator {
 +    public void run(TaskAttemptID taskID, JobConf job,
-+        TaskUmbilicalProtocol umbilical, Reporter reporter,
++        TaskUmbilicalProtocol umbilical, DelegateReporter reporter,
 +        RawKeyValueIterator rIter) 
 +        throws IOException, InterruptedException;
 +  }
@@ -175,8 +219,10 @@ index 0000000..16cafbd
 +    Class<? extends ReduceTaskDelegator> delegatorClass = 
 +        (Class<? extends ReduceTaskDelegator>)job.getClass(
 +            "mapreduce.reduce.task.delegator.class", null);
-+    ReduceTaskDelegator delegator = ReflectionUtils.newInstance(delegatorClass, job);
-+    delegator.run(reduceTask.getTaskID(), job, umbilical, reporter, rIter);
++    ReduceTaskDelegator delegator = ReflectionUtils
++        .newInstance(delegatorClass, job);
++    delegator.run(reduceTask.getTaskID(), job, umbilical, new DelegateReporter(
++        reporter), rIter);
 +  }
 +
 +  public interface MapOutputCollectorDelegator<K, V> extends
@@ -184,8 +230,9 @@ index 0000000..16cafbd
 +  }
 +
 +  @SuppressWarnings("unchecked")
-+  public static <K, V> MapTask.MapOutputCollector<K, V> tryGetDelegateMapOutputCollector(
-+      JobConf job, TaskAttemptID taskId, MapOutputFile mapOutputFile) {
++  public static <K, V> MapTask.MapOutputCollector<K, V> 
++      tryGetDelegateMapOutputCollector(JobConf job, TaskAttemptID taskId,
++          MapOutputFile mapOutputFile) {
 +    try {
 +      Class<?> cls = Class.forName(
 +          "org.apache.hadoop.mapred.NativeMapOutputCollector");

@@ -21,7 +21,9 @@
 #include "NativeTask.h"
 #include "NativeObjectFactory.h"
 #include "NativeLibrary.h"
+#include "BufferStream.h"
 #include "util/SyncUtils.h"
+#include "util/WritableUtils.h"
 #include "handler/BatchHandler.h"
 #include "handler/EchoBatchHandler.h"
 #include "handler/MCollectorOutputHandler.h"
@@ -88,6 +90,9 @@ static Config G_CONFIG;
 vector<NativeLibrary *> NativeObjectFactory::Libraries;
 map<NativeObjectType, string> NativeObjectFactory::DefaultClasses;
 Config * NativeObjectFactory::GlobalConfig = &G_CONFIG;
+float NativeObjectFactory::LastProgress = 0;
+Progress * NativeObjectFactory::TaskProgress = NULL;
+string NativeObjectFactory::LastStatus;
 set<Counter *> NativeObjectFactory::CounterSet;
 vector<Counter *> NativeObjectFactory::Counters;
 vector<uint64_t> NativeObjectFactory::CounterLastUpdateValues;
@@ -178,7 +183,52 @@ Config * NativeObjectFactory::GetConfigPtr() {
   return GlobalConfig;
 }
 
+void NativeObjectFactory::SetTaskProgressSource(Progress * progress) {
+  TaskProgress = progress;
+}
+
+float NativeObjectFactory::GetTaskProgress() {
+  if (TaskProgress != NULL) {
+    LastProgress = TaskProgress->getProgress();
+  }
+  return LastProgress;
+}
+
+void NativeObjectFactory::SetTaskStatus(const string & status) {
+  LastStatus = status;
+}
+
+static Lock CountersLock;
+
+void NativeObjectFactory::GetTaskStatusUpdate(string & statusData) {
+  // Encoding:
+  // progress:float
+  // status:Text
+  // Counter number
+  // Counters[group:Text, name:Text, incrCount:Long]
+  OutputStringStream os(statusData);
+  float progress = GetTaskProgress();
+  os.write(&progress, sizeof(progress));
+  WritableUtils::WriteText(&os, LastStatus);
+  LastStatus.clear();
+  {
+    ScopeLock<Lock> AutoLock(CountersLock);
+    uint32_t numCounter = (uint32_t)Counters.size();
+    WritableUtils::WriteInt(&os, numCounter);
+    for (size_t i = 0; i < numCounter; i++) {
+      Counter * counter = Counters[i];
+      uint64_t newCount = counter->get();
+      uint64_t incr = newCount - CounterLastUpdateValues[i];
+      CounterLastUpdateValues[i] = newCount;
+      WritableUtils::WriteText(&os, counter->group());
+      WritableUtils::WriteText(&os, counter->name());
+      WritableUtils::WriteLong(&os, incr);
+    }
+  }
+}
+
 Counter * NativeObjectFactory::GetCounter(const string & group, const string & name) {
+  ScopeLock<Lock> AutoLock(CountersLock);
   Counter tmpCounter(group, name);
   set<Counter *>::iterator itr =
       CounterSet.find(&tmpCounter);
@@ -190,10 +240,6 @@ Counter * NativeObjectFactory::GetCounter(const string & group, const string & n
   CounterLastUpdateValues.push_back(0);
   CounterSet.insert(ret);
   return ret;
-}
-
-const vector<Counter *> NativeObjectFactory::GetAllCounters() {
-  return Counters;
 }
 
 void NativeObjectFactory::RegisterClass(const string & clz, ObjectCreatorFunc func) {

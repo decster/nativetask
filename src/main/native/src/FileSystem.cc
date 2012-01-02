@@ -22,6 +22,8 @@
 #include "commons.h"
 #include "jniutils.h"
 #include "NativeTask.h"
+#include "TaskCounters.h"
+#include "NativeObjectFactory.h"
 #include "Path.h"
 #include "FileSystem.h"
 
@@ -54,6 +56,9 @@ FileInputStream::FileInputStream(const string & path) {
     _fd = -1;
     THROW_EXCEPTION_EX(IOException, "Can't open raw file: [%s]", path.c_str());
   }
+  _bytesRead = NativeObjectFactory::GetCounter(
+      TaskCounters::FILESYSTEM_COUNTER_GROUP,
+      TaskCounters::FILE_BYTES_READ);
 }
 
 FileInputStream::~FileInputStream() {
@@ -69,7 +74,11 @@ uint64_t FileInputStream::tell() {
 }
 
 int32_t FileInputStream::read(void * buff, uint32_t length) {
-  return ::read(_fd, buff, length);
+  int32_t ret = ::read(_fd, buff, length);
+  if (ret>0) {
+    _bytesRead->increase(ret);
+  }
+  return ret;
 }
 
 void FileInputStream::close() {
@@ -91,6 +100,9 @@ FileOutputStream::FileOutputStream(const string & path, bool overwite) {
     _fd = -1;
     THROW_EXCEPTION_EX(IOException, "Open raw file failed: [%s]", path.c_str());
   }
+  _bytesWrite = NativeObjectFactory::GetCounter(
+      TaskCounters::FILESYSTEM_COUNTER_GROUP,
+      TaskCounters::FILE_BYTES_WRITTEN);
 }
 
 FileOutputStream::~FileOutputStream() {
@@ -105,6 +117,7 @@ void FileOutputStream::write(const void * buff, uint32_t length) {
   if (::write(_fd, buff, length) < length) {
     THROW_EXCEPTION(IOException, "::write error");
   }
+  _bytesWrite->increase(length);
 }
 
 void FileOutputStream::flush() {

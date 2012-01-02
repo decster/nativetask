@@ -103,6 +103,8 @@ public:
 
   static int16_t ReadShort(InputStream * stream);
 
+  static float ReadFloat(InputStream * stream);
+
   static string ReadText(InputStream * stream);
 
   static string ReadBytes(InputStream * stream);
@@ -116,6 +118,8 @@ public:
   static void WriteInt(OutputStream * stream, int32_t v);
 
   static void WriteShort(OutputStream * stream, int16_t v);
+
+  static void WriteFloat(OutputStream * stream, float v);
 
   static void WriteText(OutputStream * stream, const string & v);
 

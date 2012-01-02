@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "TaskCounters.h"
 #include "NativeObjectFactory.h"
 #include "RReducerHandler.h"
 
@@ -49,13 +50,46 @@ void RReducerHandler::reset() {
   _reducer = NULL;
   delete _folder;
   _folder = NULL;
+  delete _collector;
+  _collector = NULL;
   delete _writer;
   _writer = NULL;
   delete _KVBuffer;
   _KVBuffer = NULL;
 }
 
+void RReducerHandler::initCounters() {
+   _reduceInputRecords = NativeObjectFactory::GetCounter(
+       TaskCounters::TASK_COUNTER_GROUP,
+       TaskCounters::REDUCE_INPUT_RECORDS);
+   _reduceOutputRecords = NativeObjectFactory::GetCounter(
+       TaskCounters::TASK_COUNTER_GROUP,
+       TaskCounters::REDUCE_OUTPUT_RECORDS);
+   _reduceInputGroups = NativeObjectFactory::GetCounter(
+       TaskCounters::TASK_COUNTER_GROUP,
+       TaskCounters::REDUCE_INPUT_GROUPS);
+}
+
+class TrackingCollector : public Collector {
+protected:
+  Collector * _collector;
+  Counter * _counter;
+public:
+  TrackingCollector(Collector * collector, Counter * counter) :
+    _collector(collector),
+    _counter(counter) {
+  }
+
+  virtual void collect(const void * key, uint32_t keyLen,
+                       const void * value, uint32_t valueLen) {
+    _counter->increase();
+    _collector->collect(key, keyLen, value, valueLen);
+  }
+};
+
 void RReducerHandler::configure(Config & config) {
+  initCounters();
+
   // writer
   const char * writerClass = config.get("native.recordwriter.class");
   if (NULL != writerClass) {
@@ -66,10 +100,10 @@ void RReducerHandler::configure(Config & config) {
     _writer->configure(config);
   }
 
-  Collector * collector = _writer != NULL
-      ? (Collector*) _writer
-      : (Collector*) this;
-
+  _collector = new TrackingCollector(_writer != NULL
+                                         ? (Collector*) _writer
+                                         : (Collector*) this,
+                                     _reduceOutputRecords);
   // reducer
   const char * reducerClass = config.get("native.reducer.class");
   if (NULL != reducerClass) {
@@ -81,15 +115,15 @@ void RReducerHandler::configure(Config & config) {
     switch (_reducerType) {
     case ReducerType:
       _reducer = (Reducer*)obj;
-      _reducer->setCollector(collector);
+      _reducer->setCollector(_collector);
       break;
     case MapperType:
       _mapper = (Mapper*)obj;
-      _mapper->setCollector(collector);
+      _mapper->setCollector(_collector);
       break;
     case FolderType:
       _folder = (Folder*)obj;
-      _folder->setCollector(collector);
+      _folder->setCollector(_collector);
       break;
     default:
         THROW_EXCEPTION(UnsupportException, "Reducer type not supported");
@@ -100,7 +134,7 @@ void RReducerHandler::configure(Config & config) {
     _reducerType = MapperType;
     _mapper = (Mapper *) NativeObjectFactory::CreateDefaultObject(
         MapperType);
-    _mapper->setCollector(collector);
+    _mapper->setCollector(_collector);
   }
   if (NULL == _reducer && _mapper == NULL && _folder == NULL) {
     THROW_EXCEPTION(UnsupportException, "Reducer class not found");
@@ -140,6 +174,7 @@ void RReducerHandler::run() {
   case ReducerType:
     {
       while (nextKey()) {
+        _reduceInputGroups->increase();
         _reducer->reduce(*this);
       }
       _reducer->close();
@@ -170,11 +205,6 @@ void RReducerHandler::run() {
 
 
 void RReducerHandler::collect(const void * key, uint32_t keyLen,
-    const void * value, uint32_t valueLen, int partition) {
-  THROW_EXCEPTION(UnsupportException, "Collect with partition not support in reducer");
-}
-
-void RReducerHandler::collect(const void * key, uint32_t keyLen,
     const void * value, uint32_t valueLen) {
   putInt(keyLen);
   put((char *)key, keyLen);
@@ -202,6 +232,7 @@ char * RReducerHandler::nextKeyValuePair() {
   if (_remain<8) {
     THROW_EXCEPTION(IOException, "not enough meta to read kv pair");
   }
+  _reduceInputRecords->increase();
   _klength = ((uint32_t*)_current)[0];
   _vlength = ((uint32_t*)_current)[1];
   _kvlength = _klength + _vlength;

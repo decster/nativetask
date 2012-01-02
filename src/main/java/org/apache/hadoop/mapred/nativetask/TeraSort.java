@@ -43,8 +43,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 
-public class NativeTeraSort implements Tool {
-  protected static final Log LOG = LogFactory.getLog(NativeTeraSort.class);
+public class TeraSort implements Tool {
+  protected static final Log LOG = LogFactory.getLog(TeraSort.class);
 
   static final String PARTITION_FILENAME = "_nativepartition.lst";
   Configuration conf;
@@ -153,7 +153,7 @@ public class NativeTeraSort implements Tool {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    int exitCode =  new NativeTeraSort().run(args);
+    int exitCode =  new TeraSort().run(args);
     System.exit(exitCode);
   }
 }

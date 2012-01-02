@@ -35,6 +35,7 @@ private:
   string _path;
   FILE * _handle;
   int    _fd;
+  Counter * _bytesRead;
 public:
   FileInputStream(const string & path);
   virtual ~FileInputStream();
@@ -56,6 +57,7 @@ private:
   string _path;
   FILE * _handle;
   int    _fd;
+  Counter * _bytesWrite;
 public:
   FileOutputStream(const string & path, bool overwite = true);
   virtual ~FileOutputStream();

@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "TaskCounters.h"
 #include "MMapTaskHandler.h"
 #include "NativeObjectFactory.h"
 #include "MapOutputCollector.h"
@@ -31,7 +32,11 @@ MMapTaskHandler::MMapTaskHandler() :
     _partitioner(NULL),
     _combinerCreator(NULL),
     _moc(NULL),
-    _writer(NULL) {
+    _writer(NULL),
+    _mapInputRecords(NULL),
+    _mapInputBytes(NULL),
+    _mapOutputRecords(NULL),
+    _mapOutputBytes(NULL) {
 }
 
 MMapTaskHandler::~MMapTaskHandler() {
@@ -52,7 +57,24 @@ void MMapTaskHandler::reset() {
   _writer = NULL;
 }
 
+void MMapTaskHandler::initCounters() {
+  _mapInputRecords = NativeObjectFactory::GetCounter(
+      TaskCounters::TASK_COUNTER_GROUP,
+      TaskCounters::MAP_INPUT_RECORDS);
+  _mapInputBytes = NativeObjectFactory::GetCounter(
+      TaskCounters::TASK_COUNTER_GROUP,
+      TaskCounters::MAP_INPUT_BYTES);
+  _mapOutputRecords = NativeObjectFactory::GetCounter(
+      TaskCounters::TASK_COUNTER_GROUP,
+      TaskCounters::MAP_OUTPUT_RECORDS);
+  _mapOutputBytes = NativeObjectFactory::GetCounter(
+      TaskCounters::TASK_COUNTER_GROUP,
+      TaskCounters::MAP_OUTPUT_BYTES);
+}
+
 void MMapTaskHandler::configure(Config & config) {
+  initCounters();
+
   _config = &config;
   _numPartition = config.getInt("mapred.reduce.tasks", 1);
 
@@ -124,6 +146,8 @@ void MMapTaskHandler::configure(Config & config) {
 
 void MMapTaskHandler::collect(const void * key, uint32_t keyLen,
     const void * value, uint32_t valueLen, int partition) {
+  _mapOutputRecords->increase();
+  _mapOutputBytes->increase(keyLen + valueLen);
   if (NULL != _moc) {
     int result =_moc->put(key, keyLen, value, valueLen, partition);
     if (result==0) {
@@ -156,6 +180,8 @@ void MMapTaskHandler::collect(const void * key, uint32_t keyLen,
         _numPartition);
     collect(key, keyLen, value, valueLen, partition);
   } else {
+    _mapOutputRecords->increase();
+    _mapOutputBytes->increase(keyLen + valueLen);
     _writer->collect(key, keyLen, value, valueLen);
   }
 }
@@ -167,13 +193,16 @@ string MMapTaskHandler::command(const string & cmd) {
   if (_reader==NULL || _mapper==NULL) {
     THROW_EXCEPTION(IOException, "MMapTaskHandler not setup yet");
   }
+  NativeObjectFactory::SetTaskProgressSource(_reader);
   Buffer key;
   Buffer value;
-  // TODO: insert counters
   while (_reader->next(key, value)) {
+    _mapInputRecords->increase();
+    _mapInputBytes->increase(key.length() + value.length());
     _mapper->map(key.data(), key.length(), value.data(), value.length());
   }
   close();
+  NativeObjectFactory::SetTaskProgressSource(NULL);
   return string();
 }
 

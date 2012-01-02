@@ -43,6 +43,8 @@ protected:
   Folder  * _folder;
   // RecordWriter
   RecordWriter * _writer;
+  // Reduce output collector
+  Collector * _collector;
   // state info KV pairs
   char * _current;
   uint32_t _remain;
@@ -56,6 +58,11 @@ protected:
   // for big key/value pairs
   char * _KVBuffer;
   uint32_t _KVBufferCapacity;
+
+  // counters
+  Counter * _reduceInputRecords;
+  Counter * _reduceInputGroups;
+  Counter * _reduceOutputRecords;
 public:
   RReducerHandler();
   virtual ~RReducerHandler();
@@ -70,14 +77,14 @@ public:
 
   // Collector methods
   virtual void collect(const void * key, uint32_t keyLen, const void * value,
-      uint32_t valueLen, int partition);
-  virtual void collect(const void * key, uint32_t keyLen, const void * value,
       uint32_t valueLen);
 private:
+  void initCounters();
   void run();
   virtual int32_t refill();
   char * nextKeyValuePair(); // return key position
   void reset();
+
 };
 
 } // namespace NativeTask

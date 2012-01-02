@@ -65,6 +65,7 @@ src/IFile.cc                           \
 src/MapOutputSpec.cc                   \
 src/MapOutputCollector.cc              \
 src/Merge.cc                           \
+src/TaskCounters.cc                    \
 src/NativeObjectFactory.cc             \
 src/NativeLibrary.cc                   \
 src/NativeTask.cc                      

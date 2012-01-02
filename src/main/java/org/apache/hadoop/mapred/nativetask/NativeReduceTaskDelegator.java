@@ -29,10 +29,11 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RawKeyValueIterator;
 import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskDelegation;
+import org.apache.hadoop.mapred.TaskDelegation.DelegateReporter;
 import org.apache.hadoop.mapred.TaskUmbilicalProtocol;
+import org.apache.hadoop.mapred.nativetask.NativeRuntime.StatusUpdater;
 import org.apache.hadoop.mapred.nativetask.NativeUtils.KVType;
 import org.apache.hadoop.mapred.nativetask.NativeUtils.NativeDeserializer;
 import org.apache.hadoop.util.Progressable;
@@ -48,8 +49,11 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
   @Override
   @SuppressWarnings("unchecked")
   public void run(TaskAttemptID taskAttemptID, JobConf job,
-      TaskUmbilicalProtocol umbilical, Reporter reporter, RawKeyValueIterator rIter)
+      TaskUmbilicalProtocol umbilical, DelegateReporter reporter, RawKeyValueIterator rIter)
       throws IOException, InterruptedException {
+    long updateInterval = job.getLong("native.update.interval", 1000);
+    StatusUpdater updater = new StatusUpdater(reporter, updateInterval);
+    updater.startUpdater();
     NativeRuntime.configure(job);
 
     Class keyClass = job.getMapOutputKeyClass();
@@ -78,6 +82,10 @@ public class NativeReduceTaskDelegator<IK, IV, OK, OV> implements
       processor.run();
       writer.close(reporter);
     }
+    
+    updater.stopUpdater();
+    // final update
+    NativeRuntime.updateStatus(reporter);
   }
 
   public static class ReduceTaskProcessor<IK, IV> extends NativeBatchProcessor {
