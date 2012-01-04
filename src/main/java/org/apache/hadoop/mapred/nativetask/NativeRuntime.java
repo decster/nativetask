@@ -251,7 +251,7 @@ public class NativeRuntime {
       while (true) {
         try {
           Thread.sleep(interval);
-        } 
+        }
         catch (InterruptedException e) {
           if (LOG.isDebugEnabled()) {
             LOG.debug("StatusUpdater thread exiting " +
