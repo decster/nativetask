@@ -197,7 +197,9 @@ float LineRecordReader::getProgress() {
     }
   } else {
     // compressed stream
-    float ret = ((DecompressStream*) _source)->compressedBytesRead() / (double) _inputLength;
+    uint64_t compressedRead =
+        ((DecompressStream*) _source)->compressedBytesRead();
+    float ret =  compressedRead / (double) _inputLength;
     return std::min(ret, 1.0f);
   }
   return 0.0f;

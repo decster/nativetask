@@ -251,7 +251,7 @@ void WritableUtils::WriteShort(OutputStream * stream, int16_t v) {
 void WritableUtils::WriteFloat(OutputStream * stream, float v) {
   uint32_t intv = *(uint32_t*)&v;
   intv = bswap(intv);
-  stream->write(&v, 4);
+  stream->write(&intv, 4);
 }
 
 void WritableUtils::WriteText(OutputStream * stream, const string & v) {

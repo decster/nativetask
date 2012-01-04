@@ -190,6 +190,7 @@ void NativeObjectFactory::SetTaskProgressSource(Progress * progress) {
 float NativeObjectFactory::GetTaskProgress() {
   if (TaskProgress != NULL) {
     LastProgress = TaskProgress->getProgress();
+    LOG("Native side get progress %.3f", LastProgress);
   }
   return LastProgress;
 }
@@ -208,7 +209,7 @@ void NativeObjectFactory::GetTaskStatusUpdate(string & statusData) {
   // Counters[group:Text, name:Text, incrCount:Long]
   OutputStringStream os(statusData);
   float progress = GetTaskProgress();
-  os.write(&progress, sizeof(progress));
+  WritableUtils::WriteFloat(&os, progress);
   WritableUtils::WriteText(&os, LastStatus);
   LastStatus.clear();
   {
