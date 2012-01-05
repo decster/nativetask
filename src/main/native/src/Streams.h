@@ -23,6 +23,8 @@
 
 namespace NativeTask {
 
+class OutputStream;
+
 class InputStream {
 public:
   InputStream() {}
@@ -40,6 +42,8 @@ public:
   virtual void close() {}
 
   virtual int32_t readFully(void * buff, uint32_t length);
+
+  void readAllTo(OutputStream & out, uint32_t bufferHint=1024*4);
 };
 
 class OutputStream {

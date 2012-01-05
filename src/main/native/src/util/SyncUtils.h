@@ -122,6 +122,7 @@ private:
   static void * ThreadRunner(void * pthis);
 };
 
+// Sure <tr1/functional> is better
 template <typename Subject, typename Method>
 class FunctionRunner : public Runnable {
 protected:
@@ -156,6 +157,26 @@ public:
   }
 };
 
+template <typename Subject, typename Method, typename Arg1, typename Arg2>
+class FunctionRunner2 : public Runnable {
+protected:
+  Subject & _subject;
+  Method _method;
+  Arg1 _arg1;
+  Arg2 _arg2;
+public:
+  FunctionRunner2(Subject & subject, Method method, Arg1 arg1, Arg2 arg2) :
+    _subject(subject),
+    _method(method),
+    _arg1(arg1),
+    _arg2(arg2) {
+  }
+
+  virtual void run() {
+    (_subject.*_method)(_arg1, _arg2);
+  }
+};
+
 template<typename Subject, typename Method>
 inline FunctionRunner<Subject, Method> Bind(Subject & subject, Method method) {
   return FunctionRunner<Subject, Method>(subject, method);
@@ -166,7 +187,10 @@ inline FunctionRunner1<Subject, Method, Arg> Bind(Subject & subject, Method meth
   return FunctionRunner1<Subject, Method, Arg>(subject, method, arg);
 }
 
-// TODO: use std::st1::function<void()>
+template<typename Subject, typename Method, typename Arg1, typename Arg2>
+inline FunctionRunner2<Subject, Method, Arg1, Arg2> Bind(Subject & subject, Method method, Arg1 arg1, Arg2 arg2) {
+  return FunctionRunner2<Subject, Method, Arg1, Arg2>(subject, method, arg1, arg2);
+}
 
 class ConcurrentIndex {
 private:

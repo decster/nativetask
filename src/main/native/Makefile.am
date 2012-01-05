@@ -42,12 +42,13 @@ src/lib/LineRecordReader.cc            \
 src/lib/TotalOrderPartitioner.cc       \
 src/lib/TeraSort.cc                    \
 src/lib/WordCount.cc                   \
-src/util/Hash.cc                       \
-src/util/Random.cc                     \
 src/util/Checksum.cc                   \
-src/util/Timer.cc                      \
+src/util/Hash.cc                       \
+src/util/Process.cc                    \
+src/util/Random.cc                     \
 src/util/StringUtil.cc                 \
 src/util/SyncUtils.cc                  \
+src/util/Timer.cc                      \
 src/util/WritableUtils.cc              \
 src/commons.cc                         \
 src/mempool.cc                         \
@@ -74,10 +75,14 @@ src/NativeTask.cc
 
 COMMONHEADERS = \
 src/util/Checksum.h                   \
+src/util/Process.h                    \
 src/util/StringUtil.h                 \
+src/util/SyncUtils.h                  \
 src/util/WritableUtils.h              \
-src/FileSystem.h                      \
+src/Compressions.h                    \
 src/Streams.h                         \
+src/BufferStream.h                    \
+src/FileSystem.h                      \
 src/NativeObjectFactory.h             \
 src/NativeTask.h                      
 
@@ -92,6 +97,7 @@ test/util/TestHash.cc                 \
 test/util/TestStringUtil.cc           \
 test/util/TestSyncUtils.cc            \
 test/util/TestWritableUtils.cc        \
+test/util/TestProcess.cc              \
 test/test_commons.cc                  \
 test/TestBuffers.cc                   \
 test/TestCompressions.cc              \

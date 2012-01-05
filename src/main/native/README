@@ -78,20 +78,148 @@ ifile serializaton & compress 0.6s
 local writer io 56M -> 0.61s
 Total 1.75 1.35s
 
-1G tera input 100 partition 1200m sortbuffer
-11/12/29 17:01:43 INFO NativeTask library initialized
-11/12/29 17:01:43 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/tera200G-snappy/part-00126.snappy:0+219619173
-11/12/29 17:01:43 INFO Native MemoryBlockPool: min_block_size 1024K, capacity 1200M
-11/12/29 17:01:43 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: default
-11/12/29 17:01:57 INFO Spill 0 [0,100) collect: 4.394s sort: 4.700s spill: 10.280s record: 10000000, avg: 102.000, block: 1100, size 1020000200, real: 254158667
+
+
+1G tera input 100 partition 1200m sortbuffer  sort:3.476s
+12/01/04 15:14:16 INFO NativeTask library initialized with hadoop 1.0.1-SNAPSHOT
+12/01/04 15:14:16 INFO Input FileSplit: hdfs://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:40010/tera200G-snappy/part-00081.snappy:0+219155131
+12/01/04 15:14:16 INFO Native MemoryBlockPool: min_block_size 1024K, capacity 1200M
+12/01/04 15:14:16 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: NativeTask.TotalOrderPartitioner
+12/01/04 15:14:29 INFO Spill 0 [0,200) collect: 4.417s sort: 3.476s spill: 5.344s record: 10000000, avg: 102.000, block: 1122, size 1020000400, real: 244177471
 
 1G tera input 200 partition 1200 sortbuffer, using lz4 compression, gcc4.2-darwin
-11/12/29 20:21:48 INFO NativeTask library initialized
-11/12/29 20:21:48 INFO Input FileSplit: part-00000.snappy:0+219708967
-11/12/29 20:21:48 INFO Native MemoryBlockPool: min_block_size 1024K, capacity 1200M
-11/12/29 20:21:48 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: default
-11/12/29 20:21:55 INFO Spill 0 [0,200) collect: 2.497s sort: 2.279s spill: 5.038s record: 10000000, avg: 102.000, block: 1200, size 1020000400, real: 225893609
-11/12/29 20:21:55 INFO Map Task time: 7.53625s
+// TODO:
+
+1G tera input 200 partition 1200 sortbuffer java   sort:23.336
+2012-01-04 15:20:53,976 INFO org.apache.hadoop.mapred.MapTask: numReduceTasks: 200
+2012-01-04 15:20:53,984 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 1200
+2012-01-04 15:20:54,709 INFO org.apache.hadoop.mapred.MapTask: data buffer = 1082130432/1082130432
+2012-01-04 15:20:54,709 INFO org.apache.hadoop.mapred.MapTask: record buffer = 11010048/11010048
+2012-01-04 15:20:54,730 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory: Successfully loaded & initialized native-zlib library
+2012-01-04 15:20:54,731 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new decompressor
+2012-01-04 15:21:06,751 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
+2012-01-04 15:21:30,093 INFO org.apache.hadoop.mapred.MapTask: Sort 10000000 record, Time: 23.336
+2012-01-04 15:21:30,095 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
+2012-01-04 15:21:41,238 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
+2012-01-04 15:21:41,240 INFO org.apache.hadoop.mapred.Task: Task:attempt_201201041329_0010_m_000116_0 is done. And is in the process of commiting
+2012-01-04 15:21:41,280 INFO org.apache.hadoop.mapred.Task: Task 'attempt_201201041329_0010_m_000116_0' done.
+2012-01-04 15:21:41,283 INFO org.apache.hadoop.mapred.TaskLogsTruncater: Initializing logs' truncater with mapRetainSize=-1 and reduceRetainSize=-1
+2012-01-04 15:21:41,307 INFO org.apache.hadoop.io.nativeio.NativeIO: Initialized cache for UID to User mapping with a cache timeout of 14400 seconds.
+2012-01-04 15:21:41,307 INFO org.apache.hadoop.io.nativeio.NativeIO: Got UserName hadoop for UID 49525 from the native implementation
+
+1G tera input 200 partition 300mb sortbuffer native 4 merge sort:0.705+0.749+0.702+0.525
+12/01/04 15:42:28 INFO NativeTask library initialized with hadoop 1.0.1-SNAPSHOT
+12/01/04 15:42:28 INFO Input FileSplit: hdfs://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/tera200G-snappy/part-00081.snappy:0+219155131
+12/01/04 15:42:28 INFO Native MemoryBlockPool: min_block_size 384K, capacity 300M
+12/01/04 15:42:28 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: NativeTask.TotalOrderPartitioner
+12/01/04 15:42:32 INFO Spill 0 [0,200) collect: 1.385s sort: 0.705s spill: 1.372s record: 2643253, avg: 102.000, block: 800, size 269612206, real: 64388296
+12/01/04 15:42:35 INFO Spill 1 [0,200) collect: 1.221s sort: 0.749s spill: 1.468s record: 2650475, avg: 102.000, block: 800, size 270348850, real: 64694646
+12/01/04 15:42:38 INFO Spill 2 [0,200) collect: 1.147s sort: 0.702s spill: 1.355s record: 2651449, avg: 102.000, block: 800, size 270448198, real: 64638995
+12/01/04 15:42:40 INFO Sort 3 [0,200) time: 0.525
+12/01/04 15:42:46 INFO Merge 4 segments: record: 10000000, avg: 102.000, size: 1020000400, real: 244177471, time: 6.038
+
+1G tera input 200 partition 300mb sortbuffer java 4 merge sort:4.662+4.771+4.558+2.641
+2012-01-04 15:36:01,664 INFO org.apache.hadoop.mapred.MapTask: numReduceTasks: 200
+2012-01-04 15:36:01,673 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 300
+2012-01-04 15:36:01,851 INFO org.apache.hadoop.mapred.MapTask: data buffer = 270532608/270532608
+2012-01-04 15:36:01,851 INFO org.apache.hadoop.mapred.MapTask: record buffer = 2752512/2752512
+2012-01-04 15:36:01,876 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory: Successfully loaded & initialized native-zlib library
+2012-01-04 15:36:01,876 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new decompressor
+2012-01-04 15:36:05,615 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: buffer full= false
+2012-01-04 15:36:05,615 INFO org.apache.hadoop.mapred.MapTask: bufstart = 0; bufend = 270532600; bufvoid = 270532608
+2012-01-04 15:36:05,615 INFO org.apache.hadoop.mapred.MapTask: kvstart = 0; kvend = 2705326; length = 2752512
+2012-01-04 15:36:10,283 INFO org.apache.hadoop.mapred.MapTask: Sort 2705326 record, Time: 4.662
+2012-01-04 15:36:10,285 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
+2012-01-04 15:36:13,340 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
+2012-01-04 15:36:16,751 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 15:36:16,751 INFO org.apache.hadoop.mapred.MapTask: bufstart = 270532600; bufend = 4718500; bufvoid = 270532600
+2012-01-04 15:36:16,751 INFO org.apache.hadoop.mapred.MapTask: kvstart = 2705326; kvend = 2705325; length = 2752512
+2012-01-04 15:36:21,523 INFO org.apache.hadoop.mapred.MapTask: Sort 2752511 record, Time: 4.771
+2012-01-04 15:36:24,355 INFO org.apache.hadoop.mapred.MapTask: Finished spill 1
+2012-01-04 15:36:27,711 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 15:36:27,711 INFO org.apache.hadoop.mapred.MapTask: bufstart = 4718500; bufend = 9437000; bufvoid = 270532600
+2012-01-04 15:36:27,711 INFO org.apache.hadoop.mapred.MapTask: kvstart = 2705325; kvend = 2705324; length = 2752512
+2012-01-04 15:36:32,270 INFO org.apache.hadoop.mapred.MapTask: Sort 2752511 record, Time: 4.558
+2012-01-04 15:36:35,161 INFO org.apache.hadoop.mapred.MapTask: Finished spill 2
+2012-01-04 15:36:37,264 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
+2012-01-04 15:36:39,906 INFO org.apache.hadoop.mapred.MapTask: Sort 1789652 record, Time: 2.641
+2012-01-04 15:36:42,298 INFO org.apache.hadoop.mapred.MapTask: Finished spill 3
+2012-01-04 15:36:42,304 INFO org.apache.hadoop.mapred.Merger: Merging 4 sorted segments
+
+500M wordcount 100 partition 300mb sortbuffer native 4 merge sort:1.557+1.507+1.506+0.951=5.52
+12/01/04 15:54:56 INFO NativeTask library initialized with hadoop 1.0.1-SNAPSHOT
+12/01/04 15:54:56 INFO Input FileSplit: hdfs://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/text100G-snappy/part-00060.snappy:0+260801239
+12/01/04 15:54:56 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
+12/01/04 15:54:56 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
+12/01/04 15:55:01 INFO Spill 0 [0,100) collect: 2.426s sort: 1.557s spill: 0.352s, record: 12841142, key: 1000, block: 400, size 17855, real: 18895
+12/01/04 15:55:05 INFO Spill 1 [0,100) collect: 2.097s sort: 1.507s spill: 0.287s, record: 12778865, key: 1000, block: 400, size 17855, real: 18907
+12/01/04 15:55:09 INFO Spill 2 [0,100) collect: 2.077s sort: 1.506s spill: 0.399s, record: 12748890, key: 1000, block: 400, size 17855, real: 18894
+12/01/04 15:55:11 INFO Sort 3 [0,100) time: 0.951
+12/01/04 15:55:11 INFO Merge 4 segments: record 0, key: 1000, size 17855, real 18958, time: 0.491
+
+500M wordcount 100 partition 300mb sortbuffer java 5 merge sort:9.519+9.270+9.496+9.362+6.978=44.6
+2012-01-04 16:08:30,833 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 300
+2012-01-04 16:08:31,004 INFO org.apache.hadoop.mapred.MapTask: data buffer = 157286400/157286400
+2012-01-04 16:08:31,004 INFO org.apache.hadoop.mapred.MapTask: record buffer = 9830400/9830400
+2012-01-04 16:08:31,012 WARN org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library is available
+2012-01-04 16:08:31,012 INFO org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library loaded
+2012-01-04 16:08:41,888 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:08:41,889 INFO org.apache.hadoop.mapred.MapTask: bufstart = 0; bufend = 144058980; bufvoid = 157286400
+2012-01-04 16:08:41,889 INFO org.apache.hadoop.mapred.MapTask: kvstart = 0; kvend = 9830399; length = 9830400
+2012-01-04 16:08:51,413 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.519
+2012-01-04 16:08:51,416 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
+2012-01-04 16:08:56,346 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
+2012-01-04 16:09:06,258 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:09:06,258 INFO org.apache.hadoop.mapred.MapTask: bufstart = 144058980; bufend = 130831294; bufvoid = 157286388
+2012-01-04 16:09:06,258 INFO org.apache.hadoop.mapred.MapTask: kvstart = 9830399; kvend = 9830398; length = 9830400
+2012-01-04 16:09:15,529 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.270
+2012-01-04 16:09:20,333 INFO org.apache.hadoop.mapred.MapTask: Finished spill 1
+2012-01-04 16:09:30,205 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:09:30,205 INFO org.apache.hadoop.mapred.MapTask: bufstart = 130831294; bufend = 117608227; bufvoid = 157286375
+2012-01-04 16:09:30,205 INFO org.apache.hadoop.mapred.MapTask: kvstart = 9830398; kvend = 9830397; length = 9830400
+2012-01-04 16:09:39,709 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.496
+2012-01-04 16:09:44,480 INFO org.apache.hadoop.mapred.MapTask: Finished spill 2
+2012-01-04 16:09:54,315 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:09:54,315 INFO org.apache.hadoop.mapred.MapTask: bufstart = 117608227; bufend = 104399207; bufvoid = 157286366
+2012-01-04 16:09:54,315 INFO org.apache.hadoop.mapred.MapTask: kvstart = 9830397; kvend = 9830396; length = 9830400
+2012-01-04 16:10:03,678 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.362
+2012-01-04 16:10:08,490 INFO org.apache.hadoop.mapred.MapTask: Finished spill 3
+2012-01-04 16:10:16,126 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
+2012-01-04 16:10:23,105 INFO org.apache.hadoop.mapred.MapTask: Sort 7605083 record, Time: 6.978
+2012-01-04 16:10:26,744 INFO org.apache.hadoop.mapred.MapTask: Finished spill 4
+2012-01-04 16:10:26,751 INFO org.apache.hadoop.mapred.Merger: Merging 5 sorted segments
+
+500M wordcount 100 partition 300mb sortbuffer java optimized 5 merge 9.795+9.967+9.667+9.845+7.213
+2012-01-04 16:21:49,457 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 300
+2012-01-04 16:21:49,623 INFO org.apache.hadoop.mapred.MapTask: data buffer = 157286400/157286400
+2012-01-04 16:21:49,623 INFO org.apache.hadoop.mapred.MapTask: record buffer = 9830400/9830400
+2012-01-04 16:21:49,632 WARN org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library is available
+2012-01-04 16:21:49,632 INFO org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library loaded
+2012-01-04 16:21:57,673 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:21:57,673 INFO org.apache.hadoop.mapred.MapTask: bufstart = 0; bufend = 144062461; bufvoid = 157286400
+2012-01-04 16:21:57,673 INFO org.apache.hadoop.mapred.MapTask: kvstart = 0; kvend = 9830399; length = 9830400
+2012-01-04 16:22:07,474 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.795
+2012-01-04 16:22:07,477 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
+2012-01-04 16:22:12,556 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
+2012-01-04 16:22:20,149 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:22:20,149 INFO org.apache.hadoop.mapred.MapTask: bufstart = 144062461; bufend = 130834874; bufvoid = 157286394
+2012-01-04 16:22:20,149 INFO org.apache.hadoop.mapred.MapTask: kvstart = 9830399; kvend = 9830398; length = 9830400
+2012-01-04 16:22:30,117 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.967
+2012-01-04 16:22:34,897 INFO org.apache.hadoop.mapred.MapTask: Finished spill 1
+2012-01-04 16:22:42,449 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:22:42,449 INFO org.apache.hadoop.mapred.MapTask: bufstart = 130834874; bufend = 117612671; bufvoid = 157286386
+2012-01-04 16:22:42,449 INFO org.apache.hadoop.mapred.MapTask: kvstart = 9830398; kvend = 9830397; length = 9830400
+2012-01-04 16:22:52,118 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.667
+2012-01-04 16:22:56,923 INFO org.apache.hadoop.mapred.MapTask: Finished spill 2
+2012-01-04 16:23:04,508 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
+2012-01-04 16:23:04,508 INFO org.apache.hadoop.mapred.MapTask: bufstart = 117612671; bufend = 104396079; bufvoid = 157286386
+2012-01-04 16:23:04,508 INFO org.apache.hadoop.mapred.MapTask: kvstart = 9830397; kvend = 9830396; length = 9830400
+2012-01-04 16:23:14,354 INFO org.apache.hadoop.mapred.MapTask: Sort 9830399 record, Time: 9.845
+2012-01-04 16:23:19,150 INFO org.apache.hadoop.mapred.MapTask: Finished spill 3
+2012-01-04 16:23:25,080 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
+2012-01-04 16:23:32,294 INFO org.apache.hadoop.mapred.MapTask: Sort 7605141 record, Time: 7.213
+2012-01-04 16:23:35,896 INFO org.apache.hadoop.mapred.MapTask: Finished spill 4
+2012-01-04 16:23:35,902 INFO org.apache.hadoop.mapred.Merger: Merging 5 sorted segments
 
 
 Processor Name: Intel Core i5
@@ -101,159 +229,55 @@ Processor Name: Intel Core i5
   L2 Cache (per Core):  256 KB
   L3 Cache: 3 MB
   Memory: 4 GB
+gcc version 4.2.1 (Apple Inc. build 5659)
 
 model name  : Intel(R) Xeon(R) CPU           E5645  @ 2.40GHz
 stepping  : 2
 cpu MHz   : 2399.961
 cache size  : 12288 KB
+gcc version 3.4.5 20051201
 
+12/01/04 19:40:27 INFO Native MemoryBlockPool: min_block_size 1024K, capacity 1200M
+12/01/04 19:40:27 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: default
+12/01/04 19:40:35 INFO Spill 0 [0,200) collect: 2.652s sort: 2.389s spill: 3.143s record: 10000000, avg: 102.000, block: 1200, size 1020000400, real: 255739746
 
-1G tera input 200 partiton 1200m sortbuffer, using snappy compression, gcc version 3.4.5 RHEL4 Linux kerenl 2.6.9
-11/12/29 17:08:14 INFO NativeTask library initialized
-11/12/29 17:08:14 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/tera200G-snappy/part-00006.snappy:0+219219636
-11/12/29 17:08:14 INFO Native MemoryBlockPool: min_block_size 1024K, capacity 1200M
-11/12/29 17:08:14 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: default
-11/12/29 17:08:28 INFO Spill 0 [0,200) collect: 4.567s sort: 3.906s spill: 9.554s record: 10000000, avg: 102.000, block: 1197, size 1020000400, real: 255306511
+12/01/04 15:14:16 INFO Native MemoryBlockPool: min_block_size 1024K, capacity 1200M
+12/01/04 15:14:16 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: NativeTask.TotalOrderPartitioner
+12/01/04 15:14:29 INFO Spill 0 [0,200) collect: 4.417s sort: 3.476s spill: 5.344s record: 10000000, avg: 102.000, block: 1122, size 1020000400, real: 244177471
 
-1G tera input 200 partition 750m sortbuffer
-11/12/29 18:55:54 INFO NativeTask library initialized
-11/12/29 18:55:54 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/tera200G-snappy/part-00111.snappy:0+219789800
-11/12/29 18:55:54 INFO Native MemoryBlockPool: min_block_size 960K, capacity 750M
-11/12/29 18:55:54 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: default
-11/12/29 18:56:04 INFO Spill 0 [0,200) collect: 3.412s sort: 2.476s spill: 6.475s record: 7282656, avg: 102.000, block: 800, size 742831312, real: 186019605
-11/12/29 18:56:06 INFO Sort 1 [0,200) time: 0.733
-11/12/29 18:56:11 INFO Merge 2 segments: record 10000000, avg 102.000, size 1020000400, real 255289281, time 5.591
+14/9
 
+12/01/04 17:35:30 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
+12/01/04 17:35:33 INFO Spill 0 [0,100) collect: 1.515s sort: 1.192s spill: 0.227s, record: 12841142, key: 1000, block: 400, size 17855, real: 18895
+12/01/04 17:35:36 INFO Spill 1 [0,100) collect: 1.226s sort: 1.154s spill: 0.223s, record: 12778865, key: 1000, block: 400, size 17855, real: 18907
+12/01/04 17:35:39 INFO Spill 2 [0,100) collect: 1.463s sort: 1.167s spill: 0.224s, record: 12748890, key: 1000, block: 400, size 17855, real: 18894
+12/01/04 17:35:40 INFO Sort 3 [0,100) time: 0.699
+12/01/04 17:35:41 INFO Merge 4 segments: record 0, key: 1000, size 17855, real 18958, time: 0.383
 
-1G tera input 400 partition
-11/12/29 17:12:53 INFO NativeTask library initialized
-11/12/29 17:12:53 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/tera200G-snappy/part-00108.snappy:0+219632682
-11/12/29 17:12:53 INFO Native MemoryBlockPool: min_block_size 768K, capacity 1200M
-11/12/29 17:12:53 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.TeraRecordReader Combiner: null Partitioner: default
-11/12/29 17:13:06 INFO Spill 0 [0,400) collect: 4.936s sort: 3.090s spill: 8.526s record: 10000000, avg: 102.000, block: 1600, size 1020000800, real: 256715743
+12/01/04 15:54:56 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
+12/01/04 15:54:56 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
+12/01/04 15:55:01 INFO Spill 0 [0,100) collect: 2.426s sort: 1.557s spill: 0.352s, record: 12841142, key: 1000, block: 400, size 17855, real: 18895
+12/01/04 15:55:05 INFO Spill 1 [0,100) collect: 2.097s sort: 1.507s spill: 0.287s, record: 12778865, key: 1000, block: 400, size 17855, real: 18907
+12/01/04 15:55:09 INFO Spill 2 [0,100) collect: 2.077s sort: 1.506s spill: 0.399s, record: 12748890, key: 1000, block: 400, size 17855, real: 18894
+12/01/04 15:55:11 INFO Sort 3 [0,100) time: 0.951
+12/01/04 15:55:11 INFO Merge 4 segments: record 0, key: 1000, size 17855, real 18958, time: 0.491
 
-1G tera input 200 partition java io.sort.mb 1400
-2011-12-29 17:37:09,422 INFO org.apache.hadoop.util.NativeCodeLoader: Loaded the native-hadoop library
-2011-12-29 17:37:09,464 INFO org.apache.hadoop.mapred.TaskRunner: Creating symlink: /home/disk6/hadoop/mapred/taskTracker/distcache/3891314406250704194_-1286327418_153952833/szwg-public-hadoop-b3001.szwg01.baidu.com/tera200G-snappy/_partition.lst <- /home/disk4/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/attempt_201112291412_0019_m_000194_0/work/_partition.lst
-2011-12-29 17:37:09,470 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/jars/job.jar <- /home/disk4/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/attempt_201112291412_0019_m_000194_0/work/job.jar
-2011-12-29 17:37:09,471 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/jars/.job.jar.crc <- /home/disk4/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/attempt_201112291412_0019_m_000194_0/work/.job.jar.crc
-2011-12-29 17:37:09,472 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/jars/org <- /home/disk4/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/attempt_201112291412_0019_m_000194_0/work/org
-2011-12-29 17:37:09,473 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/jars/META-INF <- /home/disk4/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0019/attempt_201112291412_0019_m_000194_0/work/META-INF
-2011-12-29 17:37:09,713 INFO org.apache.hadoop.util.ProcessTree: setsid exited with exit code 0
-2011-12-29 17:37:09,716 INFO org.apache.hadoop.mapred.Task:  Using ResourceCalculatorPlugin : org.apache.hadoop.util.LinuxResourceCalculatorPlugin@26a3960
-2011-12-29 17:37:09,832 WARN org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library is available
-2011-12-29 17:37:09,832 INFO org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library loaded
-2011-12-29 17:37:09,840 INFO org.apache.hadoop.mapred.MapTask: numReduceTasks: 200
-2011-12-29 17:37:09,847 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 1400
-2011-12-29 17:37:10,765 INFO org.apache.hadoop.mapred.MapTask: data buffer = 1247805440/1247805424
-2011-12-29 17:37:10,765 INFO org.apache.hadoop.mapred.MapTask: record buffer = 13762561/13762561
-2011-12-29 17:37:10,786 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory: Successfully loaded & initialized native-zlib library
-2011-12-29 17:37:10,786 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new decompressor
-2011-12-29 17:37:23,005 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
-2011-12-29 17:37:47,410 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
-2011-12-29 17:37:58,400 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
-2011-12-29 17:37:58,402 INFO org.apache.hadoop.mapred.Task: Task:attempt_201112291412_0019_m_000194_0 is done. And is in the process of commiting
-2011-12-29 17:38:01,431 INFO org.apache.hadoop.mapred.Task: Task 'attempt_201112291412_0019_m_000194_0' done.
-2011-12-29 17:38:01,433 INFO org.apache.hadoop.mapred.TaskLogsTruncater: Initializing logs' truncater with mapRetainSize=-1 and reduceRetainSize=-1
-2011-12-29 17:38:01,455 INFO org.apache.hadoop.io.nativeio.NativeIO: Initialized cache for UID to User mapping with a cache timeout of 14400 seconds.
-2011-12-29 17:38:01,455 INFO org.apache.hadoop.io.nativeio.NativeIO: Got UserName hadoop for UID 49525 from the native implementation
+15/11
 
-io.sort.mb 750m
-2011-12-29 18:50:23,801 INFO org.apache.hadoop.util.NativeCodeLoader: Loaded the native-hadoop library
-2011-12-29 18:50:23,874 INFO org.apache.hadoop.mapred.TaskRunner: Creating symlink: /home/disk1/hadoop/mapred/taskTracker/distcache/-9087729446592702296_-1286327418_158402160/szwg-public-hadoop-b3001.szwg01.baidu.com/tera200G-snappy/_partition.lst <- /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/attempt_201112291412_0020_m_000033_0/work/_partition.lst
-2011-12-29 18:50:23,890 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk11/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/jars/META-INF <- /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/attempt_201112291412_0020_m_000033_0/work/META-INF
-2011-12-29 18:50:23,902 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk11/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/jars/.job.jar.crc <- /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/attempt_201112291412_0020_m_000033_0/work/.job.jar.crc
-2011-12-29 18:50:23,903 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk11/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/jars/job.jar <- /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/attempt_201112291412_0020_m_000033_0/work/job.jar
-2011-12-29 18:50:23,904 INFO org.apache.hadoop.filecache.TrackerDistributedCacheManager: Creating symlink: /home/disk11/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/jars/org <- /home/disk6/hadoop/mapred/taskTracker/hadoop/jobcache/job_201112291412_0020/attempt_201112291412_0020_m_000033_0/work/org
-2011-12-29 18:50:24,291 INFO org.apache.hadoop.util.ProcessTree: setsid exited with exit code 0
-2011-12-29 18:50:24,303 INFO org.apache.hadoop.mapred.Task:  Using ResourceCalculatorPlugin : org.apache.hadoop.util.LinuxResourceCalculatorPlugin@60cf710e
-2011-12-29 18:50:24,440 WARN org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library is available
-2011-12-29 18:50:24,441 INFO org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library loaded
-2011-12-29 18:50:24,448 INFO org.apache.hadoop.mapred.MapTask: numReduceTasks: 200
-2011-12-29 18:50:24,457 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 750
-2011-12-29 18:50:25,002 INFO org.apache.hadoop.mapred.MapTask: data buffer = 668467200/668467200
-2011-12-29 18:50:25,002 INFO org.apache.hadoop.mapred.MapTask: record buffer = 7372800/7372800
-2011-12-29 18:50:25,048 INFO org.apache.hadoop.io.compress.zlib.ZlibFactory: Successfully loaded & initialized native-zlib library
-2011-12-29 18:50:25,058 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new decompressor
-2011-12-29 18:50:33,605 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: buffer full= false
-2011-12-29 18:50:33,605 INFO org.apache.hadoop.mapred.MapTask: bufstart = 0; bufend = 668467200; bufvoid = 668467200
-2011-12-29 18:50:33,607 INFO org.apache.hadoop.mapred.MapTask: kvstart = 0; kvend = 6684672; length = 7372800
-2011-12-29 18:50:48,506 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
-2011-12-29 18:50:55,839 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
-2011-12-29 18:50:59,698 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
-2011-12-29 18:51:10,140 INFO org.apache.hadoop.mapred.MapTask: Finished spill 1
-2011-12-29 18:51:10,145 INFO org.apache.hadoop.mapred.Merger: Merging 2 sorted segments
-....
-2011-12-29 18:51:22,986 INFO org.apache.hadoop.mapred.Merger: Down to the last merge-pass, with 2 segments left of total size: 1291628 bytes
-2011-12-29 18:51:23,102 INFO org.apache.hadoop.mapred.Task: Task:attempt_201112291412_0020_m_000033_0 is done. And is in the process of commiting
-2011-12-29 18:51:25,293 INFO org.apache.hadoop.mapred.Task: Task 'attempt_201112291412_0020_m_000033_0' done.
-
-Test result for Terasort
+Test for Terasort
 InputData 200G compressed(44G)
-bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar teragen 2000000000 /tera200G-snappy
 map.tasks=200 mapred.output.compression.codec=Snappy
+cmds:
+bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar teragen 2000000000 /tera200G-snappy
+bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar terasort /tera200G-snappy /terasort200G-nt-300
+bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar terasort /tera200G-snappy /terasort200G-nt
 
-Test result for WordCount
+Test for WordCount
 InputData 100G compressed(52G)
 bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar randomtextwriter -Dtest.randomtextwrite.total_bytes=100000000000 -Dtest.randomtextwrite.bytes_per_map=500000000 -outFormat org.apache.hadoop.mapred.TextOutputFormat /text100G-snappy
 map.tasks=200 mapred.output.compression.codec=Snappy
+cmds:
+bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar wordcount /text100G-snappy /wordcount-java-300-opt
+bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar wordcount -Dwordcount.enable.fast.mapper=true /text100G-snappy /wordcount-java-300-opt
+bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar -reader NativeTask.LineRecordReader -writer NativeTask.TextIntRecordWriter -mapper NativeTask.WordCountMapper -reducer NativeTask.IntSumReducer -combiner NativeTask.IntSumReducer -input /text100G-snappy -output /wordcount-100G-nt
 
-200M io.sort.mb
-2011-12-30 19:22:44,309 INFO org.apache.hadoop.mapred.MapTask: io.sort.mb = 200
-2011-12-30 19:22:44,480 INFO org.apache.hadoop.mapred.MapTask: data buffer = 125829120/125829120
-2011-12-30 19:22:44,480 INFO org.apache.hadoop.mapred.MapTask: record buffer = 5242880/5242880
-2011-12-30 19:22:44,488 WARN org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library is available
-2011-12-30 19:22:44,488 INFO org.apache.hadoop.io.compress.snappy.LoadSnappy: Snappy native library loaded
-2011-12-30 19:22:49,024 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:22:49,024 INFO org.apache.hadoop.mapred.MapTask: bufstart = 0; bufend = 76839356; bufvoid = 125829120
-2011-12-30 19:22:49,024 INFO org.apache.hadoop.mapred.MapTask: kvstart = 0; kvend = 5242879; length = 5242880
-2011-12-30 19:22:54,352 INFO org.apache.hadoop.io.compress.CodecPool: Got brand-new compressor
-2011-12-30 19:22:57,148 INFO org.apache.hadoop.mapred.MapTask: Finished spill 0
-2011-12-30 19:23:01,610 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:23:01,610 INFO org.apache.hadoop.mapred.MapTask: bufstart = 76839356; bufend = 27833735; bufvoid = 125829115
-2011-12-30 19:23:01,610 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242879; kvend = 5242878; length = 5242880
-2011-12-30 19:23:09,455 INFO org.apache.hadoop.mapred.MapTask: Finished spill 1
-2011-12-30 19:23:13,617 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:23:13,617 INFO org.apache.hadoop.mapred.MapTask: bufstart = 27833735; bufend = 104661900; bufvoid = 125829115
-2011-12-30 19:23:13,617 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242878; kvend = 5242877; length = 5242880
-2011-12-30 19:23:21,346 INFO org.apache.hadoop.mapred.MapTask: Finished spill 2
-2011-12-30 19:23:25,474 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:23:25,474 INFO org.apache.hadoop.mapred.MapTask: bufstart = 104661900; bufend = 55667143; bufvoid = 125829112
-2011-12-30 19:23:25,474 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242877; kvend = 5242876; length = 5242880
-2011-12-30 19:23:33,349 INFO org.apache.hadoop.mapred.MapTask: Finished spill 3
-2011-12-30 19:23:37,484 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:23:37,484 INFO org.apache.hadoop.mapred.MapTask: bufstart = 55667143; bufend = 6677504; bufvoid = 125829112
-2011-12-30 19:23:37,484 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242876; kvend = 5242875; length = 5242880
-2011-12-30 19:23:45,192 INFO org.apache.hadoop.mapred.MapTask: Finished spill 4
-2011-12-30 19:23:49,401 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:23:49,401 INFO org.apache.hadoop.mapred.MapTask: bufstart = 6677504; bufend = 83510014; bufvoid = 125829112
-2011-12-30 19:23:49,401 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242875; kvend = 5242874; length = 5242880
-2011-12-30 19:23:57,278 INFO org.apache.hadoop.mapred.MapTask: Finished spill 5
-2011-12-30 19:24:01,367 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:24:01,368 INFO org.apache.hadoop.mapred.MapTask: bufstart = 83510014; bufend = 34507026; bufvoid = 125829112
-2011-12-30 19:24:01,368 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242874; kvend = 5242873; length = 5242880
-2011-12-30 19:24:09,274 INFO org.apache.hadoop.mapred.MapTask: Finished spill 6
-2011-12-30 19:24:13,444 INFO org.apache.hadoop.mapred.MapTask: Spilling map output: record full = true
-2011-12-30 19:24:13,444 INFO org.apache.hadoop.mapred.MapTask: bufstart = 34507026; bufend = 111336280; bufvoid = 125829112
-2011-12-30 19:24:13,444 INFO org.apache.hadoop.mapred.MapTask: kvstart = 5242873; kvend = 5242872; length = 5242880
-2011-12-30 19:24:21,243 INFO org.apache.hadoop.mapred.MapTask: Finished spill 7
-2011-12-30 19:24:25,133 INFO org.apache.hadoop.mapred.MapTask: Starting flush of map output
-2011-12-30 19:24:32,462 INFO org.apache.hadoop.mapred.MapTask: Finished spill 8
-2011-12-30 19:24:32,469 INFO org.apache.hadoop.mapred.Merger: Merging 9 sorted segments
-
-200mb io.sort.mb
-11/12/31 13:12:46 INFO NativeTask library initialized
-11/12/31 13:12:46 INFO Input FileSplit: hdfs://szwg-public-hadoop-b3001.szwg01.baidu.com:40010/text100G-snappy/part-00135.snappy:0+260872679
-11/12/31 13:12:46 INFO Native MemoryBlockPool: min_block_size 512K, capacity 200M
-11/12/31 13:12:46 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
-11/12/31 13:12:49 INFO Spill 0 [0,100) collect: 1.837s sort: 0.993s spill: 1.213s, record: 8534193, key: 1000, block: 400, size 17855, real: 18879
-11/12/31 13:12:51 INFO Spill 1 [0,100) collect: 1.429s sort: 0.988s spill: 1.204s, record: 8543378, key: 1000, block: 400, size 17855, real: 18865
-11/12/31 13:12:54 INFO Spill 2 [0,100) collect: 1.376s sort: 0.963s spill: 1.155s, record: 8515038, key: 1000, block: 400, size 17855, real: 18868
-11/12/31 13:12:56 INFO Spill 3 [0,100) collect: 1.358s sort: 0.955s spill: 1.147s, record: 8527904, key: 1000, block: 400, size 17855, real: 18874
-11/12/31 13:12:59 INFO Spill 4 [0,100) collect: 1.364s sort: 0.967s spill: 1.162s, record: 8526535, key: 1000, block: 400, size 17855, real: 18866
-11/12/31 13:13:00 INFO Sort 5 [0,100) time: 0.465
-11/12/31 13:13:00 INFO Merge 6 segments: record 0, key: 1000, size 17855, real 18968, time: 0.232
-
-
-
-szwg-public-hadoop-b3016.szwg01.baidu.com 

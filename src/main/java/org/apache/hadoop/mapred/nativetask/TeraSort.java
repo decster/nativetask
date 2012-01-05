@@ -39,6 +39,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
@@ -96,6 +97,7 @@ public class TeraSort implements Tool {
   private void writePartitionFile(JobConf conf,
       Path partFile) throws IOException {
     TextInputFormat inFormat = new TextInputFormat();
+    inFormat.configure(conf);
     LongWritable key = new LongWritable();
     Text value = new Text();
     int partitions = conf.getNumReduceTasks();
@@ -109,7 +111,7 @@ public class TeraSort implements Tool {
     // take N samples from different parts of the input
     for(int i=0; i < samples; ++i) {
       RecordReader<LongWritable,Text> reader =
-        inFormat.getRecordReader(splits[sampleStep * i], conf, null);
+        inFormat.getRecordReader(splits[sampleStep * i], conf, Reporter.NULL);
       while (reader.next(key, value)) {
         sampleArray.add(new Text(value.toString().substring(0, 10)));
         records += 1;

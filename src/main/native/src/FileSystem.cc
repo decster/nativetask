@@ -31,22 +31,6 @@ namespace NativeTask {
 
 /////////////////////////////////////////////////////////////
 
-void InputStream::seek(uint64_t position) {
-  THROW_EXCEPTION(UnsupportException, "seek not support");
-}
-
-uint64_t InputStream::tell() {
-  THROW_EXCEPTION(UnsupportException, "tell not support");
-}
-
-/////////////////////////////////////////////////////////////
-
-uint64_t OutputStream::tell() {
-  THROW_EXCEPTION(UnsupportException, "tell not support");
-}
-
-/////////////////////////////////////////////////////////////
-
 FileInputStream::FileInputStream(const string & path) {
   _handle = fopen(path.c_str(), "rb");
   if (_handle != NULL) {

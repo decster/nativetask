@@ -272,9 +272,9 @@ public class Submitter extends Configured implements Tool  {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    if (args[0].equals("terasort")) {
+    if (args.length > 0 && args[0].equals("terasort")) {
       String [] rest = new String[args.length-1];
-      System.arraycopy(args, 1, 0, 0, rest.length);
+      System.arraycopy(args, 1, rest, 0, rest.length);
       int exitCode =  new TeraSort().run(rest);
       System.exit(exitCode);
     } else {

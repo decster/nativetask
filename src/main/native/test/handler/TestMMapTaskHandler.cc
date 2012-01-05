@@ -96,7 +96,7 @@ TEST(Perf, MMapTaskTeraSort) {
   jobconf.setBool("native.spill.sort.first", sortFirst);
   jobconf.set("native.sort.type", sorttype);
   jobconf.set("mapred.compress.map.output", "true");
-  jobconf.set("mapred.map.output.compression.codec", Compressions::Lz4Codec.name);
+  jobconf.set("mapred.map.output.compression.codec", Compressions::SnappyCodec.name);
   FileSplit split = FileSplit(inputfile, 0, inputFileLength);
   string splitData;
   split.writeFields(splitData);
@@ -164,7 +164,7 @@ TEST(Perf, MMapTaskWordCount) {
   jobconf.setBool("native.spill.sort.first", sortFirst);
   jobconf.set("native.sort.type", sorttype);
   jobconf.set("mapred.compress.map.output", "true");
-  jobconf.set("mapred.map.output.compression.codec", Compressions::Lz4Codec.name);
+  jobconf.set("mapred.map.output.compression.codec", Compressions::SnappyCodec.name);
   FileSplit split = FileSplit(inputfile, 0, inputFileLength);
   string splitData;
   split.writeFields(splitData);
@@ -174,7 +174,8 @@ TEST(Perf, MMapTaskWordCount) {
   } else if (inputtype == "word") {
     jobconf.set("native.recordreader.class", "NativeTask.LineRecordReader");
     jobconf.set("native.mapper.class", "NativeTask.WordCountMapper");
-    jobconf.set("native.combiner.class", "NativeTask.WordCountReducer");
+    jobconf.set("native.reducer.class", "NativeTask.IntSumReducer");
+    jobconf.set("native.combiner.class", "NativeTask.IntSumReducer");
   } else {
     jobconf.set("native.recordreader.class", "NativeTask.KeyValueLineRecordReader");
   }

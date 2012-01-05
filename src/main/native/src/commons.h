@@ -36,6 +36,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <memory>
 #include <algorithm>
 
 #include "primitives.h"

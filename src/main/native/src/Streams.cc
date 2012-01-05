@@ -22,6 +22,16 @@
 
 namespace NativeTask {
 
+/////////////////////////////////////////////////////////////
+
+void InputStream::seek(uint64_t position) {
+  THROW_EXCEPTION(UnsupportException, "seek not support");
+}
+
+uint64_t InputStream::tell() {
+  THROW_EXCEPTION(UnsupportException, "tell not support");
+}
+
 int32_t InputStream::readFully(void * buff, uint32_t length) {
   int32_t ret = 0;
   while (length > 0) {
@@ -34,6 +44,24 @@ int32_t InputStream::readFully(void * buff, uint32_t length) {
     length -= rd;
   }
   return ret;
+}
+
+void InputStream::readAllTo(OutputStream & out, uint32_t bufferHint) {
+  char * buffer = new char[bufferHint];
+  while (true) {
+    int32_t rd = read(buffer, bufferHint);
+    if (rd<=0) {
+      break;
+    }
+    out.write(buffer, rd);
+  }
+  delete buffer;
+}
+
+/////////////////////////////////////////////////////////////
+
+uint64_t OutputStream::tell() {
+  THROW_EXCEPTION(UnsupportException, "tell not support");
 }
 
 ///////////////////////////////////////////////////////////

@@ -94,11 +94,12 @@ am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-LineRecordReader.lo \
 	libnativetask_la-TotalOrderPartitioner.lo \
 	libnativetask_la-TeraSort.lo libnativetask_la-WordCount.lo \
-	libnativetask_la-Hash.lo libnativetask_la-Random.lo \
-	libnativetask_la-Checksum.lo libnativetask_la-Timer.lo \
+	libnativetask_la-Checksum.lo libnativetask_la-Hash.lo \
+	libnativetask_la-Process.lo libnativetask_la-Random.lo \
 	libnativetask_la-StringUtil.lo libnativetask_la-SyncUtils.lo \
-	libnativetask_la-WritableUtils.lo libnativetask_la-commons.lo \
-	libnativetask_la-mempool.lo libnativetask_la-jniutils.lo \
+	libnativetask_la-Timer.lo libnativetask_la-WritableUtils.lo \
+	libnativetask_la-commons.lo libnativetask_la-mempool.lo \
+	libnativetask_la-jniutils.lo \
 	libnativetask_la-NativeRuntimeJniImpl.lo \
 	libnativetask_la-Buffers.lo libnativetask_la-Streams.lo \
 	libnativetask_la-BufferStream.lo libnativetask_la-Path.lo \
@@ -124,8 +125,8 @@ am__objects_2 = nttest-TestRReducerHandler.$(OBJEXT) \
 	nttest-TestChecksum.$(OBJEXT) nttest-TestHash.$(OBJEXT) \
 	nttest-TestStringUtil.$(OBJEXT) nttest-TestSyncUtils.$(OBJEXT) \
 	nttest-TestWritableUtils.$(OBJEXT) \
-	nttest-test_commons.$(OBJEXT) nttest-TestBuffers.$(OBJEXT) \
-	nttest-TestCompressions.$(OBJEXT) \
+	nttest-TestProcess.$(OBJEXT) nttest-test_commons.$(OBJEXT) \
+	nttest-TestBuffers.$(OBJEXT) nttest-TestCompressions.$(OBJEXT) \
 	nttest-TestException.$(OBJEXT) nttest-TestFileSystem.$(OBJEXT) \
 	nttest-TestIFile.$(OBJEXT) nttest-TestPrimitives.$(OBJEXT) \
 	nttest-TestSort.$(OBJEXT) nttest-TestStream.$(OBJEXT) \
@@ -321,12 +322,13 @@ src/lib/LineRecordReader.cc            \
 src/lib/TotalOrderPartitioner.cc       \
 src/lib/TeraSort.cc                    \
 src/lib/WordCount.cc                   \
-src/util/Hash.cc                       \
-src/util/Random.cc                     \
 src/util/Checksum.cc                   \
-src/util/Timer.cc                      \
+src/util/Hash.cc                       \
+src/util/Process.cc                    \
+src/util/Random.cc                     \
 src/util/StringUtil.cc                 \
 src/util/SyncUtils.cc                  \
+src/util/Timer.cc                      \
 src/util/WritableUtils.cc              \
 src/commons.cc                         \
 src/mempool.cc                         \
@@ -351,10 +353,14 @@ src/NativeTask.cc
 
 COMMONHEADERS = \
 src/util/Checksum.h                   \
+src/util/Process.h                    \
 src/util/StringUtil.h                 \
+src/util/SyncUtils.h                  \
 src/util/WritableUtils.h              \
-src/FileSystem.h                      \
+src/Compressions.h                    \
 src/Streams.h                         \
+src/BufferStream.h                    \
+src/FileSystem.h                      \
 src/NativeObjectFactory.h             \
 src/NativeTask.h                      
 
@@ -368,6 +374,7 @@ test/util/TestHash.cc                 \
 test/util/TestStringUtil.cc           \
 test/util/TestSyncUtils.cc            \
 test/util/TestWritableUtils.cc        \
+test/util/TestProcess.cc              \
 test/test_commons.cc                  \
 test/TestBuffers.cc                   \
 test/TestCompressions.cc              \
@@ -525,6 +532,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-NativeTask.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-PartitionIndex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Path.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Process.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-RReducerHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Random.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-SnappyCodec.Plo@am__quote@
@@ -553,6 +561,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMMapTaskHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestMain.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestPrimitives.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestProcess.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestRReducerHandler.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestSort.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestStream.Po@am__quote@
@@ -731,20 +740,6 @@ libnativetask_la-WordCount.lo: src/lib/WordCount.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-WordCount.lo `test -f 'src/lib/WordCount.cc' || echo '$(srcdir)/'`src/lib/WordCount.cc
 
-libnativetask_la-Hash.lo: src/util/Hash.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Hash.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Hash.Tpo -c -o libnativetask_la-Hash.lo `test -f 'src/util/Hash.cc' || echo '$(srcdir)/'`src/util/Hash.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Hash.Tpo $(DEPDIR)/libnativetask_la-Hash.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Hash.cc' object='libnativetask_la-Hash.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Hash.lo `test -f 'src/util/Hash.cc' || echo '$(srcdir)/'`src/util/Hash.cc
-
-libnativetask_la-Random.lo: src/util/Random.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Random.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Random.Tpo -c -o libnativetask_la-Random.lo `test -f 'src/util/Random.cc' || echo '$(srcdir)/'`src/util/Random.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Random.Tpo $(DEPDIR)/libnativetask_la-Random.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Random.cc' object='libnativetask_la-Random.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Random.lo `test -f 'src/util/Random.cc' || echo '$(srcdir)/'`src/util/Random.cc
-
 libnativetask_la-Checksum.lo: src/util/Checksum.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Checksum.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Checksum.Tpo -c -o libnativetask_la-Checksum.lo `test -f 'src/util/Checksum.cc' || echo '$(srcdir)/'`src/util/Checksum.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Checksum.Tpo $(DEPDIR)/libnativetask_la-Checksum.Plo
@@ -752,12 +747,26 @@ libnativetask_la-Checksum.lo: src/util/Checksum.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Checksum.lo `test -f 'src/util/Checksum.cc' || echo '$(srcdir)/'`src/util/Checksum.cc
 
-libnativetask_la-Timer.lo: src/util/Timer.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Timer.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Timer.Tpo -c -o libnativetask_la-Timer.lo `test -f 'src/util/Timer.cc' || echo '$(srcdir)/'`src/util/Timer.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Timer.Tpo $(DEPDIR)/libnativetask_la-Timer.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Timer.cc' object='libnativetask_la-Timer.lo' libtool=yes @AMDEPBACKSLASH@
+libnativetask_la-Hash.lo: src/util/Hash.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Hash.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Hash.Tpo -c -o libnativetask_la-Hash.lo `test -f 'src/util/Hash.cc' || echo '$(srcdir)/'`src/util/Hash.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Hash.Tpo $(DEPDIR)/libnativetask_la-Hash.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Hash.cc' object='libnativetask_la-Hash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Timer.lo `test -f 'src/util/Timer.cc' || echo '$(srcdir)/'`src/util/Timer.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Hash.lo `test -f 'src/util/Hash.cc' || echo '$(srcdir)/'`src/util/Hash.cc
+
+libnativetask_la-Process.lo: src/util/Process.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Process.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Process.Tpo -c -o libnativetask_la-Process.lo `test -f 'src/util/Process.cc' || echo '$(srcdir)/'`src/util/Process.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Process.Tpo $(DEPDIR)/libnativetask_la-Process.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Process.cc' object='libnativetask_la-Process.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Process.lo `test -f 'src/util/Process.cc' || echo '$(srcdir)/'`src/util/Process.cc
+
+libnativetask_la-Random.lo: src/util/Random.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Random.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Random.Tpo -c -o libnativetask_la-Random.lo `test -f 'src/util/Random.cc' || echo '$(srcdir)/'`src/util/Random.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Random.Tpo $(DEPDIR)/libnativetask_la-Random.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Random.cc' object='libnativetask_la-Random.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Random.lo `test -f 'src/util/Random.cc' || echo '$(srcdir)/'`src/util/Random.cc
 
 libnativetask_la-StringUtil.lo: src/util/StringUtil.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-StringUtil.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-StringUtil.Tpo -c -o libnativetask_la-StringUtil.lo `test -f 'src/util/StringUtil.cc' || echo '$(srcdir)/'`src/util/StringUtil.cc
@@ -772,6 +781,13 @@ libnativetask_la-SyncUtils.lo: src/util/SyncUtils.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/SyncUtils.cc' object='libnativetask_la-SyncUtils.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-SyncUtils.lo `test -f 'src/util/SyncUtils.cc' || echo '$(srcdir)/'`src/util/SyncUtils.cc
+
+libnativetask_la-Timer.lo: src/util/Timer.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Timer.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Timer.Tpo -c -o libnativetask_la-Timer.lo `test -f 'src/util/Timer.cc' || echo '$(srcdir)/'`src/util/Timer.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Timer.Tpo $(DEPDIR)/libnativetask_la-Timer.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/util/Timer.cc' object='libnativetask_la-Timer.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Timer.lo `test -f 'src/util/Timer.cc' || echo '$(srcdir)/'`src/util/Timer.cc
 
 libnativetask_la-WritableUtils.lo: src/util/WritableUtils.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-WritableUtils.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-WritableUtils.Tpo -c -o libnativetask_la-WritableUtils.lo `test -f 'src/util/WritableUtils.cc' || echo '$(srcdir)/'`src/util/WritableUtils.cc
@@ -1045,6 +1061,20 @@ nttest-TestWritableUtils.obj: test/util/TestWritableUtils.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/util/TestWritableUtils.cc' object='nttest-TestWritableUtils.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestWritableUtils.obj `if test -f 'test/util/TestWritableUtils.cc'; then $(CYGPATH_W) 'test/util/TestWritableUtils.cc'; else $(CYGPATH_W) '$(srcdir)/test/util/TestWritableUtils.cc'; fi`
+
+nttest-TestProcess.o: test/util/TestProcess.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestProcess.o -MD -MP -MF $(DEPDIR)/nttest-TestProcess.Tpo -c -o nttest-TestProcess.o `test -f 'test/util/TestProcess.cc' || echo '$(srcdir)/'`test/util/TestProcess.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestProcess.Tpo $(DEPDIR)/nttest-TestProcess.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/util/TestProcess.cc' object='nttest-TestProcess.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestProcess.o `test -f 'test/util/TestProcess.cc' || echo '$(srcdir)/'`test/util/TestProcess.cc
+
+nttest-TestProcess.obj: test/util/TestProcess.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestProcess.obj -MD -MP -MF $(DEPDIR)/nttest-TestProcess.Tpo -c -o nttest-TestProcess.obj `if test -f 'test/util/TestProcess.cc'; then $(CYGPATH_W) 'test/util/TestProcess.cc'; else $(CYGPATH_W) '$(srcdir)/test/util/TestProcess.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestProcess.Tpo $(DEPDIR)/nttest-TestProcess.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/util/TestProcess.cc' object='nttest-TestProcess.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestProcess.obj `if test -f 'test/util/TestProcess.cc'; then $(CYGPATH_W) 'test/util/TestProcess.cc'; else $(CYGPATH_W) '$(srcdir)/test/util/TestProcess.cc'; fi`
 
 nttest-test_commons.o: test/test_commons.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-test_commons.o -MD -MP -MF $(DEPDIR)/nttest-test_commons.Tpo -c -o nttest-test_commons.o `test -f 'test/test_commons.cc' || echo '$(srcdir)/'`test/test_commons.cc
