@@ -81,9 +81,12 @@ void MMapTaskHandler::configure(Config & config) {
 
   const char * readerClass = config.get("native.recordreader.class");
   if (NULL == readerClass) {
-    THROW_EXCEPTION(IOException, "RecordReader not found");
+    THROW_EXCEPTION(IOException, "native.recordreader.class not set");
   }
   _reader = (RecordReader*) NativeObjectFactory::CreateObject(readerClass);
+  if (NULL == _reader) {
+    THROW_EXCEPTION_EX(UnsupportException, "%s not found", readerClass);
+  }
   _reader->configure(config);
 
   if (_numPartition > 0) {

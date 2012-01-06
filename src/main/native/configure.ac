@@ -21,7 +21,7 @@ AC_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_CONFIG_SRCDIR([src/commons.cc])
+AC_CONFIG_SRCDIR([src/NativeTask.cc])
 AC_CONFIG_HEADERS(config.h)
 
 LT_PREREQ([2.4])

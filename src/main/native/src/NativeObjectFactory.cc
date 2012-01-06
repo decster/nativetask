@@ -82,7 +82,6 @@ DEFINE_NATIVE_LIBRARY(NativeTask) {
   NativeObjectFactory::SetDefaultClass(ReducerType, "NativeTask.Reducer");
   NativeObjectFactory::SetDefaultClass(PartitionerType, "NativeTask.Partitioner");
   NativeObjectFactory::SetDefaultClass(FolderType, "NativeTask.Folder");
-  return 0;
 }
 
 namespace NativeTask {
@@ -121,6 +120,8 @@ bool NativeObjectFactory::Init() {
     NativeLibrary * library = new NativeLibrary("libnativetask.so", "NativeTask");
     library->_getObjectCreatorFunc = NativeTaskGetObjectCreator;
     Libraries.push_back(library);
+    Inited = true;
+    // load extra user provided libraries
     string libraryConf = GetConfig().get("native.class.library", "");
     if (libraryConf.length()>0) {
       vector<string> libraries;
@@ -132,6 +133,7 @@ bool NativeObjectFactory::Init() {
         if (pair.size() == 2) {
           string & name = pair[0];
           string & path = pair[1];
+          LOG("Try to load library [%s] with file [%s]", name.c_str(), path.c_str());
           if (false == RegisterLibrary(path, name)) {
             LOG("RegisterLibrary failed: name=%s path=%s", name.c_str(), path.c_str());
             return false;
@@ -145,7 +147,6 @@ bool NativeObjectFactory::Init() {
     }
     const char * version = GetConfig().get("native.hadoop.version");
     LOG("NativeTask library initialized with hadoop %s", version==NULL?"unkown":version);
-    Inited = true;
   }
   return true;
 }

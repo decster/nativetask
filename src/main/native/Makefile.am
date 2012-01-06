@@ -21,7 +21,7 @@ PRFLAGS=-DSIMPLE_MEMCPY
 #-DSPILLRECORD_CHECKSUM_UINT
 
 AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl -lz $(PLATFORM_LDFLAGS)
-AM_CFLAGS = $(PRFLAGS) $(JNI_INCLUDE) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src -I$(top_srcdir)/src/util
+AM_CFLAGS = $(PRFLAGS) $(JNI_INCLUDE) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src -I$(top_srcdir)/src/util -I$(top_srcdir)/src/lib 
 
 COMMONSOURCES = \
 lz4/lz4.c                              \
@@ -37,7 +37,7 @@ src/handler/MMapperHandler.cc          \
 src/handler/MMapTaskHandler.cc         \
 src/handler/RReducerHandler.cc         \
 src/lib/FileSplit.cc                   \
-src/lib/LineRecordWriter.cc            \            
+src/lib/LineRecordWriter.cc            \
 src/lib/LineRecordReader.cc            \
 src/lib/TotalOrderPartitioner.cc       \
 src/lib/TeraSort.cc                    \
@@ -81,7 +81,9 @@ src/util/SyncUtils.h                  \
 src/util/WritableUtils.h              \
 src/lib/LineRecordReader.h            \
 src/lib/LineRecordWriter.h            \
+src/commons.h                         \
 src/Log.h                             \
+src/primitives.h                      \
 src/Buffers.h                         \
 src/BufferStream.h                    \
 src/Compressions.h                    \
@@ -102,7 +104,6 @@ test/util/TestStringUtil.cc           \
 test/util/TestSyncUtils.cc            \
 test/util/TestWritableUtils.cc        \
 test/util/TestProcess.cc              \
-test/test_commons.cc                  \
 test/TestBuffers.cc                   \
 test/TestCompressions.cc              \
 test/TestException.cc                 \
@@ -111,10 +112,11 @@ test/TestIFile.cc                     \
 test/TestPrimitives.cc                \
 test/TestSort.cc                      \
 test/TestStream.cc                    \
-test/TestMain.cc               
+test/TestMain.cc                      \
+test/test_commons.cc                  
 
 include_HEADERS = $(COMMONHEADERS)
-lib_LTLIBRARIES = libnativetask.la
+lib_LTLIBRARIES = libnativetask.la libstreaming.la
 noinst_PROGRAMS = nttest
 noinst_SCRIPTS = test.sh
 
@@ -122,8 +124,11 @@ libnativetask_la_SOURCES = $(COMMONSOURCES)
 libnativetask_la_CPPFLAGS = -g -O2 -DNDEBUG -fPIC $(AM_CFLAGS)
 libnativetask_la_LDFLAGS = -version-info 0:1:0 $(AM_LDFLAGS)
 
+libstreaming_la_SOURCES = examples/Streaming.cc
+libstreaming_la_CPPFLAGS = -g -O2 -DNDEBUG -fPIC $(AM_CFLAGS)
+libstreaming_la_LDFLAGS = -version-info 0:1:0 $(AM_LDFLAGS)
 
 nttest_SOURCES = $(TESTSOURCES) gtest/gtest-all.cc
 nttest_LDADD = libnativetask.la
 nttest_LDFLAGS = $(AM_LDFLAGS)
-nttest_CPPFLAGS = -g -O2 $(AM_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/test 
+nttest_CPPFLAGS = -g -O2 $(AM_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/test

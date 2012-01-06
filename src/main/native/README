@@ -281,3 +281,9 @@ bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar wordcount /text100G-snappy /wo
 bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar wordcount -Dwordcount.enable.fast.mapper=true /text100G-snappy /wordcount-java-300-opt
 bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar -reader NativeTask.LineRecordReader -writer NativeTask.TextIntRecordWriter -mapper NativeTask.WordCountMapper -reducer NativeTask.IntSumReducer -combiner NativeTask.IntSumReducer -input /text100G-snappy -output /wordcount-100G-nt
 
+
+
+streaming cmd:
+bin/hadoop jar hadoop-nativetask-0.1.0.jar -lib Streaming=libstreaming.dylib -reader Streaming.StreamingReader -writer Streaming.StreamingWriter -mapper Streaming.MStreamingMapper -reducer Streaming.MStreamingReducer -input terainput/part-00000 -output streamingoutput
+
+

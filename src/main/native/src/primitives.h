@@ -223,7 +223,7 @@ inline bool fmemeq(const char * src, const char * dest, uint32_t srcLen, uint32_
   if (srcLen!=destLen) {
     return false;
   }
-  fmemeq(src, dest, std::min(srcLen, destLen));
+  return fmemeq(src, dest, std::min(srcLen, destLen));
 }
 
 /**
@@ -263,7 +263,7 @@ inline bool frmemeq(const char * src, const char * dest, uint32_t srcLen, uint32
   if (srcLen!=destLen) {
     return false;
   }
-  frmemeq(src, dest, std::min(srcLen, destLen));
+  return frmemeq(src, dest, std::min(srcLen, destLen));
 }
 
 #endif /* PRIMITIVES_H_ */

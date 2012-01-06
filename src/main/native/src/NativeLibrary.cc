@@ -41,27 +41,20 @@ bool NativeLibrary::init() {
   }
   // clean error status
   dlerror();
-  LOG("Load object library %s(%s):", _name.c_str(), _path.c_str())
 
   string create_object_func_name = _name + "GetObjectCreator";
   _getObjectCreatorFunc = (GetObjectCreatorFunc)dlsym(library, create_object_func_name.c_str());
   if (NULL==_getObjectCreatorFunc) {
-    LOG("Do not have object factory: %s", create_object_func_name.c_str());
+    LOG("ObjectCreator function [%s] not found", create_object_func_name.c_str());
   }
 
   string init_library_func_name = _name + "Init";
   InitLibraryFunc init_library_func = (InitLibraryFunc)dlsym(library, init_library_func_name.c_str());
   if (NULL==init_library_func) {
-    LOG("Do not have function of %s", init_library_func_name.c_str());
+    LOG("Library init function [%s] not found", init_library_func_name.c_str());
   }
   else {
-    if(0 != init_library_func()) {
-      LOG("init(%s) failed", init_library_func_name.c_str());
-      return false;
-    }
-    else {
-      LOG("init(%s) succeed", init_library_func_name.c_str());
-    }
+    init_library_func();
   }
   return true;
 }

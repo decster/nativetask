@@ -44,10 +44,7 @@ DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -116,6 +113,12 @@ libnativetask_la_OBJECTS = $(am_libnativetask_la_OBJECTS)
 libnativetask_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libnativetask_la_LDFLAGS) $(LDFLAGS) -o $@
+libstreaming_la_LIBADD =
+am_libstreaming_la_OBJECTS = libstreaming_la-Streaming.lo
+libstreaming_la_OBJECTS = $(am_libstreaming_la_OBJECTS)
+libstreaming_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(libstreaming_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(noinst_PROGRAMS)
 am__objects_2 = nttest-TestRReducerHandler.$(OBJEXT) \
 	nttest-TestMMapTaskHandler.$(OBJEXT) \
@@ -124,12 +127,12 @@ am__objects_2 = nttest-TestRReducerHandler.$(OBJEXT) \
 	nttest-TestChecksum.$(OBJEXT) nttest-TestHash.$(OBJEXT) \
 	nttest-TestStringUtil.$(OBJEXT) nttest-TestSyncUtils.$(OBJEXT) \
 	nttest-TestWritableUtils.$(OBJEXT) \
-	nttest-TestProcess.$(OBJEXT) nttest-test_commons.$(OBJEXT) \
-	nttest-TestBuffers.$(OBJEXT) nttest-TestCompressions.$(OBJEXT) \
+	nttest-TestProcess.$(OBJEXT) nttest-TestBuffers.$(OBJEXT) \
+	nttest-TestCompressions.$(OBJEXT) \
 	nttest-TestException.$(OBJEXT) nttest-TestFileSystem.$(OBJEXT) \
 	nttest-TestIFile.$(OBJEXT) nttest-TestPrimitives.$(OBJEXT) \
 	nttest-TestSort.$(OBJEXT) nttest-TestStream.$(OBJEXT) \
-	nttest-TestMain.$(OBJEXT)
+	nttest-TestMain.$(OBJEXT) nttest-test_commons.$(OBJEXT)
 am_nttest_OBJECTS = $(am__objects_2) nttest-gtest-all.$(OBJEXT)
 nttest_OBJECTS = $(am_nttest_OBJECTS)
 nttest_DEPENDENCIES = libnativetask.la
@@ -159,8 +162,10 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libnativetask_la_SOURCES) $(nttest_SOURCES)
-DIST_SOURCES = $(libnativetask_la_SOURCES) $(nttest_SOURCES)
+SOURCES = $(libnativetask_la_SOURCES) $(libstreaming_la_SOURCES) \
+	$(nttest_SOURCES)
+DIST_SOURCES = $(libnativetask_la_SOURCES) $(libstreaming_la_SOURCES) \
+	$(nttest_SOURCES)
 HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -301,7 +306,7 @@ ACLOCAL_AMFLAGS = -I m4
 PRFLAGS = -DSIMPLE_MEMCPY 
 #-DSPILLRECORD_CHECKSUM_UINT
 AM_LDFLAGS = -L$(SNAPPY_PREFIX)/lib -lsnappy -lpthread -ldl -lz $(PLATFORM_LDFLAGS)
-AM_CFLAGS = $(PRFLAGS) $(JNI_INCLUDE) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src -I$(top_srcdir)/src/util
+AM_CFLAGS = $(PRFLAGS) $(JNI_INCLUDE) -I$(SNAPPY_PREFIX)/include -Ijavah -I$(top_srcdir)/src -I$(top_srcdir)/src/util -I$(top_srcdir)/src/lib 
 COMMONSOURCES = \
 lz4/lz4.c                              \
 cityhash/city.cc                       \
@@ -358,7 +363,9 @@ src/util/SyncUtils.h                  \
 src/util/WritableUtils.h              \
 src/lib/LineRecordReader.h            \
 src/lib/LineRecordWriter.h            \
+src/commons.h                         \
 src/Log.h                             \
+src/primitives.h                      \
 src/Buffers.h                         \
 src/BufferStream.h                    \
 src/Compressions.h                    \
@@ -378,7 +385,6 @@ test/util/TestStringUtil.cc           \
 test/util/TestSyncUtils.cc            \
 test/util/TestWritableUtils.cc        \
 test/util/TestProcess.cc              \
-test/test_commons.cc                  \
 test/TestBuffers.cc                   \
 test/TestCompressions.cc              \
 test/TestException.cc                 \
@@ -387,18 +393,22 @@ test/TestIFile.cc                     \
 test/TestPrimitives.cc                \
 test/TestSort.cc                      \
 test/TestStream.cc                    \
-test/TestMain.cc               
+test/TestMain.cc                      \
+test/test_commons.cc                  
 
 include_HEADERS = $(COMMONHEADERS)
-lib_LTLIBRARIES = libnativetask.la
+lib_LTLIBRARIES = libnativetask.la libstreaming.la
 noinst_SCRIPTS = test.sh
 libnativetask_la_SOURCES = $(COMMONSOURCES)
 libnativetask_la_CPPFLAGS = -g -O2 -DNDEBUG -fPIC $(AM_CFLAGS)
 libnativetask_la_LDFLAGS = -version-info 0:1:0 $(AM_LDFLAGS)
+libstreaming_la_SOURCES = examples/Streaming.cc
+libstreaming_la_CPPFLAGS = -g -O2 -DNDEBUG -fPIC $(AM_CFLAGS)
+libstreaming_la_LDFLAGS = -version-info 0:1:0 $(AM_LDFLAGS)
 nttest_SOURCES = $(TESTSOURCES) gtest/gtest-all.cc
 nttest_LDADD = libnativetask.la
 nttest_LDFLAGS = $(AM_LDFLAGS)
-nttest_CPPFLAGS = -g -O2 $(AM_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/test 
+nttest_CPPFLAGS = -g -O2 $(AM_CFLAGS) -I$(top_srcdir) -I$(top_srcdir)/test
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -488,6 +498,8 @@ clean-libLTLIBRARIES:
 	done
 libnativetask.la: $(libnativetask_la_OBJECTS) $(libnativetask_la_DEPENDENCIES) 
 	$(libnativetask_la_LINK) -rpath $(libdir) $(libnativetask_la_OBJECTS) $(libnativetask_la_LIBADD) $(LIBS)
+libstreaming.la: $(libstreaming_la_OBJECTS) $(libstreaming_la_DEPENDENCIES) 
+	$(libstreaming_la_LINK) -rpath $(libdir) $(libstreaming_la_OBJECTS) $(libstreaming_la_LIBADD) $(LIBS)
 
 clean-noinstPROGRAMS:
 	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -553,6 +565,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-jniutils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-lz4.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-mempool.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libstreaming_la-Streaming.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestBuffers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestChecksum.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nttest-TestCompressions.Po@am__quote@
@@ -939,6 +952,13 @@ libnativetask_la-NativeTask.lo: src/NativeTask.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-NativeTask.lo `test -f 'src/NativeTask.cc' || echo '$(srcdir)/'`src/NativeTask.cc
 
+libstreaming_la-Streaming.lo: examples/Streaming.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libstreaming_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libstreaming_la-Streaming.lo -MD -MP -MF $(DEPDIR)/libstreaming_la-Streaming.Tpo -c -o libstreaming_la-Streaming.lo `test -f 'examples/Streaming.cc' || echo '$(srcdir)/'`examples/Streaming.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libstreaming_la-Streaming.Tpo $(DEPDIR)/libstreaming_la-Streaming.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='examples/Streaming.cc' object='libstreaming_la-Streaming.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libstreaming_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libstreaming_la-Streaming.lo `test -f 'examples/Streaming.cc' || echo '$(srcdir)/'`examples/Streaming.cc
+
 nttest-TestRReducerHandler.o: test/handler/TestRReducerHandler.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestRReducerHandler.o -MD -MP -MF $(DEPDIR)/nttest-TestRReducerHandler.Tpo -c -o nttest-TestRReducerHandler.o `test -f 'test/handler/TestRReducerHandler.cc' || echo '$(srcdir)/'`test/handler/TestRReducerHandler.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestRReducerHandler.Tpo $(DEPDIR)/nttest-TestRReducerHandler.Po
@@ -1079,20 +1099,6 @@ nttest-TestProcess.obj: test/util/TestProcess.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestProcess.obj `if test -f 'test/util/TestProcess.cc'; then $(CYGPATH_W) 'test/util/TestProcess.cc'; else $(CYGPATH_W) '$(srcdir)/test/util/TestProcess.cc'; fi`
 
-nttest-test_commons.o: test/test_commons.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-test_commons.o -MD -MP -MF $(DEPDIR)/nttest-test_commons.Tpo -c -o nttest-test_commons.o `test -f 'test/test_commons.cc' || echo '$(srcdir)/'`test/test_commons.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-test_commons.Tpo $(DEPDIR)/nttest-test_commons.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/test_commons.cc' object='nttest-test_commons.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-test_commons.o `test -f 'test/test_commons.cc' || echo '$(srcdir)/'`test/test_commons.cc
-
-nttest-test_commons.obj: test/test_commons.cc
-@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-test_commons.obj -MD -MP -MF $(DEPDIR)/nttest-test_commons.Tpo -c -o nttest-test_commons.obj `if test -f 'test/test_commons.cc'; then $(CYGPATH_W) 'test/test_commons.cc'; else $(CYGPATH_W) '$(srcdir)/test/test_commons.cc'; fi`
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-test_commons.Tpo $(DEPDIR)/nttest-test_commons.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/test_commons.cc' object='nttest-test_commons.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-test_commons.obj `if test -f 'test/test_commons.cc'; then $(CYGPATH_W) 'test/test_commons.cc'; else $(CYGPATH_W) '$(srcdir)/test/test_commons.cc'; fi`
-
 nttest-TestBuffers.o: test/TestBuffers.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-TestBuffers.o -MD -MP -MF $(DEPDIR)/nttest-TestBuffers.Tpo -c -o nttest-TestBuffers.o `test -f 'test/TestBuffers.cc' || echo '$(srcdir)/'`test/TestBuffers.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-TestBuffers.Tpo $(DEPDIR)/nttest-TestBuffers.Po
@@ -1218,6 +1224,20 @@ nttest-TestMain.obj: test/TestMain.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/TestMain.cc' object='nttest-TestMain.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-TestMain.obj `if test -f 'test/TestMain.cc'; then $(CYGPATH_W) 'test/TestMain.cc'; else $(CYGPATH_W) '$(srcdir)/test/TestMain.cc'; fi`
+
+nttest-test_commons.o: test/test_commons.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-test_commons.o -MD -MP -MF $(DEPDIR)/nttest-test_commons.Tpo -c -o nttest-test_commons.o `test -f 'test/test_commons.cc' || echo '$(srcdir)/'`test/test_commons.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-test_commons.Tpo $(DEPDIR)/nttest-test_commons.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/test_commons.cc' object='nttest-test_commons.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-test_commons.o `test -f 'test/test_commons.cc' || echo '$(srcdir)/'`test/test_commons.cc
+
+nttest-test_commons.obj: test/test_commons.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-test_commons.obj -MD -MP -MF $(DEPDIR)/nttest-test_commons.Tpo -c -o nttest-test_commons.obj `if test -f 'test/test_commons.cc'; then $(CYGPATH_W) 'test/test_commons.cc'; else $(CYGPATH_W) '$(srcdir)/test/test_commons.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/nttest-test_commons.Tpo $(DEPDIR)/nttest-test_commons.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='test/test_commons.cc' object='nttest-test_commons.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nttest-test_commons.obj `if test -f 'test/test_commons.cc'; then $(CYGPATH_W) 'test/test_commons.cc'; else $(CYGPATH_W) '$(srcdir)/test/test_commons.cc'; fi`
 
 nttest-gtest-all.o: gtest/gtest-all.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nttest_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nttest-gtest-all.o -MD -MP -MF $(DEPDIR)/nttest-gtest-all.Tpo -c -o nttest-gtest-all.o `test -f 'gtest/gtest-all.cc' || echo '$(srcdir)/'`gtest/gtest-all.cc

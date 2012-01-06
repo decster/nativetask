@@ -532,7 +532,7 @@ public:
     } \
     return NULL; \
   } \
-  extern "C" int Library##Init()
+  extern "C" void Library##Init()
 
 #define REGISTER_CLASS(Type, Library) Library##ClassMap__[#Library"."#Type] = NativeTask::ObjectCreator<Type>
 
