@@ -17,6 +17,7 @@
  */
 
 #include <stdarg.h>
+#include "commons.h"
 #include "util/Random.h"
 #include "FileSystem.h"
 #include "lib/TeraSort.h"

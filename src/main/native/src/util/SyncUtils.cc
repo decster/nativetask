@@ -17,6 +17,8 @@
  */
 
 #include "commons.h"
+#include "jniutils.h"
+#include "StringUtil.h"
 #include "SyncUtils.h"
 
 namespace NativeTask {
@@ -68,7 +70,7 @@ void Lock::unlock() {
   }
 #else
   SpinLock::SpinLock() {
-    PthreadCall("init mutex", pthread_spin_init(&_spin, NULL));
+    PthreadCall("init mutex", pthread_spin_init(&_spin, 0));
   }
 
   SpinLock::~SpinLock() {
@@ -144,6 +146,14 @@ void Thread::run() {
   if (_runable!=NULL) {
     _runable->run();
   }
+}
+
+void Thread::EnableJNI() {
+  JNU_AttachCurrentThread();
+}
+
+void Thread::ReleaseJNI() {
+  JNU_DetachCurrentThread();
 }
 
 } // namespace NativeTask

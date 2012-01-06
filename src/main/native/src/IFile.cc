@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "IFile.h"
 
 namespace NativeTask {

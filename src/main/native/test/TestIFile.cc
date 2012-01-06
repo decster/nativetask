@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include "commons.h"
 #include "BufferStream.h"
 #include "FileSystem.h"
 #include "IFile.h"

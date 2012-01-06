@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 
+#include <execinfo.h>
 #include "commons.h"
 #include "util/Hash.h"
+#include "util/StringUtil.h"
 #include "NativeTask.h"
 #include "NativeObjectFactory.h"
 

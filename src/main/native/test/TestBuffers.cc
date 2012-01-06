@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "commons.h"
 #include "BufferStream.h"
 #include "Buffers.h"
 #include "test_commons.h"

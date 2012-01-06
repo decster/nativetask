@@ -17,10 +17,11 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
+#include "util/WritableUtils.h"
 #include "NativeObjectFactory.h"
 #include "FileSplit.h"
 #include "BufferStream.h"
-#include "WritableUtils.h"
 
 namespace NativeTask {
 

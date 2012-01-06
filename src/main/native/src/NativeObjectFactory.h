@@ -35,8 +35,6 @@ using std::set;
 using std::pair;
 
 class NativeLibrary;
-class Config;
-class Counter;
 
 /**
  * Native object factory

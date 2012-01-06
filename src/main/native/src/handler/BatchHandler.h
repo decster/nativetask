@@ -41,20 +41,12 @@ struct ByteBuffer {
 
 /**
  * Native side counterpart of java side NativeBatchProcessor
- * Subclass of BatchHandler should follow the naming rule:
- *  <M|R><StartStage><EndStage>Handler
- *  Map task stages:
- *    Input Reader Mapper Partitioner Collector Combiner Output
- *  Reduce task stages:
- *    Reduce
  */
 class BatchHandler: public Configurable {
 protected:
   ByteBuffer _ib;
   ByteBuffer _ob;
-  void * _tempJNIEnv;
-  void * _tempJProcessor;
-  bool _hasJavaException;
+  void * _processor;
 public:
   BatchHandler();
   virtual ~BatchHandler();
@@ -64,19 +56,13 @@ public:
   }
 
   /**
-   * Called by native jni functions to set local jni reference
+   * Called by native jni functions to set global jni reference
    */
-  void setTemps(void * jenv, void * processor) {
-    _tempJNIEnv = jenv;
-    _tempJProcessor = processor;
+  void setProcessor(void * processor) {
+    _processor = processor;
   }
 
-  /**
-   * @return true if java side threw an exception
-   */
-  bool hasJavaException() {
-    return _hasJavaException;
-  }
+  void releaseProcessor();
 
   /**
    * Called by java side to setup native side BatchHandler

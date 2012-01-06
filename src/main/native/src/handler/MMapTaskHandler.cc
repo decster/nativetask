@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "TaskCounters.h"
 #include "MMapTaskHandler.h"
 #include "NativeObjectFactory.h"
@@ -154,9 +155,6 @@ void MMapTaskHandler::collect(const void * key, uint32_t keyLen,
       return;
     }
     string spillpath = this->sendCommand("GetSpillPath");
-    if (hasJavaException()) {
-      THROW_EXCEPTION(IOException, "GetSpillPath failed with java side exception");
-    }
     if (spillpath.length() == 0) {
       THROW_EXCEPTION(IOException, "Illegal(empty) spill files path");
     }
@@ -210,13 +208,7 @@ void MMapTaskHandler::close() {
   _mapper->close();
   if (NULL != _moc) {
     string outputpath = this->sendCommand("GetOutputPath");
-    if (hasJavaException()) {
-      return;
-    }
     string indexpath = this->sendCommand("GetOutputIndexPath");
-    if (hasJavaException()) {
-      return;
-    }
     if ((outputpath.length() == 0) || (indexpath.length() == 0)) {
       THROW_EXCEPTION(IOException, "Illegal(empty) map output file/index path");
     }

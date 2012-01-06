@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "commons.h"
 #include "Streams.h"
 #include "Buffers.h"
 #include "lib/TeraSort.h"

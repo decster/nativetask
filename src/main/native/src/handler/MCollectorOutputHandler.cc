@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "MCollectorOutputHandler.h"
 #include "NativeObjectFactory.h"
 #include "MapOutputCollector.h"
@@ -51,13 +52,7 @@ void MCollectorOutputHandler::configure(Config & config) {
 
 void MCollectorOutputHandler::finish() {
   string outputpath = this->sendCommand("GetOutputPath");
-  if (hasJavaException()) {
-    return;
-  }
   string indexpath = this->sendCommand("GetOutputIndexPath");
-  if (hasJavaException()) {
-    return;
-  }
   if ((outputpath.length() == 0) || (indexpath.length() == 0)) {
     THROW_EXCEPTION(IOException, "Illegal(empty) map output file/index path");
   }
@@ -88,9 +83,6 @@ void MCollectorOutputHandler::handleInput(char * buff, uint32_t length) {
     char * dest = _collector->get_buffer_to_put(kvlength, partition);
     if (NULL == dest) {
       string spillpath = this->sendCommand("GetSpillPath");
-      if (hasJavaException()) {
-        return;
-      }
       if (spillpath.length() == 0) {
         THROW_EXCEPTION(IOException, "Illegal(empty) spill files path");
       }

@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "KVFile.h"
 
 

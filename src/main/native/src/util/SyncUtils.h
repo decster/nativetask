@@ -118,6 +118,15 @@ public:
   void stop();
   virtual void run();
 
+  /**
+   * Enable JNI for current thread
+   */
+  static void EnableJNI();
+  /**
+   * Release JNI when thread is at end if current
+   * thread called EnableJNI before
+   */
+  static void ReleaseJNI();
 private:
   static void * ThreadRunner(void * pthis);
 };
@@ -182,9 +191,19 @@ inline FunctionRunner<Subject, Method> Bind(Subject & subject, Method method) {
   return FunctionRunner<Subject, Method>(subject, method);
 }
 
+template<typename Subject, typename Method>
+inline FunctionRunner<Subject, Method> * BindNew(Subject & subject, Method method) {
+  return new FunctionRunner<Subject, Method>(subject, method);
+}
+
 template<typename Subject, typename Method, typename Arg>
 inline FunctionRunner1<Subject, Method, Arg> Bind(Subject & subject, Method method, Arg arg) {
   return FunctionRunner1<Subject, Method, Arg>(subject, method, arg);
+}
+
+template<typename Subject, typename Method, typename Arg>
+inline FunctionRunner1<Subject, Method, Arg> * BindNew(Subject & subject, Method method, Arg arg) {
+  return new FunctionRunner1<Subject, Method, Arg>(subject, method, arg);
 }
 
 template<typename Subject, typename Method, typename Arg1, typename Arg2>
@@ -192,11 +211,15 @@ inline FunctionRunner2<Subject, Method, Arg1, Arg2> Bind(Subject & subject, Meth
   return FunctionRunner2<Subject, Method, Arg1, Arg2>(subject, method, arg1, arg2);
 }
 
+template<typename Subject, typename Method, typename Arg1, typename Arg2>
+inline FunctionRunner2<Subject, Method, Arg1, Arg2> * BindNew(Subject & subject, Method method, Arg1 arg1, Arg2 arg2) {
+  return new FunctionRunner2<Subject, Method, Arg1, Arg2>(subject, method, arg1, arg2);
+}
+
 class ConcurrentIndex {
 private:
   size_t _index;
   size_t _end;
-  // TODO: use spinlock
   SpinLock _lock;
 public:
   ConcurrentIndex(size_t count) :

@@ -19,7 +19,6 @@
 #ifndef MAPOUTPUTBUFFER_H_
 #define MAPOUTPUTBUFFER_H_
 
-#include "commons.h"
 #include "mempool.h"
 #include "Timer.h"
 #include "Buffers.h"

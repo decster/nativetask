@@ -19,7 +19,6 @@
 #ifndef MEMORYPOOL_H_
 #define MEMORYPOOL_H_
 
-#include "commons.h"
 #include "Buffers.h"
 #include "MapOutputSpec.h"
 

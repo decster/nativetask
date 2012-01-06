@@ -119,6 +119,14 @@ public:
   }
 };
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define AT __FILE__ ":" TOSTRING(__LINE__)
+#define THROW_EXCEPTION(type, what) throw type((std::string(AT":") + what))
+#define THROW_EXCEPTION_EX(type, fmt, args...) \
+        throw type(StringUtil::Format("%s:" fmt, AT, ##args))
+
+
 class Config {
 protected:
   map<string, string> _configs;

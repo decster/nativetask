@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <jni.h>
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "jniutils.h"
 #include "NativeTask.h"
 #include "TaskCounters.h"

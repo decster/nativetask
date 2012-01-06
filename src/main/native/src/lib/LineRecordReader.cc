@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "Buffers.h"
 #include "FileSystem.h"
 #include "Compressions.h"
@@ -67,46 +68,45 @@ LineRecordReader::~LineRecordReader() {
 /**
  * For performance reasons,
  * Only consider \n or \r\n as new line terminator
- * TODO: memchr in some os/platform is not optimized,
- *       add memchr_sse4.2 primitive
+ * memchr in some os/platform is not optimized,
+ * add memchr_sse4.2 primitive
  */
-uint32_t LineRecordReader::readLine(Buffer & line) {
-  if (_pos >= _end) {
-    return 0;
-  }
-  if (_buffer.remain() > 0) {
-    char * pos = (char*)memchr(_buffer.current(), '\n', _buffer.remain());
+uint32_t LineRecordReader::ReadLine(InputStream * source, DynamicBuffer & buffer,
+                                    Buffer & line, uint32_t bufferHint,
+                                    bool withEOL) {
+  if (buffer.remain() > 0) {
+    char * pos = (char*)memchr(buffer.current(), '\n', buffer.remain());
     if (pos>0) {
-      uint32_t length = pos - _buffer.current();
-      uint32_t hasBR = ((length>0) && (*(pos-1) == '\r')) ? 1 : 0;
-      line.reset(_buffer.current(), length - hasBR);
-      _buffer.use(length + 1);
+      uint32_t length = pos - buffer.current();
+      int32_t hasBR = ((length>0) && (*(pos-1) == '\r')) ? 1 : 0;
+      line.reset(buffer.current(), length + (withEOL?1:-hasBR));
+      buffer.use(length + 1);
       return length + 1;
     }
   }
-  _buffer.cleanUsed();
+  buffer.cleanUsed();
   uint32_t findStart = 0;
   while (true) {
-    if (_buffer.freeSpace() < _bufferHint) {
-      _buffer.reserve(_buffer.capacity()*2);
+    if (buffer.freeSpace() < bufferHint) {
+      buffer.reserve(buffer.capacity()*2);
     }
-    int32_t rd = _buffer.refill(_source);
+    int32_t rd = buffer.refill(source);
     if (rd<=0) {
       // reach EOF
-      uint32_t ret = _buffer.size();
-      line.reset(_buffer.data(), ret);
-      _buffer.use(ret);
+      uint32_t ret = buffer.size();
+      line.reset(buffer.data(), ret);
+      buffer.use(ret);
       return ret;
     }
-    char * pos = (char*)memchr(_buffer.data()+findStart, '\n', _buffer.size()-findStart);
+    char * pos = (char*)memchr(buffer.data()+findStart, '\n', buffer.size()-findStart);
     if (pos>0) {
-      uint32_t length = pos - _buffer.data();
-      uint32_t hasBR = ((length>0) && (*(pos-1) == '\r')) ? 1 : 0;
-      line.reset(_buffer.data(), length - hasBR);
-      _buffer.use(length + 1);
+      uint32_t length = pos - buffer.data();
+      int32_t hasBR = ((length>0) && (*(pos-1) == '\r')) ? 1 : 0;
+      line.reset(buffer.data(), length + (withEOL?1:-hasBR));
+      buffer.use(length + 1);
       return length + 1;
     }
-    findStart = _buffer.size();
+    findStart = buffer.size();
   }
   return 0;
 }
@@ -121,11 +121,11 @@ void LineRecordReader::init(InputStream * stream, const string & codec) {
   _end = (uint64_t)-1;
   _inputLength = (uint64_t)-1;
   if (codec.length() > 0) {
-    // more buffer to prevent decompression stream using extra cache buffer
+    // more buffer to prevent decompression stream using extra temp buffer
     _buffer.reserve(_bufferHint*2);
     _source = Compressions::getDecompressionStream(codec, _orig, _bufferHint);
   } else {
-    _buffer.reserve(_bufferHint*2);
+    _buffer.reserve(_bufferHint);
     _source = _orig;
     if (_start != 0) {
       --_start;
@@ -138,7 +138,8 @@ void LineRecordReader::init(InputStream * stream, const string & codec) {
   }
 }
 
-void LineRecordReader::init(const string & file, uint64_t start, uint64_t length, Config & config) {
+void LineRecordReader::init(const string & file, uint64_t start,
+                            uint64_t length, Config & config) {
   close();
   _bufferHint = 128*1024;
   _orig = FileSystem::get(config).open(file);

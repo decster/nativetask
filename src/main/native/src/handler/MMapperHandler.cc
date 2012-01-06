@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "MMapperHandler.h"
 #include "NativeObjectFactory.h"
 #include "MapOutputCollector.h"
@@ -159,9 +160,6 @@ void MMapperHandler::collect(const void * key, uint32_t keyLen,
     return;
   }
   string spillpath = this->sendCommand("GetSpillPath");
-  if (hasJavaException()) {
-    return;
-  }
   if (spillpath.length() == 0) {
     THROW_EXCEPTION(IOException, "Illegal(empty) spill files path");
   }
@@ -195,13 +193,7 @@ void MMapperHandler::close() {
     return;
   }
   string outputpath = this->sendCommand("GetOutputPath");
-  if (hasJavaException()) {
-    return;
-  }
   string indexpath = this->sendCommand("GetOutputIndexPath");
-  if (hasJavaException()) {
-    return;
-  }
   if ((outputpath.length() == 0) || (indexpath.length() == 0)) {
     THROW_EXCEPTION(IOException, "Illegal(empty) map output file/index path");
   }

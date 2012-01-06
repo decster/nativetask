@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-#include "Timer.h"
+#include "commons.h"
+#include "util/Timer.h"
+#include "util/StringUtil.h"
 #include "Merge.h"
 
 namespace NativeTask {

@@ -19,7 +19,6 @@
 #ifndef BUFFERS_H_
 #define BUFFERS_H_
 
-#include "commons.h"
 #include "Streams.h"
 #include "Compressions.h"
 
@@ -162,7 +161,6 @@ public:
 
   /**
    * read to outside buffer, use simple_memcpy
-   * so buff must be have other remain space(buff.remain>=7)
    */
   inline void readUnsafe(char * buff, uint32_t len) {
     if (likely(len <= _remain)) {

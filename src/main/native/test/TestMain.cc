@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <execinfo.h>
 #include <stdexcept>
+#include "commons.h"
 #include "Buffers.h"
 #include "FileSystem.h"
 #include "test_commons.h"

@@ -29,6 +29,7 @@ class FileSystem;
 
 /**
  * Local raw filesystem file input stream
+ * with blocking semantics
  */
 class FileInputStream : public InputStream {
 private:
@@ -51,6 +52,7 @@ public:
 
 /**
  * Local raw filesystem file output stream
+ * with blocking semantics
  */
 class FileOutputStream : public OutputStream {
 private:

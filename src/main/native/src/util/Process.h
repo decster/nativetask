@@ -94,6 +94,16 @@ public:
    * @return subprocess pid
    */
   static int Popen(const string & cmd,
+                   int & fdstdin,
+                   int & fdstdout,
+                   int & fdstderr);
+
+  static int Popen(const string & cmd,
+                   FILE *& fstdin,
+                   FILE *& fstdout,
+                   FILE *& fstderr);
+
+  static int Popen(const string & cmd,
                    PipeOutputStream & pstdin,
                    PipeInputStream & pstdout,
                    PipeInputStream & pstderr);

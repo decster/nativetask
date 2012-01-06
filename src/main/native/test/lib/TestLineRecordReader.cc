@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "commons.h"
 #include "lib/LineRecordReader.h"
 #include "test_commons.h"
 

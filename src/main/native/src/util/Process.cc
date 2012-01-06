@@ -71,11 +71,10 @@ void PipeOutputStream::close() {
   _fd = -1;
 }
 
-
 int Process::Popen(const string & cmd,
-                   PipeOutputStream & pstdin,
-                   PipeInputStream & pstdout,
-                   PipeInputStream & pstderr) {
+                   int & fdstdin,
+                   int & fdstdout,
+                   int & fdstderr) {
   int outfd[2];
   int infd[2];
   int errfd[2];
@@ -110,11 +109,45 @@ int Process::Popen(const string & cmd,
     close(outfd[0]);
     close(infd[1]);
     close(errfd[1]);
-    pstdin.setFd(outfd[1]);
-    pstdout.setFd(infd[0]);
-    pstderr.setFd(errfd[0]);
+    fdstdin = outfd[1];
+    fdstdout = infd[0];
+    fdstderr = errfd[0];
     return pid;
   }
+}
+
+int Process::Popen(const string & cmd,
+                   FILE *& fstdin,
+                   FILE *& fstdout,
+                   FILE *& fstderr) {
+  int fdstdin;
+  int fdstdout;
+  int fdstderr;
+  int ret = Popen(cmd, fdstdin, fdstdout, fdstderr);
+  if (ret<=0) {
+    return ret;
+  }
+  fstdin = fdopen(fdstdin, "w");
+  fstdout = fdopen(fdstdout, "r");
+  fstderr = fdopen(fdstderr, "r");
+  return ret;
+}
+
+int Process::Popen(const string & cmd,
+                   PipeOutputStream & pstdin,
+                   PipeInputStream & pstdout,
+                   PipeInputStream & pstderr) {
+  int fdstdin;
+  int fdstdout;
+  int fdstderr;
+  int ret = Popen(cmd, fdstdin, fdstdout, fdstderr);
+  if (ret<=0) {
+    return ret;
+  }
+  pstdin.setFd(fdstdin);
+  pstdout.setFd(fdstdout);
+  pstderr.setFd(fdstderr);
+  return ret;
 }
 
 int Process::Run(const string & cmd, string * out, string * err) {

@@ -22,14 +22,37 @@
 #include <string>
 #include <jni.h>
 
+/**
+ * Get current JavaVM, if none then try to create one.
+ */
+JavaVM * JNU_GetJVM(void);
+
+/**
+ * Get JNIEnv for current thread.
+ */
 JNIEnv* JNU_GetJNIEnv(void);
 
+/**
+ * Attach currentThread, same effect as JNU_GetJNIEnv.
+ */
+void JNU_AttachCurrentThread();
+
+/**
+ * Detach current thread, call it if current thread
+ * is created in native side and have called
+ * JNU_AttachCurrentThread before
+ */
+void JNU_DetachCurrentThread();
+
+/**
+ * Throw a java exception.
+ */
 void JNU_ThrowByName(JNIEnv *jenv, const char *name, const char *msg);
 
+/**
+ * Convert a java byte array to c++ std::string
+ */
 std::string JNU_ByteArrayToString(JNIEnv * jenv, jbyteArray src);
 
-jmethodID methodIdFromClass(const char *className, const char *methName,
-                            const char *methSignature, bool isStatic,
-                            JNIEnv *env);
 
 #endif /* JNIUTILS_H_ */

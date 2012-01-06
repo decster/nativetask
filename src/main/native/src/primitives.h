@@ -38,23 +38,7 @@
 #endif
 
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define AT __FILE__ ":" TOSTRING(__LINE__)
-
-// #define THROW_EXCEPTION(type, what) throw type(AT":"what)
-
-#define THROW_EXCEPTION(type, what) throw type((std::string(AT":") + what))
-
-#define THROW_EXCEPTION_EX(type, fmt, args...) throw type(StringUtil::Format("%s:" fmt, AT, ##args))
-
-#if !defined(USE_CHECKSUM_CRC32C) && !defined(USE_CHECKSUM_CRC32C_HARDWARE)
-#define USE_CHECKSUM_CRC32
-#endif
-
-//#define MEMCMP_SSE42
 //#define SIMPLE_MEMCPY
-
 
 #if !defined(SIMPLE_MEMCPY)
 #define simple_memcpy memcpy

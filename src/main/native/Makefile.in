@@ -98,12 +98,11 @@ am__objects_1 = libnativetask_la-lz4.lo libnativetask_la-city.lo \
 	libnativetask_la-Process.lo libnativetask_la-Random.lo \
 	libnativetask_la-StringUtil.lo libnativetask_la-SyncUtils.lo \
 	libnativetask_la-Timer.lo libnativetask_la-WritableUtils.lo \
-	libnativetask_la-commons.lo libnativetask_la-mempool.lo \
-	libnativetask_la-jniutils.lo \
+	libnativetask_la-mempool.lo libnativetask_la-jniutils.lo \
 	libnativetask_la-NativeRuntimeJniImpl.lo \
-	libnativetask_la-Buffers.lo libnativetask_la-Streams.lo \
-	libnativetask_la-BufferStream.lo libnativetask_la-Path.lo \
-	libnativetask_la-FileSystem.lo \
+	libnativetask_la-Log.lo libnativetask_la-Buffers.lo \
+	libnativetask_la-Streams.lo libnativetask_la-BufferStream.lo \
+	libnativetask_la-Path.lo libnativetask_la-FileSystem.lo \
 	libnativetask_la-Compressions.lo \
 	libnativetask_la-PartitionIndex.lo libnativetask_la-KVFile.lo \
 	libnativetask_la-IFile.lo libnativetask_la-MapOutputSpec.lo \
@@ -330,10 +329,10 @@ src/util/StringUtil.cc                 \
 src/util/SyncUtils.cc                  \
 src/util/Timer.cc                      \
 src/util/WritableUtils.cc              \
-src/commons.cc                         \
 src/mempool.cc                         \
 src/jniutils.cc                        \
 src/NativeRuntimeJniImpl.cc            \
+src/Log.cc                             \
 src/Buffers.cc                         \
 src/Streams.cc                         \
 src/BufferStream.cc                    \
@@ -357,10 +356,14 @@ src/util/Process.h                    \
 src/util/StringUtil.h                 \
 src/util/SyncUtils.h                  \
 src/util/WritableUtils.h              \
-src/Compressions.h                    \
-src/Streams.h                         \
+src/lib/LineRecordReader.h            \
+src/lib/LineRecordWriter.h            \
+src/Log.h                             \
+src/Buffers.h                         \
 src/BufferStream.h                    \
+src/Compressions.h                    \
 src/FileSystem.h                      \
+src/Streams.h                         \
 src/NativeObjectFactory.h             \
 src/NativeTask.h                      
 
@@ -519,6 +522,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-KVFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-LineRecordReader.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-LineRecordWriter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-Lz4Codec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MCollectorOutputHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-MMapTaskHandler.Plo@am__quote@
@@ -546,7 +550,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-WordCount.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-WritableUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-city.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-commons.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-jniutils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-lz4.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativetask_la-mempool.Plo@am__quote@
@@ -796,13 +799,6 @@ libnativetask_la-WritableUtils.lo: src/util/WritableUtils.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-WritableUtils.lo `test -f 'src/util/WritableUtils.cc' || echo '$(srcdir)/'`src/util/WritableUtils.cc
 
-libnativetask_la-commons.lo: src/commons.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-commons.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-commons.Tpo -c -o libnativetask_la-commons.lo `test -f 'src/commons.cc' || echo '$(srcdir)/'`src/commons.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-commons.Tpo $(DEPDIR)/libnativetask_la-commons.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/commons.cc' object='libnativetask_la-commons.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-commons.lo `test -f 'src/commons.cc' || echo '$(srcdir)/'`src/commons.cc
-
 libnativetask_la-mempool.lo: src/mempool.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-mempool.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-mempool.Tpo -c -o libnativetask_la-mempool.lo `test -f 'src/mempool.cc' || echo '$(srcdir)/'`src/mempool.cc
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-mempool.Tpo $(DEPDIR)/libnativetask_la-mempool.Plo
@@ -823,6 +819,13 @@ libnativetask_la-NativeRuntimeJniImpl.lo: src/NativeRuntimeJniImpl.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/NativeRuntimeJniImpl.cc' object='libnativetask_la-NativeRuntimeJniImpl.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-NativeRuntimeJniImpl.lo `test -f 'src/NativeRuntimeJniImpl.cc' || echo '$(srcdir)/'`src/NativeRuntimeJniImpl.cc
+
+libnativetask_la-Log.lo: src/Log.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Log.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Log.Tpo -c -o libnativetask_la-Log.lo `test -f 'src/Log.cc' || echo '$(srcdir)/'`src/Log.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libnativetask_la-Log.Tpo $(DEPDIR)/libnativetask_la-Log.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/Log.cc' object='libnativetask_la-Log.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o libnativetask_la-Log.lo `test -f 'src/Log.cc' || echo '$(srcdir)/'`src/Log.cc
 
 libnativetask_la-Buffers.lo: src/Buffers.cc
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libnativetask_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT libnativetask_la-Buffers.lo -MD -MP -MF $(DEPDIR)/libnativetask_la-Buffers.Tpo -c -o libnativetask_la-Buffers.lo `test -f 'src/Buffers.cc' || echo '$(srcdir)/'`src/Buffers.cc

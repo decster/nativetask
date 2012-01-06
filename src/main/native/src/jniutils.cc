@@ -17,10 +17,81 @@
  */
 
 #include "commons.h"
-#include "StringUtil.h"
+#include "util/StringUtil.h"
+#include "util/SyncUtils.h"
 #include "jniutils.h"
 
 using namespace NativeTask;
+
+JavaVM * JNU_GetJVM(void) {
+  static JavaVM * gJVM = NULL;
+  static Lock GJVMLock;
+  if (gJVM != NULL) {
+    return gJVM;
+  }
+  {
+    ScopeLock<Lock> autolock(GJVMLock);
+    if (gJVM == NULL) {
+      jint rv = 0;
+      jint noVMs = 0;
+      rv = JNI_GetCreatedJavaVMs(&gJVM, 1, &noVMs);
+      if (rv != 0) {
+        THROW_EXCEPTION(NativeTask::HadoopException, "JNI_GetCreatedJavaVMs failed");
+      }
+      if (noVMs == 0) {
+        char *hadoopClassPath = getenv("CLASSPATH");
+        if (hadoopClassPath == NULL) {
+          THROW_EXCEPTION(NativeTask::HadoopException, "Environment variable CLASSPATH not set!");
+          return NULL;
+        }
+        const char *hadoopClassPathVMArg = "-Djava.class.path=";
+        size_t optHadoopClassPathLen = strlen(hadoopClassPath)
+            + strlen(hadoopClassPathVMArg) + 1;
+        char *optHadoopClassPath = (char*)malloc(sizeof(char) * optHadoopClassPathLen);
+        snprintf(optHadoopClassPath, optHadoopClassPathLen, "%s%s",
+                 hadoopClassPathVMArg, hadoopClassPath);
+        int noArgs = 1;
+        JavaVMOption options[noArgs];
+        options[0].optionString = optHadoopClassPath;
+
+        //Create the VM
+        JavaVMInitArgs vm_args;
+        vm_args.version = JNI_VERSION_1_6;
+        vm_args.options = options;
+        vm_args.nOptions = noArgs;
+        vm_args.ignoreUnrecognized = 1;
+        JNIEnv * jenv;
+        rv = JNI_CreateJavaVM(&gJVM, (void**) &jenv, &vm_args);
+        if (rv != 0) {
+          THROW_EXCEPTION(NativeTask::HadoopException, "JNI_CreateJavaVM failed");
+          return NULL;
+        }
+        free(optHadoopClassPath);
+      }
+    }
+  }
+  return gJVM;
+}
+
+JNIEnv* JNU_GetJNIEnv(void) {
+  JNIEnv * env;
+  jint rv = JNU_GetJVM()->AttachCurrentThread((void **)&env, NULL);
+  if (rv != 0) {
+    THROW_EXCEPTION(NativeTask::HadoopException, "Call to AttachCurrentThread failed");
+  }
+  return env;
+}
+
+void JNU_AttachCurrentThread() {
+  JNU_GetJNIEnv();
+}
+
+void JNU_DetachCurrentThread() {
+  jint rv = JNU_GetJVM()->DetachCurrentThread();
+  if (rv != 0) {
+    THROW_EXCEPTION(NativeTask::HadoopException, "Call to DetachCurrentThread failed");
+  }
+}
 
 void JNU_ThrowByName(JNIEnv *jenv, const char *name, const char *msg) {
   jclass cls = jenv->FindClass(name);
@@ -38,94 +109,4 @@ std::string JNU_ByteArrayToString(JNIEnv * jenv, jbyteArray src) {
     return ret;
   }
   return std::string();
-}
-
-/**
- * getJNIEnv: A helper function to get the JNIEnv* for the given thread.
- * If no JVM exists, then one will be created. JVM command line arguments
- * are obtained from the LIBHDFS_OPTS environment variable.
- *
- * @param: None.
- * @return The JNIEnv* corresponding to the thread.
- */
-JNIEnv* JNU_GetJNIEnv(void) {
-  const jsize vmBufLength = 1;
-  JavaVM* vmBuf[vmBufLength];
-  JNIEnv *env;
-  jint rv = 0;
-  jint noVMs = 0;
-
-  rv = JNI_GetCreatedJavaVMs(&(vmBuf[0]), vmBufLength, &noVMs);
-  if (rv != 0) {
-    THROW_EXCEPTION(NativeTask::HadoopException, "JNI_GetCreatedJavaVMs failed");
-  }
-
-  if (noVMs == 0) {
-//    THROW_EXCEPTION(Hadoop::HadoopException, "Not in a JNI environment");
-    char *hadoopClassPath = getenv("CLASSPATH");
-    if (hadoopClassPath == NULL) {
-      THROW_EXCEPTION(NativeTask::HadoopException, "Environment variable CLASSPATH not set!");
-      return NULL;
-    }
-    const char *hadoopClassPathVMArg = "-Djava.class.path=";
-    size_t optHadoopClassPathLen = strlen(hadoopClassPath)
-        + strlen(hadoopClassPathVMArg) + 1;
-    char *optHadoopClassPath = (char*)malloc(sizeof(char) * optHadoopClassPathLen);
-    snprintf(optHadoopClassPath, optHadoopClassPathLen, "%s%s",
-             hadoopClassPathVMArg, hadoopClassPath);
-
-    int noArgs = 1;
-    JavaVMOption options[noArgs];
-    options[0].optionString = optHadoopClassPath;
-
-    //Create the VM
-    JavaVMInitArgs vm_args;
-    JavaVM *vm;
-    vm_args.version = JNI_VERSION_1_6;
-    vm_args.options = options;
-    vm_args.nOptions = noArgs;
-    vm_args.ignoreUnrecognized = 1;
-
-    rv = JNI_CreateJavaVM(&vm, (void**) &env, &vm_args);
-    if (rv != 0) {
-      THROW_EXCEPTION(NativeTask::HadoopException, "JNI_CreateJavaVM failed");
-      return NULL;
-    }
-    free(optHadoopClassPath);
-  }
-  else {
-    //Attach this thread to the VM
-    JavaVM* vm = vmBuf[0];
-    rv = vm->AttachCurrentThread((void **)&env, NULL);
-    if (rv != 0) {
-      THROW_EXCEPTION(NativeTask::HadoopException, "Call to AttachCurrentThread failed");
-    }
-  }
-
-  return env;
-}
-
-
-jmethodID methodIdFromClass(const char *className, const char *methName,
-                            const char *methSignature, bool isStatic,
-                            JNIEnv *env) {
-  jclass cls = env->FindClass(className);
-  if (cls == NULL) {
-    THROW_EXCEPTION_EX(NativeTask::HadoopException, "class not found: %s", className);
-    return NULL;
-  }
-
-  jmethodID mid = 0;
-
-  if (isStatic) {
-      mid = env->GetStaticMethodID(cls, methName, methSignature);
-  }
-  else {
-      mid = env->GetMethodID(cls, methName, methSignature);
-  }
-  if (mid == NULL) {
-    THROW_EXCEPTION_EX(NativeTask::HadoopException, "method not found: %s", methName);
-  }
-  env->DeleteLocalRef(cls);
-  return mid;
 }

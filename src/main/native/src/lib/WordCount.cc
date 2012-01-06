@@ -16,10 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef WORDCOUNT_CC_
-#define WORDCOUNT_CC_
-
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "WordCount.h"
 
 namespace NativeTask {
@@ -113,4 +111,3 @@ void TextIntRecordWriter::collect(const void * key, uint32_t keyLen,
 
 } // namespace NativeTask
 
-#endif /* WORDCOUNT_CC_ */

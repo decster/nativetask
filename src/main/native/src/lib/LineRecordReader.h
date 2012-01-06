@@ -40,10 +40,15 @@ protected:
   /**
    * read next line in to <code>line</code>
    * @param line contains memory position & length of the line read
-   * @return bytes of the newline including the ending \r or \n
+   * @return bytes of the newline including the ending \r\n or \n
    *         0 if no more line
    */
-  uint32_t readLine(Buffer & line);
+  uint32_t readLine(Buffer & line, bool withEOL=false) {
+    if (_pos >= _end) {
+      return 0;
+    }
+    return ReadLine(_source, _buffer, line, _bufferHint, withEOL);
+  }
 public:
   LineRecordReader();
 
@@ -64,6 +69,10 @@ public:
   virtual float getProgress();
 
   virtual void close();
+
+  static uint32_t ReadLine(InputStream * in, DynamicBuffer & buffer,
+                           Buffer & line, uint32_t bufferHint,
+                           bool withEOL = false);
 };
 
 class KeyValueLineRecordReader : public LineRecordReader {

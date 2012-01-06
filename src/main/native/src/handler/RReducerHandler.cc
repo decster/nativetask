@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "TaskCounters.h"
 #include "NativeObjectFactory.h"
 #include "RReducerHandler.h"
@@ -214,9 +215,6 @@ void RReducerHandler::collect(const void * key, uint32_t keyLen,
 
 int32_t RReducerHandler::refill() {
   string ret = sendCommand("r");
-  if (_hasJavaException) {
-    THROW_EXCEPTION(JavaException, "java side throw an exception when call refill");
-  }
   int32_t retvalue = *((const int32_t*)ret.data());
   _current = _ib.buff;
   _remain = retvalue;

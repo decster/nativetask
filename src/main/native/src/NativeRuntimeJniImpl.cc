@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-
+#ifndef QUICK_BUILD
 #include "org_apache_hadoop_mapred_nativetask_NativeRuntime.h"
+#endif
 #include "commons.h"
 #include "jniutils.h"
 #include "NativeObjectFactory.h"

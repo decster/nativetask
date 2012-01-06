@@ -17,6 +17,7 @@
  */
 
 #include "commons.h"
+#include "util/StringUtil.h"
 #include "Compressions.h"
 #include "FileSystem.h"
 #include "LineRecordWriter.h"

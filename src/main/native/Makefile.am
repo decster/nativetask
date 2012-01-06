@@ -50,10 +50,10 @@ src/util/StringUtil.cc                 \
 src/util/SyncUtils.cc                  \
 src/util/Timer.cc                      \
 src/util/WritableUtils.cc              \
-src/commons.cc                         \
 src/mempool.cc                         \
 src/jniutils.cc                        \
 src/NativeRuntimeJniImpl.cc            \
+src/Log.cc                             \
 src/Buffers.cc                         \
 src/Streams.cc                         \
 src/BufferStream.cc                    \
@@ -79,10 +79,14 @@ src/util/Process.h                    \
 src/util/StringUtil.h                 \
 src/util/SyncUtils.h                  \
 src/util/WritableUtils.h              \
-src/Compressions.h                    \
-src/Streams.h                         \
+src/lib/LineRecordReader.h            \
+src/lib/LineRecordWriter.h            \
+src/Log.h                             \
+src/Buffers.h                         \
 src/BufferStream.h                    \
+src/Compressions.h                    \
 src/FileSystem.h                      \
+src/Streams.h                         \
 src/NativeObjectFactory.h             \
 src/NativeTask.h                      
 

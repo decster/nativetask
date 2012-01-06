@@ -1,9 +1,11 @@
 TODOs:
 
+extract LineReader from LineRecordReader
+add example 
+
 input progress
 Counters
 job submitter
-add example 
 Terasort TotalOrderPartitioner
 add google sparse hash
 add test for partition bucket combiner

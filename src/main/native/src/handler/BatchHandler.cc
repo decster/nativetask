@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+#ifndef QUICK_BUILD
 #include "org_apache_hadoop_mapred_nativetask_NativeBatchProcessor.h"
+#endif
 #include "commons.h"
 #include "jniutils.h"
 #include "BatchHandler.h"
@@ -39,12 +41,19 @@ static jmethodID SendCommandToJavaMethodID   = NULL;
 namespace NativeTask {
 
 BatchHandler::BatchHandler() :
-  _tempJNIEnv(NULL),
-  _tempJProcessor(NULL),
-  _hasJavaException(false) {
+  _processor(NULL) {
 }
 
 BatchHandler::~BatchHandler() {
+  releaseProcessor();
+}
+
+void BatchHandler::releaseProcessor() {
+  if (_processor != NULL) {
+    JNIEnv * env = JNU_GetJNIEnv();
+    env->DeleteGlobalRef((jobject)_processor);
+    _processor = NULL;
+  }
 }
 
 void BatchHandler::onInputData(uint32_t length) {
@@ -59,10 +68,11 @@ void BatchHandler::flushOutput(uint32_t length) {
   if (NULL == _ob.buff) {
     return;
   }
-  ((JNIEnv*)_tempJNIEnv)->CallVoidMethod((jobject)_tempJProcessor,
+  JNIEnv * env = JNU_GetJNIEnv();
+  env->CallVoidMethod((jobject)_processor,
       FlushOutputMethodID, (jint) length);
-  if (((JNIEnv*) _tempJNIEnv)->ExceptionCheck()) {
-    _hasJavaException = true;
+  if (env->ExceptionCheck()) {
+    THROW_EXCEPTION(JavaException, "FlushOutput throw exception");
   }
 }
 
@@ -70,17 +80,17 @@ void BatchHandler::finishOutput() {
   if (NULL == _ob.buff) {
     return;
   }
-  ((JNIEnv*)_tempJNIEnv)->CallVoidMethod((jobject)_tempJProcessor,
+  JNIEnv * env = JNU_GetJNIEnv();
+  env->CallVoidMethod((jobject)_processor,
       FinishOutputMethodID);
-  if (((JNIEnv*) _tempJNIEnv)->ExceptionCheck()) {
-    _hasJavaException = true;
+  if (env->ExceptionCheck()) {
+    THROW_EXCEPTION(JavaException, "FinishOutput throw exception");
   }
 }
 
 void BatchHandler::onSetup(char * inputBuffer, uint32_t inputBufferCapacity,
     char * outputBuffer, uint32_t outputBufferCapacity) {
   _ib.reset(inputBuffer, inputBufferCapacity);
-  // reserve space for simple_memcpy
   if (NULL != outputBuffer) {
     if (outputBufferCapacity <= 1024) {
       THROW_EXCEPTION(IOException, "Output buffer size too small for BatchHandler");
@@ -91,16 +101,16 @@ void BatchHandler::onSetup(char * inputBuffer, uint32_t inputBufferCapacity,
 }
 
 std::string BatchHandler::sendCommand(const std::string & data) {
-  jbyteArray jcmdData = ((JNIEnv*) _tempJNIEnv)->NewByteArray(data.length());
-  ((JNIEnv*) _tempJNIEnv)->SetByteArrayRegion(jcmdData, 0,
+  JNIEnv * env = JNU_GetJNIEnv();
+  jbyteArray jcmdData = env->NewByteArray(data.length());
+  env->SetByteArrayRegion(jcmdData, 0,
       (jsize) data.length(), (jbyte*) data.c_str());
-  jbyteArray ret = (jbyteArray) ((JNIEnv*) _tempJNIEnv)->CallObjectMethod(
-      (jobject) _tempJProcessor, SendCommandToJavaMethodID, jcmdData);
-  if (((JNIEnv*) _tempJNIEnv)->ExceptionCheck()) {
-    _hasJavaException = true;
-    return std::string("");
+  jbyteArray ret = (jbyteArray) env->CallObjectMethod(
+      (jobject) _processor, SendCommandToJavaMethodID, jcmdData);
+  if (env->ExceptionCheck()) {
+    THROW_EXCEPTION(JavaException, "SendCommandToJava throw exception");
   }
-  return JNU_ByteArrayToString(((JNIEnv*) _tempJNIEnv), ret);
+  return JNU_ByteArrayToString(env, ret);
 }
 
 } // namespace NativeTask
@@ -119,7 +129,6 @@ using namespace NativeTask;
 void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setupHandler
   (JNIEnv * jenv, jobject processor, jlong handler) {
   try {
-    //LOG("native setup handler %llu", handler);
     NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "BatchHandler is null");
@@ -139,6 +148,7 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setup
       outputBufferAddr = (char*)(jenv->GetDirectBufferAddress(joutputBuffer));
       outputBufferCapacity = jenv->GetDirectBufferCapacity(joutputBuffer);
     }
+    batchHandler->setProcessor(jenv->NewGlobalRef(processor));
     batchHandler->onSetup(inputBufferAddr, inputBufferCapacity, outputBufferAddr, outputBufferCapacity);
   }
   catch (NativeTask::UnsupportException e) {
@@ -170,13 +180,11 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_setup
 void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativeProcessInput
   (JNIEnv * jenv, jobject processor, jlong handler, jint length) {
   try {
-    //LOG("native process input %llu", handler);
     NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "handler not instance of BatchHandler");
       return;
     }
-    batchHandler->setTemps(jenv, processor);
     batchHandler->onInputData(length);
   }
   catch (NativeTask::UnsupportException e) {
@@ -208,13 +216,11 @@ void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativ
 void JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor_nativeFinish
   (JNIEnv * jenv, jobject processor, jlong handler) {
   try {
-    //LOG("native finish %llu", handler);
     NativeTask::BatchHandler * batchHandler = (NativeTask::BatchHandler *)((void*)handler);
     if (NULL==batchHandler) {
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "handler not instance of BatchHandler");
       return;
     }
-    batchHandler->setTemps(jenv, processor);
     batchHandler->onFinish();
   }
   catch (NativeTask::UnsupportException e) {
@@ -251,12 +257,8 @@ jbyteArray JNICALL Java_org_apache_hadoop_mapred_nativetask_NativeBatchProcessor
       JNU_ThrowByName(jenv, "java/lang/IllegalArgumentException", "handler not instance of BatchHandler");
       return NULL;
     }
-    batchHandler->setTemps(jenv, processor);
     std::string cmdDataStr = JNU_ByteArrayToString(jenv, cmdData);
     std::string retString = batchHandler->onCommand(cmdDataStr);
-    if (batchHandler->hasJavaException()) {
-      return NULL;
-    }
     jbyteArray ret = jenv->NewByteArray(retString.length());
     jenv->SetByteArrayRegion(ret, 0, retString.length(), (jbyte*)retString.c_str());
     return ret;

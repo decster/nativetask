@@ -17,11 +17,13 @@
  */
 
 #include <signal.h>
+#include <execinfo.h>
 #include "commons.h"
 #include "NativeTask.h"
 #include "NativeObjectFactory.h"
 #include "NativeLibrary.h"
 #include "BufferStream.h"
+#include "util/StringUtil.h"
 #include "util/SyncUtils.h"
 #include "util/WritableUtils.h"
 #include "handler/BatchHandler.h"

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,29 +16,34 @@
  * limitations under the License.
  */
 
+#ifndef LOG_H_
+#define LOG_H_
 
-#ifndef COMMONS_H_
-#define COMMONS_H_
-
-#include <stdint.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
 #include <stdio.h>
-#include <memory.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <time.h>
 
-#include <limits>
-#include <string>
-#include <vector>
-#include <set>
-#include <map>
-#include <algorithm>
+namespace NativeTask {
 
-#include "primitives.h"
-#include "Log.h"
-#include "NativeTask.h"
+#define PRINT_LOG
 
-#endif /* COMMONS_H_ */
+#ifdef PRINT_LOG
+
+extern FILE * LOG_DEVICE;
+#define LOG(_fmt_, args...)   if (LOG_DEVICE) { \
+    time_t log_timer; struct tm log_tm; \
+    time(&log_timer); localtime_r(&log_timer, &log_tm); \
+    fprintf(LOG_DEVICE, "%02d/%02d/%02d %02d:%02d:%02d INFO "_fmt_"\n", \
+    log_tm.tm_year%100, log_tm.tm_mon+1, log_tm.tm_mday, \
+    log_tm.tm_hour, log_tm.tm_min, log_tm.tm_sec, \
+    ##args);}
+
+#else
+
+#define LOG(_fmt_, args...)
+
+#endif
+
+} // namespace NativeTask
+
+
+#endif /* LOG_H_ */

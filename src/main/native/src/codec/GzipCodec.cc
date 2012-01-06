@@ -35,7 +35,8 @@ GzipCompressStream::GzipCompressStream(
   _zstream = malloc(sizeof(z_stream));
   z_stream * zstream = (z_stream*)_zstream;
   memset(zstream, 0, sizeof(z_stream));
-  if (Z_OK != deflateInit2(zstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY)) {
+  if (Z_OK != deflateInit2(zstream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8,
+                           Z_DEFAULT_STRATEGY)) {
     free(_zstream);
     _zstream = NULL;
     THROW_EXCEPTION(IOException, "deflateInit2 failed");
@@ -165,16 +166,20 @@ int32_t GzipDecompressStream::read(void * buff, uint32_t length) {
         zstream->avail_in = rd;
       }
     }
-    //printf("before in: %p/%u out: %p/%u total: %lu/%lu\n", stream.next_in, stream.avail_in, stream.next_out, stream.avail_out, stream.total_in, stream.total_out);
+//    printf("before in: %p/%u out: %p/%u total: %lu/%lu\n", stream.next_in,
+//           stream.avail_in, stream.next_out, stream.avail_out, stream.total_in,
+//           stream.total_out);
     int ret = inflate(zstream, Z_NO_FLUSH);
-    //printf(" after in: %p/%u out: %p/%u total: %lu/%lu\n", stream.next_in, stream.avail_in, stream.next_out, stream.avail_out, stream.total_in, stream.total_out);
+//    printf(" after in: %p/%u out: %p/%u total: %lu/%lu\n", stream.next_in,
+//           stream.avail_in, stream.next_out, stream.avail_out, stream.total_in,
+//           stream.total_out);
     if (ret == Z_OK || ret == Z_STREAM_END) {
       if (zstream->avail_out == 0) {
-        printf("return %d\n", length);
+//        printf("return %d\n", length);
         return length;
       }
     } else {
-      printf("Error: %d\n", ret);
+//      printf("Error: %d\n", ret);
       return -1;
     }
   }

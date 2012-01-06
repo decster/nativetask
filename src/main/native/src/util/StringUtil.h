@@ -19,6 +19,7 @@
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
+#include <stdint.h>
 #include <vector>
 #include <string>
 

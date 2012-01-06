@@ -113,7 +113,7 @@ static void test_simple_memcpy_perf_len(char * src, char * dest, size_t len,
   }
 }
 
-TEST(Perf, simple_memcpy) {
+TEST(Perf, simple_memcpy_small) {
   char * src = new char[10240];
   char * dest = new char[10240];
   char buff[32];
@@ -281,8 +281,8 @@ TEST(Perf, memchr) {
   delete [] buff;
 }
 
-TEST(Perf, memcpy) {
-  int32_t size = TestConfig.getInt("input.size", 32*1024);
+TEST(Perf, memcpy_batch) {
+  int32_t size = TestConfig.getInt("input.size", 64*1024);
   size_t mb = TestConfig.getInt("input.mb", 320) * 1024*1024UL;
   char * src = new char[size];
   char * dest = new char[size];
