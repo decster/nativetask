@@ -254,7 +254,6 @@ gcc version 3.4.5 20051201
 12/01/04 17:35:40 INFO Sort 3 [0,100) time: 0.699
 12/01/04 17:35:41 INFO Merge 4 segments: record 0, key: 1000, size 17855, real 18958, time: 0.383
 
-12/01/04 15:54:56 INFO Native MemoryBlockPool: min_block_size 768K, capacity 300M
 12/01/04 15:54:56 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
 12/01/04 15:55:01 INFO Spill 0 [0,100) collect: 2.426s sort: 1.557s spill: 0.352s, record: 12841142, key: 1000, block: 400, size 17855, real: 18895
 12/01/04 15:55:05 INFO Spill 1 [0,100) collect: 2.097s sort: 1.507s spill: 0.287s, record: 12778865, key: 1000, block: 400, size 17855, real: 18907

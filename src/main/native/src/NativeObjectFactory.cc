@@ -113,10 +113,7 @@ bool NativeObjectFactory::Init() {
     } else {
       LOG_DEVICE = fopen(device.c_str(), "w");
     }
-    if (0 != NativeTaskInit()) {
-      LOG("NativeTaskInit() failed");
-      return false;
-    }
+    NativeTaskInit();
     NativeLibrary * library = new NativeLibrary("libnativetask.so", "NativeTask");
     library->_getObjectCreatorFunc = NativeTaskGetObjectCreator;
     Libraries.push_back(library);

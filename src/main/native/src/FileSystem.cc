@@ -17,6 +17,7 @@
  */
 
 #include <errno.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <jni.h>
 #include "commons.h"
@@ -119,10 +120,6 @@ void FileOutputStream::close() {
 
 /////////////////////////////////////////////////////////////
 
-static int mkdirs(const string & path, int nmode) {
-
-}
-
 class RawFileSystem : public FileSystem {
 protected:
   string getRealPath(const string & path) {
@@ -156,6 +153,26 @@ public:
           "stat path %s failed, %s", path.c_str(), buff));
     }
     return st.st_size;
+  }
+
+  bool list(const string & path, vector<FileEntry> & status) {
+    DIR * dp;
+    struct dirent * dirp;
+    if ((dp = opendir(path.c_str())) == NULL) {
+      return false;
+    }
+
+    FileEntry temp;
+    while ((dirp = readdir(dp)) != NULL) {
+      temp.name = dirp->d_name;
+      temp.isDirectory = dirp->d_type & DT_DIR;
+      if (temp.name == "." || temp.name == "..") {
+        continue;
+      }
+      status.push_back(temp);
+    }
+    closedir(dp);
+    return true;
   }
 
   void remove(const string & path) {
@@ -364,6 +381,10 @@ public:
       THROW_EXCEPTION_EX(HadoopException, "getLength file [%s] got exception", path.c_str());
     }
     return (uint64_t)ret;
+  }
+
+  bool list(const string & path, vector<FileEntry> & status) {
+    return false;
   }
 
   void remove(const string & path) {

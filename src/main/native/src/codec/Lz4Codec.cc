@@ -108,4 +108,3 @@ uint64_t Lz4DecompressStream::maxCompressedLength(uint64_t origLength) {
 }
 
 } // namespace NativeTask
-

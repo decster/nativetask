@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+#include "snappy.h"
+#include "commons.h"
+#include "Path.h"
 #include "BufferStream.h"
 #include "FileSystem.h"
 #include "Compressions.h"
@@ -55,7 +58,7 @@ void TestCodec(const string & codec, const string & data, char * buff,
     }
     total += rd;
   }
-  LOG("%s", timer.getSpeedM2("decompress orig/uncompressed", outputBuffer.tell(), total).c_str());
+  LOG("%s", timer.getSpeedM2("decompress origin/uncompressed", outputBuffer.tell(), total).c_str());
   LOG("ratio: %.3lf", outputBuffer.tell()/(double)total);
   ASSERT_EQ(data.length(), total);
   ASSERT_EQ(0, memcmp(data.c_str(), buff2, total));
@@ -150,3 +153,141 @@ TEST(Perf, CompressionUtil) {
     LOG("Not compression or decompression, do nothing");
   }
 }
+
+
+class CompressResult {
+public:
+  uint64_t uncompressedSize;
+  uint64_t compressedSize;
+  uint64_t compressTime;
+  uint64_t uncompressTime;
+  CompressResult():
+    uncompressedSize(0),
+    compressedSize(0),
+    compressTime(0),
+    uncompressTime(0){
+  }
+  CompressResult & operator+=(const CompressResult & rhs) {
+    uncompressedSize += rhs.uncompressedSize;
+    compressedSize += rhs.compressedSize;
+    compressTime += rhs.compressTime;
+    uncompressTime += rhs.uncompressTime;
+  }
+  string toString() {
+    return StringUtil::Format("Compress: %4.0fM/s Decompress: %5.0fM/s(%5.0fM/s) ratio: %.1f%%",
+                              (uncompressedSize/1024.0/1024) / (compressTime / 1000000000.),
+                              (compressedSize/1024.0/1024) / (uncompressTime / 1000000000.),
+                              (uncompressedSize/1024.0/1024) / (uncompressTime / 1000000000.),
+                              compressedSize / (float) uncompressedSize * 100);
+  }
+};
+
+extern "C" {
+extern int LZ4_compress   (char* source, char* dest, int isize);
+extern int LZ4_uncompress (char* source, char* dest, int osize);
+};
+
+void MeasureSingleFileLz4(const string & path, CompressResult & total, size_t blockSize, int times) {
+  string data;
+  ReadFile(data, path);
+  size_t maxlength = std::max((size_t)(blockSize*1.005), blockSize+8);
+  char * outputBuffer = new char[maxlength];
+  char * dest = new char[blockSize+8];
+  CompressResult result;
+  Timer t;
+  int compressedSize;
+  for (size_t start = 0; start < data.length(); start+= blockSize) {
+    size_t currentblocksize = std::min(data.length() - start, blockSize);
+    uint64_t startTime = t.now();
+    for (int i=0;i<times;i++) {
+      int osize = LZ4_compress((char*)data.data()+start, outputBuffer, currentblocksize);
+      compressedSize = osize;
+      result.compressedSize += osize;
+      result.uncompressedSize += currentblocksize;
+    }
+    uint64_t endTime = t.now();
+    result.compressTime += endTime - startTime;
+    startTime = t.now();
+    for (int i=0;i<times;i++) {
+//      memset(dest, 0, currentblocksize+8);
+      int osize = LZ4_uncompress(outputBuffer, dest, currentblocksize);
+//      printf("%016llx blocksize: %lu\n", bswap64(*(uint64_t*)(dest+currentblocksize)), currentblocksize);
+    }
+    endTime = t.now();
+    result.uncompressTime += endTime - startTime;
+  }
+  printf("%s - %s\n", result.toString().c_str(), Path::GetName(path).c_str());
+  delete [] outputBuffer;
+  delete [] dest;
+  total += result;
+}
+
+TEST(Perf, RawCompressionLz4) {
+  string inputdir = TestConfig.get("compressions.input.path", "");
+  int64_t times = TestConfig.getInt("compression.time", 400);
+  int64_t blockSize = TestConfig.getInt("compression.block.size", 1024*64);
+  vector<FileEntry> inputfiles;
+  FileSystem::getRaw().list(inputdir, inputfiles);
+  CompressResult total;
+  printf("Block size: %lldK\n", blockSize/1024);
+  for (size_t i=0;i<inputfiles.size();i++) {
+    if (!inputfiles[i].isDirectory) {
+      MeasureSingleFileLz4((inputdir + "/" + inputfiles[i].name).c_str(), total, blockSize, times);
+    }
+  }
+  printf("%s - Total\n", total.toString().c_str());
+}
+
+
+void MeasureSingleFileSnappy(const string & path, CompressResult & total, size_t blockSize, int times) {
+  string data;
+  ReadFile(data, path);
+  size_t maxlength = snappy::MaxCompressedLength(blockSize);
+  char * outputBuffer = new char[maxlength];
+  char * dest = new char[blockSize];
+  CompressResult result;
+  Timer t;
+  int compressedSize;
+  for (size_t start = 0; start < data.length(); start+= blockSize) {
+    size_t currentblocksize = std::min(data.length() - start, blockSize);
+    uint64_t startTime = t.now();
+    for (int i=0;i<times;i++) {
+      size_t osize = maxlength;
+      snappy::RawCompress(data.data()+start, currentblocksize, outputBuffer, &osize);
+      compressedSize = osize;
+      result.compressedSize += osize;
+      result.uncompressedSize += currentblocksize;
+    }
+    uint64_t endTime = t.now();
+    result.compressTime += endTime - startTime;
+    startTime = t.now();
+    for (int i=0;i<times;i++) {
+      snappy::RawUncompress(outputBuffer, compressedSize, dest);
+    }
+    endTime = t.now();
+    result.uncompressTime += endTime - startTime;
+  }
+  printf("%s - %s\n", result.toString().c_str(), Path::GetName(path).c_str());
+  delete [] outputBuffer;
+  delete [] dest;
+  total += result;
+}
+
+TEST(Perf, RawCompressionSnappy) {
+  string inputdir = TestConfig.get("compressions.input.path", "");
+  int64_t times = TestConfig.getInt("compression.time", 400);
+  int64_t blockSize = TestConfig.getInt("compression.block.size", 1024*64);
+  vector<FileEntry> inputfiles;
+  FileSystem::getRaw().list(inputdir, inputfiles);
+  CompressResult total;
+  printf("Block size: %lldK\n", blockSize/1024);
+  for (size_t i=0;i<inputfiles.size();i++) {
+    if (!inputfiles[i].isDirectory) {
+      MeasureSingleFileSnappy((inputdir + "/" + inputfiles[i].name).c_str(), total, blockSize, times);
+    }
+  }
+  printf("%s - Total\n", total.toString().c_str());
+}
+
+
+

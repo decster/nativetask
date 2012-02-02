@@ -116,6 +116,12 @@ public:
   virtual void close();
 };
 
+class FileEntry {
+public:
+  string name;
+  bool isDirectory;
+};
+
 /**
  * FileSystem interface
  */
@@ -125,11 +131,28 @@ protected:
 public:
   virtual ~FileSystem() {}
 
-  virtual InputStream * open(const string & path) {}
-  virtual OutputStream * create(const string & path, bool overwrite = true) {}
-  virtual uint64_t getLength(const string & path) {}
+  virtual InputStream * open(const string & path) {
+    return NULL;
+  }
+
+  virtual OutputStream * create(const string & path, bool overwrite = true) {
+    return NULL;
+  }
+
+  virtual uint64_t getLength(const string & path) {
+    return 0;
+  }
+
+  virtual bool list(const string & path, vector<FileEntry> & status) {
+    return false;
+  }
+
   virtual void remove(const string & path) {}
-  virtual bool exists(const string & path) {}
+
+  virtual bool exists(const string & path) {
+    return false;
+  }
+
   virtual void mkdirs(const string & path) {}
 
   static string getDefaultUri(Config & config);

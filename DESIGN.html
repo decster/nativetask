@@ -1,0 +1,909 @@
+<h1>The Design of NativeTask</h1>
+
+<p>Author: Binglin Chang (decstery@gmail.com)</p>
+
+<h2>Introduction</h2>
+
+<p>NativeTask is a high performance C++ API &amp; runtime for Hadoop MapReduce. Why
+it is called <em>NativeTask</em> is that it is a <em>native</em> computing unit only focus
+on data processing, which is exactly what <em>Task</em> do in the Hadoop MapReduce 
+context. 
+In other word, NativeTask is not responsible for resource management, job
+Scheduling and fault-tolerance. Those are all managed by original Hadoop
+components as before, unchanged. But the actual data processing and computation, 
+which consumes most of cluster resources, are delegated to this highly 
+efficient data processing unit.</p>
+
+<p>NativeTask is designed to be very fast, with native C++ API. So more 
+efficient data analysis applications can build upon it, like LLVM based 
+query execution engine mentioned in Google's 
+<a href="http://research.google.com/pubs/pub37200.html">Tenzing</a>. 
+Actually this is the main objective of NativeTask, to provide a efficient 
+native Hadoop framework, so much more efficient data analyze tools can 
+be built upon it: </p>
+
+<ul>
+<li><p>Data warehousing tool using state of the art query execution techniques 
+existing in parallel DBMSs, such as compression, vectorization, dynamic 
+compilation, etc. These techniques are more easy to implement in 
+native code, as we can see that most of these techniques are implemented 
+using C/C++: Vectorwise, Vertica.</p></li>
+<li><p>High performance data mining/machine learning libraries, most of these 
+algorithms are CPU intensive, involving lot of numerical computation, 
+or have been implemented using native languages already, a native runtime 
+permits better performance, or easy porting these algorithms to Hadoop. </p></li>
+</ul>
+
+<p>From user's perspective, NativeTask is a lot like Hadoop Pipes: using header 
+files and dynamic libraries provided in NativeTask library, you compile 
+your application or class library to a dynamic library rather than executable 
+program(because we use JNI), then using a Submitter tool to submit you 
+job to Hadoop cluster like streaming or pipes do. Tutorials or manuals are not 
+available yet, also you can read examples in src/main/native/examples.</p>
+
+<h2>Features</h2>
+
+<ol>
+<li>High performance, more cost effective for your Hadoop cluster;</li>
+<li>C++ API, so user can develop native applications or apply more 
+aggressive optimizations not available or convenient for java, 
+like SSE/AVX instruction, LLVM, GPU computing, coprocessor etc.</li>
+<li>Support no sort, by removing sort, the shuffle stage barrier can be 
+eliminated, yielding better data processing throughput;</li>
+<li>Support foldl style API, much faster for aggregation queries;</li>
+<li>Binary based MapReduce API, no serialization/deserialization overhead;</li>
+<li>Compatible with Hadoop 0.20-0.23(need task-delegation patch)</li>
+</ol>
+
+<h2>Why it is Fast?</h2>
+
+<p>That's the topic people most interested in, but before the explain technical 
+details of NativeTask, the more appropriate question to begin with should be: </p>
+
+<p><em>Does Hadoop fast enough?</em></p>
+
+<p>Actually, No. 
+It is common to see a well hand written C++ program to process 1GB data 
+in just a few seconds, but it may take MapReduce task minutes to process the 
+same data, and many research have shown that Hadoop MapReduce is not so 
+efficient comparing to traditional parallel DBMS for analytical workloads.</p>
+
+<p>On the other hand Hadoop does better at scalability and fault tolerance. 
+Although it is not efficient enough, but I believe there is no technical 
+limitations for Hadoop to get the same performance as hand written native 
+programs. so: </p>
+
+<p><em>How fast can it get?</em></p>
+
+<p>Let's do some computation for this, for example, consider a commodity server:</p>
+
+<pre><code>Dell PowerEdge C2100
+CPU: 2 * 6 core Xeon5600    
+Memory: 48GB   
+Disk: 12 * 2TB SATA
+</code></pre>
+
+<p>This server can run 12 tasks in parallel, each task use 1 core(2 thread), 
+4GB memory, 1 SATA disk. A typical map task data flow and it's ideal 
+speed would be:</p>
+
+<pre><code>Read data from HDFS    100MB/s (data local task)
+Decompression          700-2000MB/s ratio 2-5x (snappy or lz4)
+RecordReader+Mapper    2000MB/s (LineRecordReader+IdenticalMapper)
+Sort                   300-600MB/s (varies a lot, faster if key/value are large)
+Compression            250-500MB/s (varies a lot, depending on data type)
+Write to local Disk    100MB/s  (2000MB/s with page cache)
+</code></pre>
+
+<p>One thing to notice here is that with lightweight compression enabled, disk is not 
+bottleneck any more, system throughput is more and more determined by 
+the raw CPU costs.</p>
+
+<p>So if all things are perfect, a map task should handle 1GB(250MB compressed) data:</p>
+
+<pre><code>Read + Decompression     2.5s
+RecordReader+Mapper      0.5s
+Sort                     2s
+Compression+Write        3s
+Total                    8s
+</code></pre>
+
+<p>So it is 1GB/8s = 125MB/s. Furthermore, for selection+filter+join/aggregation 
+queries, sort is not needed, output size is much less than input size, 
+and each core has 2 threads to use in one task, combine all these factors,
+it is possible to process 1GB data in just 3s, 
+that's about 333MB/s. For the whole server, it is 12 * 333MB/s = 4GB/s. 
+This means that in best conditions(totally balanced scheduling, 
+perfect data locality, no slow node or failure), A 25 node cluster with 10GbE 
+should: </p>
+
+<ul>
+<li>Complete 1TB Terasort in 58 seconds (27s map + 10s shuffle + 21s reduce), 
+if input, map output, final output are all compressed (Terasort is an IO 
+test by default and do not allow compression, but it can be served as 
+typical MapReduce framework test).</li>
+<li>Answer an simple aggregation query against 1TB dataset in 10 seconds.</li>
+</ul>
+
+<p>Sure there are lots of assumptions in the arguments above, but again there 
+are no technical limits in every stage of the whole processing flow.
+With this processing throughput, it is possible to setup Hadoop based data 
+warehouse at very low cost comparing to commercial data warehousing solutions, 
+but with comparable performance. The server mentioned above cost 
+about 10-20K$ per node, with 8TB(3replicaion)/24T(decompressed) capacity, 
+that is 1-2K$ per core, 1-2K$/TB. With hardware cost continue to decrease, 
+this cost will continue to drop. </p>
+
+<p>Although this sounds amazing, but it is a long way to get there. 
+Currently, a well written Hadoop map task can process 1GB data in about 40-120s, 
+so it's 10-30MB/s, Hive/Pig tasks may take much longer time because their high 
+level abstraction. Apparently it is far from the maximum possible 
+speed(100-300MB/s). This leads to the next question:</p>
+
+<p><em>Why Hadoop not perform well enough? How to improve?</em></p>
+
+<p>Here are some top reasons(but not all):</p>
+
+<ol>
+<li><p>I/O bottleneck. Most Hadoop workloads are data intensive, so if no 
+compression is used for input, mid-output, and output, I/O(disk, 
+network) could be a bottleneck. <br />
+The solution is use compression everywhere. Luckily there are amazing 
+general lightweight compression algorithms out there: snappy &amp; lz4, 
+with 2x-5x compression ratio(actually much higher for Haodop workload 
+data types), I/O bandwidth is virtually 2x-5x of real I/O bandwidth. <br />
+Another thing need to mention is high speed network, today's server are 
+much powerful than a few years ago, with more and more cores and RAM per 
+node, a server can run more tasks concurrently, so high speed network 
+like 10~40GbE will become standard setup for Hadoop cluster, whether the 
+current Hadoop network stack(jetty/netty based) can sustain such big 
+throughput is also questionable.  </p></li>
+<li><p>Inefficient implementation. This inefficiency lies everywhere:  </p>
+
+<ul>
+<li><p>Map side sort: current sort can be 10x slower than a well written sort, 
+because current sort implementation suffer from cache locality problem 
+and is not partition based. This will likely be improved in latest 
+Hadoop version but it is still not optimal.</p></li>
+<li><p>Serialization/Deserialization: this leads to inevitable object creation,
+lots of small buffer copies, heavy stream abstraction, primitive 
+type boxing/unboxing, suboptimal compare operation, etc. 
+Ser/Deser are overused both in MapRedcue framework level and query 
+execution level(Hive/Pig), this is the main reason for Hadoop's poor
+data processing throughput. There are 
+<a href="https://issues.apache.org/jira/browse/MAPREDUCE-326">discussions</a> 
+for this long ago, but no progress yet.
+Here is my thought: at MR framework level a pure binary interface is 
+enough &amp; efficient for a query execution engine build upon it, 
+or even more aggressive: don't use MR API, just use task input split &amp; 
+data redistribution utility(shuffle) provided by the MR framework; 
+At query execution level, ser/deser is not necessary too, the most 
+efficient way is to use some sort of schema to describe data, using 
+C struct like binary representation to store data, then using LLVM to 
+directly generate native code based on schema and logical query plan. 
+This can leads to a big boost in processing throughput, Google has 
+reported 6x-12x throughput boost using LLVM in Tenzing.</p></li>
+<li><p>Shuffle: Hadoop 0.23 has done many optimization for shuffle(netty, batch 
+fetch, etc.), but it can be further optimized(for example, shuffle in 
+lastest Hadoop version still slower than Baidu's internal version). 
+When sort is not needed, there are more optimizations to exploit. 
+And sure there will be a lot of tuning work to fully utilize high 
+speed Ethernet too.</p></li>
+<li><p>Data locality. This is one of the main advantage of parallel DBMS over 
+Hadoop, with advanced data partitioning, indexing, and sophisticated 
+query plan, most data are processed locally and data movements are 
+reduced to minimum. Hive have done some similar optimizations, but 
+more can be done, also some optimization need more flexible
+computing model beyond MapReduce.  </p></li>
+<li><p>Scheduling &amp; starting overhead. This has big impact on small jobs and 
+multiple iteration jobs.</p></li>
+</ul></li>
+<li><p>Inflexible programming paradigm. MapReduce is a very general data 
+processing model, this gives it's strength, but also limits its 
+performance. For some specific tasks, there are more efficient methods 
+to adopt. There are many examples in 
+<a href="http://research.google.com/pubs/pub37200.html">Tenzing</a> paper, also 
+there are lots of research recently about improving query performance for 
+MapReduce. Hive has done many optimizations on application level, 
+but some framework level optimizations/interfaces are needed, such as 
+hash-aggregation with no sort for aggregation queries, map-side join 
+with dictionary-server, chained MapReduce job(combine reducer with 
+mapper of the next MR job) etc.</p></li>
+</ol>
+
+<p>These factors directly leads to the design principles of NativeTask:</p>
+
+<ol>
+<li><p>Native implementation. 
+I'm fully aware that java is very efficient, actually based on my 
+experience, java is very efficient for normal tasks, and java has certain 
+runtime optimizations techniques which are much more difficult for 
+c/c++ to realize. For example, it is very difficult to do dynamic 
+optimizations such as lock coarsening, virtual function inlining in C++. 
+But there are some tasks/optimizations, which I believe are essential for 
+this project, are better done in a native runtime:</p>
+
+<ul>
+<li><em>Compression</em> Nearly all the fastest compression algorithms are 
+ written in native code, Currently Hadoop uses JNI to call these 
+ libraries in a bulk processing manner, but still there are some 
+ overheads crossing JNI boundary, especially when decompression 
+ speed is very fast(>1GB/s). And some techniques like lazy 
+ decompression, direct operations on compressed data can not fit 
+ in bulk processing.</li>
+<li><em>SSE/SIMD</em> This is similar to compression, currently Hadoop use 
+ JNI to leverage SSE optimization such as CRC checksum. But again 
+ it is not a general solution. </li>
+<li><em>LLVM</em> As mentioned before, on of the main objectives of this project 
+ is to provide a native runtime to support high level query execution 
+ engine, it is almost certain that LLVM will be used. Because LLVM is 
+ a native C++ library, so C++ is more suitable. </li>
+</ul></li>
+<li><p>Avoid serialization and memory copy.
+As mentioned before, serialization has a lot of overhead. To get maximum 
+throughput, it is better to abandon serialization, or to introduce some <br />
+serialization method that can operate directly on serialized data, or to 
+avoid object creation and memory copy. Again it is hard or not user 
+friendly in java, but convenient and straightforward in native code, such
+as C struct like data representation. In addition, when the whole data 
+flow is in native side(CRC checksum, decompression, reader, process, writer, 
+compression, CRC checksum), a lot of small memory copies can be and should 
+be eliminated. So the interface and underlying processing flow are designed 
+to try to eliminate most memory copies.  </p></li>
+<li><p>Keep it simple.
+This project mainly focuses on pure data processing, unlike typical 
+distributed systems, there shouldn't be much complex things involved, such 
+as multi-thread programming &amp; synchronization, high level abstractions or 
+complex system programming. For example, this project try to avoid 
+asynchronized output collector, io stream abstractions and other complex 
+things existing in current MapReduce design. </p></li>
+<li><p>Less concern of compatibility.
+As mentioned before, the main objective of this project is to build high 
+level data analysis tools/libraries upon this, the compatibility should be 
+constrained in a higher level(such as query language level), while permitting 
+more flexibility in the lower level, so we can experiment varies 
+things on this. And the new MRv2/YARN framework permits us to experimenting 
+new frameworks. Finally, since this project is in very early stage, lots of 
+things will certainly go through radical changes during development.</p></li>
+</ol>
+
+<h2>Design &amp; Implementation</h2>
+
+<p>NativeTask consists of two major parts: java side and native side. Java side 
+is responsible to bypass normal java data flow and delegate the data 
+processing to native side, and native side do the actual computation.
+Java side and native side communicate with each other using JNI, in a 
+synchronized, batch processing(block based) way. This is different from 
+other IPC mechanisms used in 
+<a href="http://hadoop.apache.org/common/docs/r1.0.0/streaming.html">Streaming</a>
+and 
+<a href="http://hadoop.apache.org/common/docs/current/api/org/apache/
+hadoop/mapred/pipes/package-summary.html">Pipes</a>.
+Sockets and pipes are fast enough for data processing, but they consume 
+a lot of CPU and will introduce multi-thread programming and asynchronized 
+processing.</p>
+
+<h3>Task delegation</h3>
+
+<p>To bypass normal java data flow, NativeTask introduces a task delegation 
+interface, it will insert the bypassing logic into the beginning of MapTask 
+and ReduceTask(needs modification to the current 
+MapReduce source code). The bypassing logic will check whether a delegator
+is configured in JobConf, if there is, it will use the configured delegator 
+to run the task, bypassing the original logic. 
+The delegation interface looks like this:  </p>
+
+<p>MapTask: void run(TaskAttemptID taskID, 
+                    JobConf job, 
+                    TaskUmbilicalProtocol umbilical, 
+                    DelegateReporter reporter, 
+                    Object split) <br />
+  ReduceTask: void run(TaskAttemptID taskID, 
+                       JobConf job, 
+                       TaskUmbilicalProtocol umbilical, 
+                       DelegateReporter reporter,
+                       RawKeyValueIterator rIter)  </p>
+
+<p>For MapTask, split information is needed, currently only FileSplit is 
+supported by native RecordReader. For ReduceTask, shuffle and merge is 
+still done in java side unchanged, so RawKeyValueIterator is passed to 
+delegator. A native implementation of shuffle and merge will certainly
+have better performance in the future. I have proposed another possible
+(and more general) solution <a href="https://
+issues.apache.org/jira/browse/MAPREDUCE-3246">Extensible Task(MAPREDUCE-3246)</a>
+to try to make task extensible, but in practice I found the delegation 
+interface more convenient because there are still many works can't be 
+done in native side right now. Anyway these are minor issues, since both 
+are easy to refactor.</p>
+
+<p>Currently delegation supports two modes of dataflow:</p>
+
+<ul>
+<li><p>Native Mapper/Reducer only: compatible with existing InputFormat/OuputFormat
+and RecordReader/Writer, Key/Value pairs are passed to/from native side in 
+batch. 
+The dataflow of a typical MapTask: <br />
+RecordReader -> Serialize -> [DirectByteBuffer] -> Native Mapper -> Native 
+Output Collector(Sort &amp; Spill) <br />
+The dataflow of a typical ReduceTask: <br />
+RawKeyValueIterator -> [DirectByteBuffer] -> Native Reducer -> 
+[DirectByteBuffer] -> Deserialize -> RecordWriter  </p></li>
+<li><p>Native Mapper/Reducer with native RecordReader/Writer: currently 
+InputFormat/OutputFormat still exist for input split and output 
+commit, but RecordReader/Writer are native, so native task can implement 
+RecordReader/Writer for read input or write output directly, yielding 
+better performance and flexibility.
+The dataflow of a typical MapTask: <br />
+Input Split -> Native RecordReader -> Native Mapper -> Native Output 
+Collector <br />
+The dataflow of a typical ReduceTask: <br />
+RawKeyValueIterator -> [DirectByteBuffer] -> Native Reducer -> Native 
+RecordWriter</p></li>
+</ul>
+
+<h3>Small Batch Processing</h3>
+
+<p>As described before, the java side and native side pass serialized K/V data in
+a block based batch processing pattern, rather than record based. This is 
+because JNI calls have considerable overheads, batch processing can minimize 
+the numbers of JNI calls. The block size is about 32KB~128KB, smaller than 
+L2-cache.</p>
+
+<p>The JNI based batch processing is implemented in Java class 
+NativeBatchProcessor and native C++ class BatchHandler, the JNI stuffs are 
+isolated in these 2 classes, so other part of the project needn't to deal with 
+the complexity of JNI. </p>
+
+<h3>Class Library</h3>
+
+<p>One problem of C++ is its lack of reflection, so it's difficult to setup 
+mapper, reducer, record reader, writers in JobConf at client side and 
+create them dynamically at task. Pipes uses static linking, unlike Pipes, 
+NativeTask uses something more dynamic, a class library based structure.
+A typical application based on NativeTask consists of several dynamic 
+libraries(as class libraries), for example:</p>
+
+<pre><code>[Task JVM]  
+     | 
+delegation
+     |
+     |--load-&gt; [libnativetask.so]  
+                      |--load-&gt; [userlibrary.so]  
+                      |--load-&gt; [application.so]  
+                      |  
+               create native objects  
+                      |  
+                run mapper/reducer  
+                      |  
+     |----------------|  
+   done()
+</code></pre>
+
+<p>NativeTask uses a little template tricks to realize a very simple equivalent 
+of Hadoop's ReflectionUtils.newInstance(). 
+Consider .so library as class libraries(like .jar files), every .so library 
+have an entrance function to create C++ objects of the classes in this library. 
+The dynamic library, libnativetask.so, is the NativeTask runtime, but it is 
+also served as a class library, with some predefined Mapper/Reducer, 
+Partitioner and RecordReader/Writer, such as IdentitcalMapper/Reducer, 
+HashPartitioner, TotalOrderPartitioner, LineRecordReader/Writer, etc.</p>
+
+<p>The drawback of dynamic linking is the poor ABI compatibility of C++, but since 
+this is an open source project, and mainly target on Linux and homogeneous 
+computing environment, and based on my experience in HCE(Hadoop C++ Extension),
+this is not a serious problem.</p>
+
+<h3>IO buffers and Compression</h3>
+
+<p>To minimize buffer copy, two light weighted io buffers are introduced: 
+ReadBuffer &amp; AppendBuffer, these are different from decorator pattern based 
+java &amp; Hadoop IO streams, ReaderBuffer &amp; AppendBuffer are implemented to 
+inline most frequently invoked methods, and add code path to avoid one buffer 
+copy when supporting compression/decompression. This doesn't mean NativeTask
+don't use decorator based stream, but they are only used in batch mode, such
+as file read/write and CRC checksum.</p>
+
+<p>It is much easier to add a compression codec in native code, currently snappy, 
+lz4 and gzip have been integrated into NativeTask.</p>
+
+<h3>Task Dataflow</h3>
+
+<p>The dataflow and main logic of map/reduce task are almost the same as of the 
+original implementation, the differences are the implementation details. 
+The general difference is that the native implementation tends to be simpler 
+and so is easy to be optimized, and the mapper/reducer, reader/writer API is
+designed to make zero copy possible.</p>
+
+<h4>Map Output Collector</h4>
+
+<p>This part contributes a lot of performance gains. As mentioned before, sort 
+implementation of the current Hadoop is suboptimal. So a different partition
+based sort &amp; spill method is used. The main components of for this method is 
+described below: </p>
+
+<p>Basically, map output collect is a partitioned key/value buffer, mapper emit 
+key/value pairs and then a partition number is generated using partitioner, 
+map output collect find a PartitionBucket to put this key/value pair to, 
+a PartitionBucket has a array of MemoryBlocks to hold KV pair, if the last <br />
+MemoryBlock is full, it will allocate a new MemoryBlock from MemoryPool, 
+if there is not enough memory in MemoryPool, a spill will be activated.</p>
+
+<p>MemoryPool hold the buffer of size io.sort.mb, and track current buffer usage,
+notice that this buffer will only occupy virtual memory not RSS(memory really 
+used) if the memory is not actually accessed, this is better than java because
+java initialize arrays.</p>
+
+<p>MemoryBlock is small chunk of memory block backed by MemoryPool, used by 
+PartitionBucket. The default size of MemoryBlock equals ceil(io.sort.mb / 
+partition / 4 / MIN<em>BLOCK</em>SIZE) * MIN<em>BLOCK</em>SIZE, currently MIN<em>BLOCK</em>SIZE 
+equals 32K, and the max size of MemoryBlock is 1M, it should be dynamically 
+tuned according to partition number &amp; io.sort.mb in the future.
+The purpose of MemoryBlock is to reduce CPU cache miss. When sorting large 
+indirect addressed KV pairs, the sort time will be dominated by RAM random 
+reads, so MemoryBlock is used to let each bucket get relatively continuous 
+memory.</p>
+
+<p>PartitionBucket stores KV pairs for a partition, it has two arrays:
+    vector<MemoryBlock *> blocks
+      blocks used by this bucket
+    vector<uint32_t> offsets 
+      KV pair start offset in MemoryPool
+This vector is not under memory control(in io.sort.mb) yet, but in practice it 
+doesn't affect memory footprint too much.</p>
+
+<p>This approach will not work well when partition number &amp; Key/Value size is 
+large, but this is rare case, and it can be improved, just for example, we 
+can use MemoryPool directly (disable MemoryBlock) if io.sort.mb/partition 
+number is too small. </p>
+
+<h3>Map Side Sort</h3>
+
+<p>Since map output buffer is partitioned, we can sort each partition separately, 
+this is different from java's single buffer approach. By doing so, sort can 
+be much faster, because sort a big array is much slower than sort many small 
+arrays; small array also means less cache miss; and partition number does not 
+needed to be compared in sort. My test have shown 10x-20x speedup in sort 
+performance.</p>
+
+<p>Currently only binary comparator is supported, because it is efficient, and <br />
+enough for most applications, fix length key comparison and user defined 
+compare function maybe useful, they can be implemented in the future.</p>
+
+<h3>No Sort Dataflow</h3>
+
+<p>NO sort dataflow is easy to implement in the native map side, just do not sort
+each PartitionBucket, since combiner relies on grouping KV pairs together, 
+so combiner is not supported in no sort dataflow, but combine can be done in 
+mapper logic in many cases. Originally I plan to implement grouping dataflow 
+that do support combiner, but after sort is optimized, there seems very little 
+benefits to support grouping. </p>
+
+<p>Since reduce side shuffle and merge is not implemented yet, no sort dataflow 
+in reduce side is implemented in java. A patch is submitted to 
+<a href="https://issues.apache.org/jira/browse/MAPREDUCE-3246">MAPREDUCE-3246</a>
+with both map and reduce side implementation. </p>
+
+<h3>Parallel Spill</h3>
+
+<p>Since map output KV buffer is partitioned, parallel sort and spill became 
+possible, but this need some change to the original Hadoop code so I left 
+this not implemented. For example, suppose a map task with reducer number 
+of 100, instead of spilling to one file, we spill to one directory: 
+    output
+      |- partition0-49.out
+      |_ partition50-100.out
+then sorting, combining, spilling, compression can all be done in parallel, 
+to fully utilize CPU resource and reduce task execution time.</p>
+
+<h4>Reduce Task</h4>
+
+<p>Shuffle and merge are not implemented yet, so there nothing special. 
+2 new interfaces are introduced in combiner and reducer stage, so you can 
+use mapper or <a href="https://issues.apache.org/jira/browse/MAPREDUCE-3247">folder</a> 
+interface in combiner and/or reducer stage. These two interfaces are both 
+passive interfaces, which are suitable in no sort dataflow to implement 
+aggregation style workloads. Mapper API is for user who want to manage 
+their hashtable by themselves, Folder API is for users who want the framework 
+to manage hashtable for them. This work is experimental and not 
+finished yet.</p>
+
+<h3>Usability and Others</h3>
+
+<p>To increase usability, A few classes are built into NativeTask library:
+    LineRecordReader/LineRecordWriter
+    IdenticalMapper/IdenticalReducer
+    HashPartitioner
+    TotalOrderPartitioner
+More Reader/Writers will be added, to support other Input/OutputFormats such 
+as SequenceFile and RCFile. </p>
+
+<p>I also implemented Terasort &amp; Wordcount, bundled with NativeTask library,
+to make performance test easier.</p>
+
+<p>There is an example in the "example" directory, a simple version of Hadoop 
+Streaming, to illustrate a relatively complex demo. </p>
+
+<p>There are quite some utility classes missing in C++ comparing to Java, 
+I have to re-implement them, such as synchronization utils, process &amp; pipes, 
+random generator etc. Some of them are copied and modified based on JDK 
+and google-leveldb.</p>
+
+<p>This project use a lot of open source projects from google: snappy, gtest, 
+cityhash, leveldb, probably sparsehash for hash aggregation implementations 
+in the future. Another project is LZ4, I'm quite impressed by its simplicity 
+and amazing speed. </p>
+
+<h2>Performance Experiments</h2>
+
+<p>I tested hadoop-1.0 and NativeTask using simple MapReduce applications: Terasort and 
+WordCount, on a 15 node cluster.</p>
+
+<h3>Cluster Configuration</h3>
+
+<p>The test cluster has 16 nodes connected by 1Gb Ethernet, each node has:  </p>
+
+<pre><code>CPU:    Xeon(R) CPU E5645 * 2, 2.4GHz, 12 core, 24 thread  
+Memory: 32GB  
+Disk:   12 * 1T SATA
+JDK: 1.6 u23
+Map Task: 7  
+Reduce Task: 7
+</code></pre>
+
+<p>I use Hadoop version 1.0 patched with task delegation patch. 
+The namenode and jobtracker are deployed on the save node, datanodes and 
+tasktracker are deployed on the other 15 nodes. So the whole cluster has 105 
+map slots, and 105 reduce slots. Block size is configured to 256MB.</p>
+
+<p>The NativeTask library is compiled by gcc version 3.4.5, because it is the only 
+available compiler in the test environment, this compiler is very old and probably 
+generate bad native code. Actually on my own computer Macbook Pro with gcc 
+version 4.2.1 (Apple Inc. build 5659), the result is much better(50%-70% faster), 
+the CPU of my computer is Intel Core i5 2.3GHz, it should have similar performance 
+with Xeon E5645. Anyway I suggest anyone who is interested to compile the code and 
+run on their own environment, and let me know. I don't think I will have resources 
+and time to do large scale tests recently :(</p>
+
+<h3>Test Application</h3>
+
+<p>Standard Terasort is actually an IO test and don't allow compression, but for the 
+purpose of this experiment, to evaluate the data processing throughput, snappy 
+compression is used in input, mid-output and final output, this actually moves 
+the bottleneck from disk and network IO to CPU. This test focus on pure 
+framework performance, key/value is passed directly in mapper and reducer, 
+without object creation and copying. <br />
+WordCount is a simple aggregation workload, and their are some computation in 
+application level. The original WordCount demo implementation is inefficient, 
+involving lots of type cast, object creation and copying. I make an optimized 
+version using the same implementation in NativeTask, both test results will
+be included. </p>
+
+<p>Hera are some characteristics of terasort and wordcount:
+    <table>
+        <tr>
+            <th></th>
+            <th>   Terasort   </th>
+            <th>   WordCount   </th>
+        </tr>
+        <tr>
+            <th>Key value size</th>
+            <td>100</td>
+            <td>8-16</td>
+        </tr>
+        <tr>
+            <th>Combiner</th>
+            <td>No</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <th>Input</th>
+            <td>200G(44G compressed)</td>
+            <td>100G(52G compressed)</td>
+        </tr>
+        <tr>
+            <th>MapTask</th>
+            <td>200(1G/task)</td>
+            <td>200(500M/task)</td>
+        </tr>
+        <tr>
+            <th>ReduceTask</th>
+            <td>200</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <th>Compression Ratio</th>
+            <td>about 0.2</td>
+            <td>about 0.5</td>
+        </tr>
+        <tr>
+            <th>Input/Output</th>
+            <td>1:1</td>
+            <td>1:0(almost)</td>
+        </tr>
+    </table></p>
+
+<h3>Test data generation</h3>
+
+<p>Input data generation commands: <br />
+    Terasort <br />
+    bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar teragen 2000000000 /tera200G-snappy <br />
+    WordCount <br />
+    bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar randomtextwriter -Dtest.randomtextwrite.total<em>bytes=100000000000 -Dtest.randomtextwrite.bytes</em>per_map=500000000 -outFormat org.apache.hadoop.mapred.TextOutputFormat /text100G-snappy  </p>
+
+<p>Tests execution commands: <br />
+    Terasort Java <br />
+    bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar terasort /tera200G-snappy /terasort200G-java <br />
+    Terasort NativeTask <br />
+    bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar terasort /tera200G-snappy /terasort200G-nt <br />
+    WordCount Java <br />
+    bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar wordcount /text100G-snappy /wordcount-100G-java <br />
+    WordCount Java Optimized <br />
+    bin/hadoop jar hadoop-examples-1.0.1-SNAPSHOT.jar wordcount -Dwordcount.enable.fast.mapper=true /text100G-snappy /wordcount-100G-java-opt <br />
+    WordCount NativeTask <br />
+    bin/hadoop jar lib/hadoop-nativetask-0.1.0.jar -reader NativeTask.LineRecordReader -writer NativeTask.TextIntRecordWriter -mapper NativeTask.WordCountMapper -reducer NativeTask.IntSumReducer -combiner NativeTask.IntSumReducer -input /text100G-snappy -output /wordcount-100G-nt  </p>
+
+<h3>Test Result</h3>
+
+<p>Terasort 
+    <table>
+        <tr>
+            <th>Terasort 200G(io.sort.mb=1200M, no merge)
+                200Map,200Reduce</th>
+            <th>Total Time(s)</th>
+            <th>Map Avg(s)</th>
+            <th>Map Best(s)</th>
+            <th>Sort(s)</th>
+            <th>Shuffle Avg(s)</th>
+            <th>Shuffle Best(s)</th>
+            <th>Reduce Avg(s)</th>
+            <th>Reduce Best(s)</th>
+            <th>Map CPU(ms)</th>
+            <th>Reduce CPU(ms)</th>
+            <th>Map Memory(M)</th>
+            <th>Reduce Memory(M)</th>
+        </tr>
+        <tr>
+            <th>java</th>
+            <td>220</td>
+            <td>51</td>
+            <td>47</td>
+            <td>23.336</td>
+            <td>31</td>
+            <td>20</td>
+            <td>20</td>
+            <td>14</td>
+            <td>10357020</td>
+            <td>11466330</td>
+            <td>292001</td>
+            <td>338160</td>
+        </tr>
+        <tr>
+            <th>native</th>
+            <td>139</td>
+            <td>15</td>
+            <td>14</td>
+            <td>3.476</td>
+            <td>30</td>
+            <td>20</td>
+            <td>17</td>
+            <td>11</td>
+            <td>295510</td>
+            <td>10595440</td>
+            <td>259581</td>
+            <td>336060</td>
+        </tr>
+        <tr>
+            <th>ratio</th>
+            <td>1.583</td>
+            <td>3.4</td>
+            <td>3.36</td>
+            <td>6.71</td>
+            <td>1.03</td>
+            <td>1</td>
+            <td>1.176</td>
+            <td>1.273</td>
+            <td>3.504</td>
+            <td>1.082</td>
+            <td>1.125</td>
+            <td>1.006</td>
+        </tr>
+    </table></p>
+
+<p>WordCount
+    <table>
+        <tr>
+            <th>WordCount 200G(io.sort.mb=300M)
+                200Map, 100Reduce</th>
+            <th>Total Time(s)</th>
+            <th>Merge Segments</th>
+            <th>Map Avg(s)</th>
+            <th>Map Best(s)</th>
+            <th>Sort(s)</th>
+            <th>Shuffle Avg(s)</th>
+            <th>Shuffle Best(s)</th>
+            <th>Reduce Avg(s)</th>
+            <th>Reduce Best(s)</th>
+            <th>Map CPU(ms)</th>
+            <th>Reduce CPU(ms)</th>
+            <th>Map Memory(M)</th>
+            <th>Reduce Memory(M)</th>
+        </tr>
+        <tr>
+            <th>java</th>
+            <td>266</td>
+            <td>5</td>
+            <td>124</td>
+            <td>117</td>
+            <td>45</td>
+            <td>8</td>
+            <td>8</td>
+            <td>1</td>
+            <td>1</td>
+            <td>25324990</td>
+            <td>410990</td>
+            <td>211082</td>
+            <td>21153</td>
+        </tr>
+        <tr>
+            <th>java optimized</th>
+            <td>243</td>
+            <td>5</td>
+            <td>112</td>
+            <td>95</td>
+            <td>46</td>
+            <td>8</td>
+            <td>8</td>
+            <td>1</td>
+            <td>1</td>
+            <td>22909200</td>
+            <td>412430</td>
+            <td>104078</td>
+            <td>21054</td>
+        </tr>
+        <tr>
+            <th>native</th>
+            <td>55</td>
+            <td>4</td>
+            <td>17</td>
+            <td>16</td>
+            <td>5.52</td>
+            <td>8</td>
+            <td>8</td>
+            <td>1</td>
+            <td>1</td>
+            <td>3287460</td>
+            <td>443890</td>
+            <td>104350</td>
+            <td>21706</td>
+        </tr>
+        <tr>
+            <th>ratio</th>
+            <td>4.42</td>
+            <td>-</td>
+            <td>6.59</td>
+            <td>5.93</td>
+            <td>8.33</td>
+            <td>1</td>
+            <td>1</td>
+            <td>1</td>
+            <td>1</td>
+            <td>6.869</td>
+            <td>0.939</td>
+            <td>0.997</td>
+            <td>0.970</td>
+        </tr>
+    </table></p>
+
+<h3>Result Analysis</h3>
+
+<h4>Map Task</h4>
+
+<p>There is a lot of performance gains in map tasks, this is because it is 
+all native, and it has a relatively efficient implementation of sort and 
+spill. The speedup is higher in WordCount than in Terasort, this is because 
+the KV size for terasort is much larger than wordcount, so there are more 
+records processed in WordCount for the same amount of input, the framework 
+has some constant overhead for each record, and sort performance is related
+to record count, so the small the record is, or the more records there are, 
+the more speed advantage NativeTask will have.</p>
+
+<h4>Reduce Task</h4>
+
+<p>Reduce side does change much, about 8% in Terasort test case. This is because 
+reduce side shuffle and merge are still done in java, shuffle and merge 
+take most CPU resource and task execution time in reduce task; and there 
+are extra serialization overheads when crossing JNI boundary.
+After shuffle and merge are implemented, or maybe just merge, similar(perhaps 
+smaller) performance gains are expected.</p>
+
+<p>As mentioned before, the shuffle implementation is suboptimal in hadoop-1.0, 
+although the current trunk version has improved shuffle performance a lot, 
+it still can be optimized. Finally, this test environment only use 1GbE network, 
+we can get better whole job speedup if high speed networks like 10GbE is used.</p>
+
+<h4>Compiler Factor</h4>
+
+<p>As I said before, The NativeTask library used in the experiment is probably 
+suboptimal. For example a native wordcount task unittest runs about 11s on 
+my laptop, and 16s on test environment, a native terasort task unittest runs 
+about 9s in my laptop, and 14s on test environment. Here are some logs 
+generated by the tests:</p>
+
+<p>On my laptop:</p>
+
+<pre><code>12/01/04 17:35:30 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
+12/01/04 17:35:33 INFO Spill 0 [0,100) collect: 1.515s sort: 1.192s spill: 0.227s, record: 12841142, key: 1000, block: 400, size 17855, real: 18895
+12/01/04 17:35:36 INFO Spill 1 [0,100) collect: 1.226s sort: 1.154s spill: 0.223s, record: 12778865, key: 1000, block: 400, size 17855, real: 18907
+12/01/04 17:35:39 INFO Spill 2 [0,100) collect: 1.463s sort: 1.167s spill: 0.224s, record: 12748890, key: 1000, block: 400, size 17855, real: 18894
+12/01/04 17:35:40 INFO Sort 3 [0,100) time: 0.699
+12/01/04 17:35:41 INFO Merge 4 segments: record 0, key: 1000, size 17855, real 18958, time: 0.383
+</code></pre>
+
+<p>On test environment:</p>
+
+<pre><code>12/01/04 15:54:56 INFO Native Mapper with MapOutputCollector, RecordReader: NativeTask.LineRecordReader Combiner: NativeTask.IntSumReducer Partitioner: default
+12/01/04 15:55:01 INFO Spill 0 [0,100) collect: 2.426s sort: 1.557s spill: 0.352s, record: 12841142, key: 1000, block: 400, size 17855, real: 18895
+12/01/04 15:55:05 INFO Spill 1 [0,100) collect: 2.097s sort: 1.507s spill: 0.287s, record: 12778865, key: 1000, block: 400, size 17855, real: 18907
+12/01/04 15:55:09 INFO Spill 2 [0,100) collect: 2.077s sort: 1.506s spill: 0.399s, record: 12748890, key: 1000, block: 400, size 17855, real: 18894
+12/01/04 15:55:11 INFO Sort 3 [0,100) time: 0.951
+12/01/04 15:55:11 INFO Merge 4 segments: record 0, key: 1000, size 17855, real 18958, time: 0.491
+</code></pre>
+
+<p>One the other hand, the same java task unittests run about the same speed on 
+my laptop and on test environment. So it is very likely a compiler issue, 
+excluding this factor, NativeTask should have extra speed advantage, about 40%-60%. </p>
+
+<h2>Conclusion and Future Work</h2>
+
+<p>Generally, NativeTask outperforms original MapReduce framework, about 3x-7x 
+for map task, 1x-1.1x for reduce task, 1.5x-5x for whole job. If the compiler 
+hypothesis has some truth, the speedup could be 4.5x-12x for map task, and the 
+speedup should be larger correspondingly.
+The main reason for NativeTask's high performance are avoiding serialization, 
+avoiding heavy abstraction, better usage of compression, and speed advantage of 
+C++ over Java. Since this project is in very early stage, I expect more 
+improvements in the future. As mentioned before, it is possible that the 
+throughput for a single map task can reach 300MB/s, currently NativeTask is 
+about 50-100MB/s, so there is space for improvement.
+NativeTask only addresses some aspects of Hadoop's inefficiency, other aspects 
+like shuffle, data locality, schedule &amp; startup overhead are not the scope of 
+this project, but may become dominate factors in some workloads. These aspects 
+are better to be addressed in a higher level, such as data warehousing tools 
+like hive, or BSP workloads like giraph. 
+The next step of this project will be to integrate no sort dataflow, support 
+folder API, implement reduce shuffle and merge, parallel sort and spill. 
+Again, the main objective of this project is to provide a efficient native 
+Hadoop framework, so much more efficient data analyze tools can 
+build upon it, with the same performance of commercial systems. </p>
+
+<p>I am thinking a modified version of hive, which transform its physical query 
+plan to LLVM IR, then run on top of NativeTask. According to Google's tenzing 
+paper, and current status of Hive and NativeTask, an 10x speedup for Hive is 
+entirely possible, and with more advanced techniques already exist in 
+commercial databases, it possbile to reach comparable performance of 
+commerical data warehousing products. </p>
+
+<p>Another possible direction is Hadoop distribution for single fat node or very 
+small cluster. Most analytical workloads are TB scale for small companies,
+only a few large companies really need to scale to PB scale, with manycore 
+processors and very dense disk storage, a commodity server in the near future 
+can have the same computing power and capacity of today's small Hadoop 
+cluster, a single fat node Hadoop can perform many optimizations which are 
+impossible in distributed mode. No network bottleneck, data can be shared 
+directly, combine the performance boost of NativeTask, small workloads 
+won't need a cluster to run anymore. In the future, perhaps every data analyst 
+can use Hadoop to analyze TBs of data only with their computer, and if he or she 
+wants more processing power, just connect to cloud and submit your same Hadoop 
+application unchanged.</p>
+
+<p>If anyone have similar thoughts and want to start open source projects or 
+realize them in existing projects, please let me know:)</p>
+
+<h2>Useful Links</h2>
+
+<p>For more information about vectorization or dynamic compilation: <br />
+* <a href="www.vldb.org/pvldb/vol4/p539-neumann.pdf">Efficiently Compiling Efficient Query Plans for Modern Hardware</a> <br />
+* <a href="http://homepages.cwi.nl/~boncz/x100.html">MonetDB/X100: Hyper-pipelining query execution</a>  </p>
+
+<p>A interesting article about future hardware trend and programming model: <br />
+* <a href="http://herbsutter.com/welcome-to-the-jungle/">http://herbsutter.com/welcome-to-the-jungle/</a></p>

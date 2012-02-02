@@ -94,4 +94,3 @@ uint64_t SnappyDecompressStream::maxCompressedLength(uint64_t origLength) {
 }
 
 } // namespace NativeTask
-
