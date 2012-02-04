@@ -847,7 +847,7 @@ Conclusion and Future Work
 Generally, NativeTask outperforms original MapReduce framework, about 3x-7x 
 for map task, 1x-1.1x for reduce task, 1.5x-5x for whole job. If the compiler 
 hypothesis has some truth, the speedup could be 4.5x-12x for map task, and the 
-speedup should be larger correspondingly.
+speedup for whole job should be larger correspondingly.
 The main reason for NativeTask's high performance are avoiding serialization, 
 avoiding heavy abstraction, better usage of compression, and speed advantage of 
 C++ over Java. Since this project is in very early stage, I expect more 

@@ -53,6 +53,8 @@ Notice
 ------
 This project is in very early stages currently, and is not well documented. 
 If you are familiar with Hadoop MapReduce, you can hack into the source code. 
+For more informantion, please read the [design document](https://github.com/
+decster/nativetask/wiki/The-Design-of-NativeTask)
 
-Demo and some early test results in Hadoop JIRA:
+Also you can find some discussion in Hadoop JIRA:
 https://issues.apache.org/jira/browse/MAPREDUCE-2841
