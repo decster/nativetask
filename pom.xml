@@ -22,7 +22,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <snappy.prefix>${HOME}/local</snappy.prefix>
+    <snappy.prefix>/usr</snappy.prefix>
     <snappy.lib>${snappy.prefix}/lib</snappy.lib>
     <bundle.snappy>false</bundle.snappy>
   </properties>

@@ -17,6 +17,8 @@
  */
 
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "commons.h"
 #include "util/SyncUtils.h"
 #include "BufferStream.h"
