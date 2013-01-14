@@ -17,6 +17,8 @@
  */
 
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "commons.h"
 #include "Log.h"
 #include "StringUtil.h"
