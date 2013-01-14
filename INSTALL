@@ -1,0 +1,17 @@
+Install Guide
+=============
+1. apply patch in patch/ to hadoop and rebuild(sorry), so hadoop can use nativetask
+2. put hadoop-nativetask-0.1.0.jar to HADOOP_HOME/lib/
+3. put lib/* to HADOOP_HOME/lib/native/Linux-amd-64/
+4. include/* are used to develop nativetask based application, not required in runtime
+5. there is a prebuild nativetask binrary in prebuild/ for linxu-amd-64
+
+Develop Guide
+-------------
+
+If you want to develop nativetask based MR application, using headers in include/* and 
+build so libraries as applications.
+Currently there is no develop documents.
+You can follow the examples in src/main/native/examples to get a sense on writing 
+nativetask MR app. 
+
