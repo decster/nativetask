@@ -21,7 +21,7 @@
 #include "test_commons.h"
 
 TEST(FileSystem, RawFileSystem) {
-  FileSystem & fs = FileSystem::getRaw();
+  FileSystem & fs = FileSystem::getLocal();
   fs.mkdirs("temp");
   string temppath = "temp/data";
   string content;

@@ -250,6 +250,8 @@ public class NativeBatchProcessor {
   private static native void InitIDs();
 
   static {
-    InitIDs();
+    if (NativeRuntime.isNativeLibraryLoaded()) {
+      InitIDs();
+    }
   }
 }

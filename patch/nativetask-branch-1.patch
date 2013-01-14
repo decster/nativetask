@@ -42,18 +42,10 @@ index 19faa87..a058d22 100644
     */
    public void clear() {
 diff --git a/src/mapred/org/apache/hadoop/mapred/MapTask.java b/src/mapred/org/apache/hadoop/mapred/MapTask.java
-index 8a469ac..727f84c 100644
+index 78ddea3..85e5a01 100644
 --- a/src/mapred/org/apache/hadoop/mapred/MapTask.java
 +++ b/src/mapred/org/apache/hadoop/mapred/MapTask.java
-@@ -41,6 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
- import org.apache.commons.logging.Log;
- import org.apache.commons.logging.LogFactory;
- import org.apache.hadoop.conf.Configuration;
-+import org.apache.hadoop.filecache.TaskDistributedCacheManager;
- import org.apache.hadoop.fs.FSDataInputStream;
- import org.apache.hadoop.fs.FSDataOutputStream;
- import org.apache.hadoop.fs.FileSystem;
-@@ -366,6 +367,18 @@ class MapTask extends Task {
+@@ -366,6 +366,18 @@ class MapTask extends Task {
        return;
      }
  
@@ -72,7 +64,7 @@ index 8a469ac..727f84c 100644
      if (useNewApi) {
        runNewMapper(job, splitMetaInfo, umbilical, reporter);
      } else {
-@@ -425,7 +438,9 @@ class MapTask extends Task {
+@@ -425,7 +437,9 @@ class MapTask extends Task {
      LOG.info("numReduceTasks: " + numReduceTasks);
      MapOutputCollector collector = null;
      if (numReduceTasks > 0) {
@@ -83,7 +75,7 @@ index 8a469ac..727f84c 100644
      } else { 
        collector = new DirectMapOutputCollector(umbilical, job, reporter);
      }
-@@ -671,7 +686,8 @@ class MapTask extends Task {
+@@ -672,7 +686,8 @@ class MapTask extends Task {
                         TaskUmbilicalProtocol umbilical,
                         TaskReporter reporter
                         ) throws IOException, ClassNotFoundException {
@@ -94,10 +86,10 @@ index 8a469ac..727f84c 100644
        if (partitions > 0) {
          partitioner = (org.apache.hadoop.mapreduce.Partitioner<K,V>)
 diff --git a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-index 980b988..e6182bc 100644
+index f3cfe0c..84ffbd7 100644
 --- a/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
 +++ b/src/mapred/org/apache/hadoop/mapred/ReduceTask.java
-@@ -413,6 +413,11 @@ class ReduceTask extends Task {
+@@ -414,6 +414,11 @@ class ReduceTask extends Task {
      Class valueClass = job.getMapOutputValueClass();
      RawComparator comparator = job.getOutputValueGroupingComparator();
  
@@ -111,10 +103,10 @@ index 980b988..e6182bc 100644
                      keyClass, valueClass);
 diff --git a/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
 new file mode 100644
-index 0000000..e3c8e87
+index 0000000..20adabe
 --- /dev/null
 +++ b/src/mapred/org/apache/hadoop/mapred/TaskDelegation.java
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,150 @@
 +/**
 + * Licensed to the Apache Software Foundation (ASF) under one
 + * or more contributor license agreements.  See the NOTICE file
@@ -180,6 +172,10 @@ index 0000000..e3c8e87
 +    @Override
 +    public void incrCounter(String group, String counter, long amount) {
 +      reporter.incrCounter(group, counter, amount);
++    }
++    @Override
++    public float getProgress() {
++      return reporter.getProgress();
 +    }
 +    public void setProgress(float progress) {
 +      reporter.setProgress(progress);
@@ -248,14 +244,15 @@ index 0000000..e3c8e87
 +      Boolean can = (Boolean)canEnbaleMthd.invoke(null, job);
 +      if (can) {
 +        Constructor<?> cons = cls.getConstructor(JobConf.class,
-+            TaskAttemptID.class, MapOutputFile.class);
++            TaskAttemptID.class);
 +        MapTask.MapOutputCollector<K, V> moc = 
 +            (MapTask.MapOutputCollector<K, V>) cons.newInstance(
-+                job, taskId, mapOutputFile);
++                job, taskId);
 +        return moc;
 +      }
 +      return null;
 +    } catch (Exception e) {
++      e.printStackTrace(System.err);
 +      return null;
 +    }
 +  }

@@ -322,7 +322,7 @@ void MapOutputCollector::mid_spill(std::vector<std::string> & filepaths,
     uint64_t recordCount = 0;
     uint64_t sortTime = 0;
     uint64_t keyGroupCount = 0;
-    OutputStream * fout = FileSystem::getRaw().create(filepaths[0], true);
+    OutputStream * fout = FileSystem::getLocal().create(filepaths[0], true);
     IFileWriter * writer = new IFileWriter(fout, spec.checksumType,
                                              spec.keyType, spec.valueType,
                                              spec.codec);
@@ -390,7 +390,7 @@ void MapOutputCollector::final_merge_and_spill(std::vector<std::string> & filepa
     mid_spill(filepaths, idx_file_path, spec, combinerCreator);
     return;
   }
-  OutputStream * fout = FileSystem::getRaw().create(filepaths[0], true);
+  OutputStream * fout = FileSystem::getLocal().create(filepaths[0], true);
   IFileWriter * writer = new IFileWriter(fout, spec.checksumType,
                                            spec.keyType, spec.valueType,
                                            spec.codec);
@@ -399,7 +399,7 @@ void MapOutputCollector::final_merge_and_spill(std::vector<std::string> & filepa
   IFileReader ** readers = new IFileReader*[_spills.size()];
   for (size_t i = 0 ; i < _spills.size() ; i++) {
     PartitionIndex * spill = _spills[i];
-    inputStreams[i] = FileSystem::getRaw().open(spill->ranges[0]->filepath);
+    inputStreams[i] = FileSystem::getLocal().open(spill->ranges[0]->filepath);
     readers[i] = new IFileReader(inputStreams[i], spec.checksumType,
                                   spec.keyType, spec.valueType,
                                   spill->ranges[0], spec.codec);

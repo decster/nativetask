@@ -63,11 +63,11 @@ TEST(Perf, MMapTaskTeraSort) {
   bool isTeraInput = inputtype == "tera";
   uint64_t inputFileLength = 0;
   Timer timer;
-  if (!FileSystem::getRaw().exists(inputfile)) {
+  if (!FileSystem::getLocal().exists(inputfile)) {
     LOG("start generating input");
     vector<pair<string, string> > inputdata;
     GenerateLength(inputdata, inputLength, inputtype);
-    OutputStream * fout = FileSystem::getRaw().create(inputfile, true);
+    OutputStream * fout = FileSystem::getLocal().create(inputfile, true);
     AppendBuffer appendBuffer = AppendBuffer();
     appendBuffer.init(128 * 1024, fout, inputcodec);
     for (size_t i=0;i<inputdata.size();i++) {
@@ -84,7 +84,7 @@ TEST(Perf, MMapTaskTeraSort) {
     delete fout;
     LOG("%s", timer.getInterval("Generate input").c_str());
   } else {
-    inputFileLength = FileSystem::getRaw().getLength(inputfile);
+    inputFileLength = FileSystem::getLocal().getLength(inputfile);
   }
 
   timer.reset();
@@ -131,11 +131,11 @@ TEST(Perf, MMapTaskWordCount) {
   bool isTeraInput = inputtype == "tera";
   uint64_t inputFileLength = 0;
   Timer timer;
-  if (!FileSystem::getRaw().exists(inputfile)) {
+  if (!FileSystem::getLocal().exists(inputfile)) {
     LOG("start generating input");
     vector<pair<string, string> > inputdata;
     GenerateLength(inputdata, inputLength, inputtype);
-    OutputStream * fout = FileSystem::getRaw().create(inputfile, true);
+    OutputStream * fout = FileSystem::getLocal().create(inputfile, true);
     AppendBuffer appendBuffer = AppendBuffer();
     appendBuffer.init(128 * 1024, fout, inputcodec);
     for (size_t i=0;i<inputdata.size();i++) {
@@ -152,7 +152,7 @@ TEST(Perf, MMapTaskWordCount) {
     delete fout;
     LOG("%s", timer.getInterval("Generate input").c_str());
   } else {
-    inputFileLength = FileSystem::getRaw().getLength(inputfile);
+    inputFileLength = FileSystem::getLocal().getLength(inputfile);
   }
 
   timer.reset();

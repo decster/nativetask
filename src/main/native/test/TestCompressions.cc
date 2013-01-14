@@ -103,12 +103,12 @@ TEST(Perf, CompressionUtil) {
   size_t bufferSize = buffhint;
   if (inputcodec.length()>0 && outputcodec.length()==0) {
     // decompression
-    InputStream * fin = FileSystem::getRaw().open(inputfile);
+    InputStream * fin = FileSystem::getLocal().open(inputfile);
     if (fin == NULL) {
       THROW_EXCEPTION(IOException, "input file not found");
     }
     DecompressStream * source = Compressions::getDecompressionStream(inputcodec, fin, bufferSize);
-    OutputStream * fout = FileSystem::getRaw().create(outputfile, true);
+    OutputStream * fout = FileSystem::getLocal().create(outputfile, true);
     char * buffer = new char[bufferSize];
     while (true) {
       int rd = source->read(buffer, bufferSize);
@@ -127,11 +127,11 @@ TEST(Perf, CompressionUtil) {
     delete buffer;
   } else if (inputcodec.length()==0 && outputcodec.length()>0) {
     // compression
-    InputStream * fin = FileSystem::getRaw().open(inputfile);
+    InputStream * fin = FileSystem::getLocal().open(inputfile);
     if (fin == NULL) {
       THROW_EXCEPTION(IOException, "input file not found");
     }
-    OutputStream * fout = FileSystem::getRaw().create(outputfile, true);
+    OutputStream * fout = FileSystem::getLocal().create(outputfile, true);
     CompressStream * dest = Compressions::getCompressionStream(outputcodec, fout, bufferSize);
     char * buffer = new char[bufferSize];
     while (true) {
@@ -227,7 +227,7 @@ TEST(Perf, RawCompressionLz4) {
   int64_t times = TestConfig.getInt("compression.time", 400);
   int64_t blockSize = TestConfig.getInt("compression.block.size", 1024*64);
   vector<FileEntry> inputfiles;
-  FileSystem::getRaw().list(inputdir, inputfiles);
+  FileSystem::getLocal().list(inputdir, inputfiles);
   CompressResult total;
   printf("Block size: %lldK\n", blockSize/1024);
   for (size_t i=0;i<inputfiles.size();i++) {
@@ -278,7 +278,7 @@ TEST(Perf, RawCompressionSnappy) {
   int64_t times = TestConfig.getInt("compression.time", 400);
   int64_t blockSize = TestConfig.getInt("compression.block.size", 1024*64);
   vector<FileEntry> inputfiles;
-  FileSystem::getRaw().list(inputdir, inputfiles);
+  FileSystem::getLocal().list(inputdir, inputfiles);
   CompressResult total;
   printf("Block size: %lldK\n", blockSize/1024);
   for (size_t i=0;i<inputfiles.size();i++) {

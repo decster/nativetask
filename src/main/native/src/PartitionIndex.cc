@@ -34,7 +34,7 @@ void IndexRange::delete_file() {
 }
 
 void PartitionIndex::writeIFile(const std::string & filepath) {
-  OutputStream * fout = FileSystem::getRaw().create(filepath, true);
+  OutputStream * fout = FileSystem::getLocal().create(filepath, true);
   {
     ChecksumOutputStream dest = ChecksumOutputStream(fout, CHECKSUM_CRC32);
     AppendBuffer appendBuffer;

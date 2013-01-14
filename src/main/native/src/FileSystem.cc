@@ -579,7 +579,7 @@ extern JavaFileSystem JavaFileSystemInstance;
 RawFileSystem RawFileSystemInstance = RawFileSystem();
 JavaFileSystem JavaFileSystemInstance = JavaFileSystem();
 
-string FileSystem::getDefaultUri(Config & config) {
+string FileSystem::getDefaultFsUri(Config & config) {
   const char * nm = config.get("fs.default.name");
   if (nm == NULL) {
     nm = config.get("fs.defaultFS");
@@ -591,7 +591,7 @@ string FileSystem::getDefaultUri(Config & config) {
   }
 }
 
-FileSystem & FileSystem::getRaw() {
+FileSystem & FileSystem::getLocal() {
   return RawFileSystemInstance;
 }
 
@@ -600,7 +600,7 @@ FileSystem & FileSystem::getJava(Config & config) {
 }
 
 FileSystem & FileSystem::get(Config & config) {
-  string uri = getDefaultUri(config);
+  string uri = getDefaultFsUri(config);
   if (uri == "file:///") {
     return RawFileSystemInstance;
   } else {

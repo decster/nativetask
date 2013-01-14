@@ -79,7 +79,7 @@ int main(int argc, char ** argv) {
       if (codec.length()==0) {
         fprintf(stdout, "%s", temp.c_str());
       } else {
-        OutputStream * fout = FileSystem::getRaw().create("/dev/stdout");
+        OutputStream * fout = FileSystem::getLocal().create("/dev/stdout");
         AppendBuffer app = AppendBuffer();
         app.init(128*1024, fout, codec);
         app.write(temp.data(), temp.length());

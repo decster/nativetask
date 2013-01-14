@@ -155,8 +155,8 @@ public:
 
   virtual void mkdirs(const string & path) {}
 
-  static string getDefaultUri(Config & config);
-  static FileSystem & getRaw();
+  static string getDefaultFsUri(Config & config);
+  static FileSystem & getLocal();
   static FileSystem & getJava(Config & config);
   static FileSystem & get(Config & config);
 };

@@ -29,7 +29,7 @@ IndexRange * writeIFile(int partition,
                              const string & path,
                              KeyValueType type,
                              const string & codec) {
-  FileOutputStream * fout = (FileOutputStream*)FileSystem::getRaw().create(path);
+  FileOutputStream * fout = (FileOutputStream*)FileSystem::getLocal().create(path);
   IFileWriter * iw = new IFileWriter(fout, CHECKSUM_CRC32, type, type, codec);
   for (int i=0;i<partition;i++) {
     iw->startPartition();
@@ -48,7 +48,7 @@ IndexRange * writeIFile(int partition,
 
 void readIFile(vector<pair<string, string> > & kvs, const string & path,
                 KeyValueType type, IndexRange * info, const string & codec) {
-  FileInputStream * fin = (FileInputStream*) FileSystem::getRaw().open(path);
+  FileInputStream * fin = (FileInputStream*) FileSystem::getLocal().open(path);
   IFileReader * ir = new IFileReader(fin, CHECKSUM_CRC32, type, type, info, codec);
   size_t count = 0;
   while (ir->nextPartition() == 0) {
@@ -84,7 +84,7 @@ void TestIFileReadWrite(KeyValueType kvtype, int partition, int size,
 //    }
     ASSERT_EQ(kvs, cur_part);
   }
-  FileSystem::getRaw().remove(outputpath);
+  FileSystem::getLocal().remove(outputpath);
 }
 
 
