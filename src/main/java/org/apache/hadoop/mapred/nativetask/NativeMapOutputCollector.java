@@ -66,7 +66,12 @@ public class NativeMapOutputCollector
           BinaryComparable.class.isAssignableFrom(valCls))) {
       return false;
     }
-    return NativeRuntime.isNativeLibraryLoaded();
+    if (NativeRuntime.isNativeLibraryLoaded()) {
+      NativeRuntime.configure(job);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   public NativeMapOutputCollector(JobConf conf, TaskAttemptID taskAttemptID) {
