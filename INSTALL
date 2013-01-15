@@ -1,10 +1,12 @@
 Install Guide
 =============
 1. apply patch in patch/ to hadoop and rebuild(sorry), so hadoop can use nativetask
-2. put hadoop-nativetask-0.1.0.jar to HADOOP_HOME/lib/
-3. put lib/* to HADOOP_HOME/lib/native/Linux-amd-64/
-4. include/* are used to develop nativetask based application, not required in runtime
-5. there is a prebuild nativetask binrary in prebuild/ for linxu-amd-64
+2. build nativetask using: mvn package, you can find build jar and native libraries
+   in target/ and target/native/target
+   Or there is a prebuild nativetask binrary in prebuild/ for linux-amd-64
+4. put jar hadoop-nativetask-0.1.0.jar to HADOOP_HOME/lib/
+5. put native libraies lib/* to HADOOP_HOME/lib/native/Linux-amd-64/
+6. include/* are used to develop nativetask based application, not required in runtime
 
 Develop Guide
 -------------
