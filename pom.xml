@@ -113,11 +113,6 @@
       <version>0.7.1</version>
     </dependency>
     <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-      <version>1.4.1</version>
-    </dependency>
-    <dependency>
       <groupId>net.sf.kosmosfs</groupId>
       <artifactId>kfs</artifactId>
       <version>0.3</version>
