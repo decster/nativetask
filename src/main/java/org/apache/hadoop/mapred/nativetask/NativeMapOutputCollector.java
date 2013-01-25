@@ -62,8 +62,8 @@ public class NativeMapOutputCollector
     }
     Class<?> keyCls = job.getMapOutputKeyClass();
     Class<?> valCls = job.getMapOutputValueClass();
-    if (!(BinaryComparable.class.isAssignableFrom(keyCls) && 
-          BinaryComparable.class.isAssignableFrom(valCls))) {
+    if (!(NativeRuntime.supportType(keyCls.getName()) && 
+          NativeRuntime.supportType(valCls.getName()))) {
       return false;
     }
     if (NativeRuntime.isNativeLibraryLoaded()) {

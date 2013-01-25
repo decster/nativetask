@@ -73,6 +73,50 @@ public class NativeRuntime {
       "fs.defaultFS",
   };
 
+  public static String [][] supportedTypes = {
+      {
+        "org.apache.hadoop.io.Text",
+        "org.apache.hadoop.io.Text",
+      },
+      {
+        "org.apache.hadoop.io.BytesWritable",
+        "org.apache.hadoop.io.BytesWritable",
+      },
+      {
+        "org.apache.hadoop.typedbytes.TypedBytesWritable",
+        "org.apache.hadoop.io.BytesWritable",
+      },
+      {
+        "org.apache.hadoop.hive.ql.io.HiveKey",
+        "org.apache.hadoop.io.BytesWritable",
+      },
+  };
+
+  public static boolean supportType(String type) {
+    for (String [] st : supportedTypes) {
+      if (type.equals(st[0])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static String getCompatibleValue(String key, String value) {
+    if (key.equals("mapred.output.key.class") ||
+        key.equals("mapred.output.value.class") ||
+        key.equals("mapred.mapoutput.key.class") ||
+        key.equals("mapred.mapoutput.value.class")) {
+      for (String [] st : supportedTypes) {
+        if (value.equals(st[0])) {
+          return st[1];
+        }
+      }
+      return null;
+    } else {
+      return value;
+    }
+  }
+
   static {
     try {
       System.loadLibrary("nativetask");
@@ -164,6 +208,10 @@ public class NativeRuntime {
       String key = usefulExternalConfigsKeys[i];
       String value = conf.get(key);
       if (value != null) {
+        String newValue = getCompatibleValue(key, value);
+        if (newValue != null) {
+          value = newValue;
+        }
         nativeConfigs.add(NativeUtils.toBytes(key));
         nativeConfigs.add(NativeUtils.toBytes(value));
       }
